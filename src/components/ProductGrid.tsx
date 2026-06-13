@@ -1,5 +1,6 @@
 import type { Product } from '../types'
 import { ProductCard } from './ProductCard'
+import { useTranslation } from '../i18n/LanguageContext'
 
 interface ProductGridProps {
   products: Product[]
@@ -7,6 +8,7 @@ interface ProductGridProps {
 }
 
 export function ProductGrid({ products, onAdd }: ProductGridProps) {
+  const { t } = useTranslation()
   return (
     <section id="products" className="relative overflow-hidden">
       {/* Discus photo background with a dark overlay for readability */}
@@ -20,11 +22,10 @@ export function ProductGrid({ products, onAdd }: ProductGridProps) {
       <div className="relative mx-auto max-w-6xl px-5 py-20">
         <div className="mb-10 text-center">
           <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            Shop our discus foods
+            {t('products.title')}
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-slate-300">
-            Carefully formulated blends to keep your discus colorful, active, and
-            thriving.
+            {t('products.subtitle')}
           </p>
         </div>
 

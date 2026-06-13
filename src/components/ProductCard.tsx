@@ -1,5 +1,6 @@
 import type { Product } from '../types'
 import { formatPrice } from '../lib/format'
+import { useTranslation } from '../i18n/LanguageContext'
 
 // Discus photos used as card thumbnails when a product has no image of its own.
 // The logo is intentionally excluded — it's only the brand mark.
@@ -17,6 +18,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, index, onAdd }: ProductCardProps) {
+  const { t } = useTranslation()
   const fallback = CARD_IMAGES[index % CARD_IMAGES.length]
   const soldOut = product.stock <= 0
 
@@ -52,7 +54,7 @@ export function ProductCard({ product, index, onAdd }: ProductCardProps) {
             onClick={() => onAdd(product)}
             className="rounded-full bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-300"
           >
-            {soldOut ? 'Sold out' : 'Add to cart'}
+            {soldOut ? t('product.soldOut') : t('product.addToCart')}
           </button>
         </div>
       </div>

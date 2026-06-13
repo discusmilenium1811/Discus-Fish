@@ -1,4 +1,7 @@
+import { useTranslation } from '../i18n/LanguageContext'
+
 export function Hero() {
+  const { t } = useTranslation()
   return (
     <section
       id="top"
@@ -18,36 +21,35 @@ export function Hero() {
       <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 py-20 md:grid-cols-2 md:py-28">
         <div>
           <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-cyan-200">
-            Vet-formulated nutrition
+            {t('hero.badge')}
           </span>
           <h1 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight drop-shadow-sm sm:text-5xl md:text-6xl">
-            Vibrant color.
+            {t('hero.title1')}
             <br />
             <span className="bg-gradient-to-r from-cyan-300 to-teal-200 bg-clip-text text-transparent">
-              Healthier discus.
+              {t('hero.title2')}
             </span>
           </h1>
           <p className="mt-5 max-w-md text-lg text-slate-200">
-            Premium foods crafted for the unique needs of discus fish — for
-            richer colors, stronger growth, and happier tanks.
+            {t('hero.subtitle')}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a
               href="#products"
               className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-bold text-slate-900 shadow-lg shadow-cyan-500/30 transition hover:bg-cyan-300"
             >
-              Shop the collection
+              {t('hero.shop')}
             </a>
             <a
               href="#features"
               className="rounded-full border border-white/25 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/10"
             >
-              Why DiscusFish
+              {t('hero.why')}
             </a>
           </div>
           <div className="mt-8 flex items-center gap-6 text-sm text-slate-300">
-            <span>⭐ 4.9/5 from 2,000+ keepers</span>
-            <span>🚚 Free shipping over $35</span>
+            <span>{t('hero.rating')}</span>
+            <span>{t('hero.shipping')}</span>
           </div>
         </div>
 
@@ -60,10 +62,10 @@ export function Hero() {
               className="h-44 w-full rounded-2xl object-cover shadow-inner"
             />
             <p className="mt-4 px-1 text-sm font-semibold text-white">
-              Premium Discus Granules
+              {t('hero.cardTitle')}
             </p>
             <p className="px-1 text-xs text-slate-300">
-              Color-enhancing · high protein
+              {t('hero.cardSubtitle')}
             </p>
             <p className="mt-2 px-1 text-lg font-bold text-cyan-200">$14.99</p>
           </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { CartItem } from '../hooks/useCart'
 import { formatPrice } from '../lib/format'
 import { createCheckout } from '../lib/api'
+import { useTranslation } from '../i18n/LanguageContext'
 
 const ITEM_FALLBACK = '/pictures/discus-closeup.webp'
 
@@ -24,6 +25,7 @@ export function CartDrawer({
   onRemove,
   onClear,
 }: CartDrawerProps) {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -36,9 +38,7 @@ export function CartDrawer({
       )
       window.location.href = url
     } catch {
-      setError(
-        'Checkout isn’t available yet — the payments back-end still needs to be configured.',
-      )
+      setError(t('cart.error'))
     } finally {
       setLoading(false)
     }
@@ -61,15 +61,15 @@ export function CartDrawer({
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
         role="dialog"
-        aria-label="Shopping cart"
+        aria-label={t('cart.title')}
       >
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-          <h2 className="text-lg font-bold text-white">Your cart</h2>
+          <h2 className="text-lg font-bold text-white">{t('cart.title')}</h2>
           <button
             type="button"
             onClick={onClose}
             className="grid h-8 w-8 place-items-center rounded-full text-slate-400 transition hover:bg-white/10 hover:text-white"
-            aria-label="Close cart"
+            aria-label={t('cart.close')}
           >
             ✕
           </button>
@@ -78,10 +78,8 @@ export function CartDrawer({
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-5 text-center">
             <span className="text-5xl">🛒</span>
-            <p className="font-semibold text-slate-200">Your cart is empty</p>
-            <p className="text-sm text-slate-400">
-              Add some food to keep your discus happy.
-            </p>
+            <p className="font-semibold text-slate-200">{t('cart.empty')}</p>
+            <p className="text-sm text-slate-400">{t('cart.emptyHint')}</p>
           </div>
         ) : (
           <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
@@ -104,9 +102,9 @@ export function CartDrawer({
                       type="button"
                       onClick={() => onRemove(item.product.id)}
                       className="text-xs text-slate-400 hover:text-rose-400"
-                      aria-label={`Remove ${item.product.name}`}
+                      aria-label={`${t('cart.remove')} ${item.product.name}`}
                     >
-                      Remove
+                      {t('cart.remove')}
                     </button>
                   </div>
                   <p className="text-sm text-slate-400">
@@ -119,7 +117,7 @@ export function CartDrawer({
                         onSetQuantity(item.product.id, item.quantity - 1)
                       }
                       className="grid h-7 w-7 place-items-center rounded-full border border-white/20 text-slate-200 transition hover:bg-white/10"
-                      aria-label="Decrease quantity"
+                      aria-label={t('cart.decrease')}
                     >
                       −
                     </button>
@@ -132,7 +130,7 @@ export function CartDrawer({
                         onSetQuantity(item.product.id, item.quantity + 1)
                       }
                       className="grid h-7 w-7 place-items-center rounded-full border border-white/20 text-slate-200 transition hover:bg-white/10"
-                      aria-label="Increase quantity"
+                      aria-label={t('cart.increase')}
                     >
                       +
                     </button>
@@ -146,7 +144,7 @@ export function CartDrawer({
               onClick={onClear}
               className="text-xs font-medium text-slate-400 hover:text-rose-400"
             >
-              Clear cart
+              {t('cart.clear')}
             </button>
           </div>
         )}
@@ -159,7 +157,7 @@ export function CartDrawer({
               </p>
             )}
             <div className="mb-4 flex items-center justify-between">
-              <span className="text-sm text-slate-400">Subtotal</span>
+              <span className="text-sm text-slate-400">{t('cart.subtotal')}</span>
               <span className="text-xl font-extrabold text-white">
                 {formatPrice(totalCents)}
               </span>
@@ -170,10 +168,10 @@ export function CartDrawer({
               disabled={loading}
               className="w-full rounded-full bg-cyan-400 py-3 text-sm font-bold text-slate-900 transition hover:bg-cyan-300 disabled:opacity-60"
             >
-              {loading ? 'Redirecting…' : 'Checkout'}
+              {loading ? t('cart.redirecting') : t('cart.checkout')}
             </button>
             <p className="mt-2 text-center text-xs text-slate-500">
-              Secure payment powered by Stripe
+              {t('cart.securePayment')}
             </p>
           </div>
         )}

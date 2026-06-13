@@ -6,6 +6,7 @@ import { Features } from './components/Features'
 import { CtaBanner } from './components/CtaBanner'
 import { Footer } from './components/Footer'
 import { CartDrawer } from './components/CartDrawer'
+import { LanguageDrawer } from './components/LanguageDrawer'
 import { useCart } from './hooks/useCart'
 import { fetchProducts } from './lib/api'
 import { sampleProducts } from './data/sampleProducts'
@@ -15,6 +16,7 @@ function App() {
   const cart = useCart()
   const [products, setProducts] = useState<Product[]>(sampleProducts)
   const [cartOpen, setCartOpen] = useState(false)
+  const [languageOpen, setLanguageOpen] = useState(false)
 
   // Load the live catalog; fall back to sample data if the API isn't up yet.
   useEffect(() => {
@@ -29,7 +31,11 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <Navbar cartCount={cart.count} onCartClick={() => setCartOpen(true)} />
+      <Navbar
+        cartCount={cart.count}
+        onCartClick={() => setCartOpen(true)}
+        onLanguageClick={() => setLanguageOpen(true)}
+      />
       <main>
         <Hero />
         <ProductGrid products={products} onAdd={cart.add} />
@@ -45,6 +51,10 @@ function App() {
         onSetQuantity={cart.setQuantity}
         onRemove={cart.remove}
         onClear={cart.clear}
+      />
+      <LanguageDrawer
+        open={languageOpen}
+        onClose={() => setLanguageOpen(false)}
       />
     </div>
   )

@@ -1,9 +1,14 @@
+import { useTranslation } from '../i18n/LanguageContext'
+
 interface NavbarProps {
   cartCount: number
   onCartClick: () => void
+  onLanguageClick: () => void
 }
 
-export function Navbar({ cartCount, onCartClick }: NavbarProps) {
+export function Navbar({ cartCount, onCartClick, onLanguageClick }: NavbarProps) {
+  const { t, lang } = useTranslation()
+
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/60 backdrop-blur-lg">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
@@ -20,29 +25,41 @@ export function Navbar({ cartCount, onCartClick }: NavbarProps) {
 
         <nav className="hidden items-center gap-8 text-sm font-medium text-slate-300 sm:flex">
           <a href="#products" className="transition hover:text-cyan-300">
-            Shop
+            {t('nav.shop')}
           </a>
           <a href="#features" className="transition hover:text-cyan-300">
-            Why us
+            {t('nav.whyUs')}
           </a>
           <a href="#footer" className="transition hover:text-cyan-300">
-            Contact
+            {t('nav.contact')}
           </a>
         </nav>
 
-        <button
-          type="button"
-          onClick={onCartClick}
-          className="relative inline-flex items-center gap-2 rounded-full bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-300"
-        >
-          <span aria-hidden="true">🛒</span>
-          <span className="hidden sm:inline">Cart</span>
-          {cartCount > 0 && (
-            <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-rose-500 px-1 text-xs font-bold text-white">
-              {cartCount}
-            </span>
-          )}
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={onLanguageClick}
+            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-sm font-semibold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white"
+            aria-label={t('nav.language')}
+          >
+            <span aria-hidden="true">🌐</span>
+            <span className="uppercase">{lang}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onCartClick}
+            className="relative inline-flex items-center gap-2 rounded-full bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-300"
+          >
+            <span aria-hidden="true">🛒</span>
+            <span className="hidden sm:inline">{t('nav.cart')}</span>
+            {cartCount > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-rose-500 px-1 text-xs font-bold text-white">
+                {cartCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
     </header>
   )

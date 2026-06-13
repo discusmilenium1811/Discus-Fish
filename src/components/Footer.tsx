@@ -1,4 +1,7 @@
+import { useTranslation } from '../i18n/LanguageContext'
+
 export function Footer() {
+  const { t } = useTranslation()
   return (
     <footer id="footer" className="bg-slate-900 text-slate-300">
       <div className="mx-auto max-w-6xl px-5 py-14">
@@ -15,33 +18,32 @@ export function Footer() {
               </span>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-slate-400">
-              Premium nutrition for vibrant, healthy discus. Made by keepers,
-              for keepers.
+              {t('footer.tagline')}
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-10 text-sm">
             <div>
-              <h4 className="font-semibold text-white">Shop</h4>
+              <h4 className="font-semibold text-white">{t('footer.shop')}</h4>
               <ul className="mt-3 space-y-2 text-slate-400">
                 <li>
                   <a href="#products" className="hover:text-teal-400">
-                    All foods
+                    {t('footer.allFoods')}
                   </a>
                 </li>
                 <li>
                   <a href="#products" className="hover:text-teal-400">
-                    Best sellers
+                    {t('footer.bestSellers')}
                   </a>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-white">Support</h4>
+              <h4 className="font-semibold text-white">{t('footer.support')}</h4>
               <ul className="mt-3 space-y-2 text-slate-400">
                 <li>
                   <a href="#features" className="hover:text-teal-400">
-                    Why us
+                    {t('footer.whyUs')}
                   </a>
                 </li>
                 <li>
@@ -49,7 +51,7 @@ export function Footer() {
                     href="mailto:hello@discusfish.app"
                     className="hover:text-teal-400"
                   >
-                    Contact
+                    {t('footer.contact')}
                   </a>
                 </li>
               </ul>
@@ -58,7 +60,7 @@ export function Footer() {
         </div>
 
         <div className="mt-10 border-t border-white/10 pt-6 text-sm text-slate-500">
-          © {new Date().getFullYear()} DiscusFish. All rights reserved.
+          © {new Date().getFullYear()} DiscusFish. {t('footer.rights')}
         </div>
       </div>
     </footer>
