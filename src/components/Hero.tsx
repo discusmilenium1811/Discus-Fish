@@ -2,18 +2,25 @@ export function Hero() {
   return (
     <section
       id="top"
-      className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-teal-900 to-cyan-800 text-white"
+      className="relative overflow-hidden text-white"
     >
-      {/* Soft glowing orbs */}
-      <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-cyan-400/30 blur-3xl" />
-      <div className="pointer-events-none absolute -right-16 bottom-0 h-80 w-80 rounded-full bg-teal-400/20 blur-3xl" />
+      {/* Photo background */}
+      <img
+        src="/pictures/hero-wide.jpg"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      {/* Dark teal gradient overlay keeps text readable over the photo */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-950/92 via-teal-950/80 to-cyan-900/65" />
+      <div className="pointer-events-none absolute -right-16 bottom-0 h-80 w-80 rounded-full bg-cyan-400/20 blur-3xl" />
 
       <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 py-20 md:grid-cols-2 md:py-28">
         <div>
           <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-cyan-200">
             Vet-formulated nutrition
           </span>
-          <h1 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl md:text-6xl">
+          <h1 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight drop-shadow-sm sm:text-5xl md:text-6xl">
             Vibrant color.
             <br />
             <span className="bg-gradient-to-r from-cyan-300 to-teal-200 bg-clip-text text-transparent">
@@ -33,7 +40,7 @@ export function Hero() {
             </a>
             <a
               href="#features"
-              className="rounded-full border border-white/25 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+              className="rounded-full border border-white/25 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/10"
             >
               Why DiscusFish
             </a>
@@ -44,19 +51,21 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Floating product highlight card */}
+        {/* Floating product highlight card with a real discus photo */}
         <div className="relative hidden md:block">
-          <div className="animate-float mx-auto w-64 rounded-3xl bg-white/10 p-6 backdrop-blur-md ring-1 ring-white/20">
-            <div className="grid h-40 place-items-center rounded-2xl bg-gradient-to-br from-cyan-400 to-teal-500 text-7xl shadow-inner">
-              🐠
-            </div>
-            <p className="mt-4 text-sm font-semibold text-white">
+          <div className="animate-float mx-auto w-64 rounded-3xl bg-white/10 p-4 backdrop-blur-md ring-1 ring-white/20">
+            <img
+              src="/pictures/discus-closeup.webp"
+              alt="Vibrant red and turquoise discus fish"
+              className="h-44 w-full rounded-2xl object-cover shadow-inner"
+            />
+            <p className="mt-4 px-1 text-sm font-semibold text-white">
               Premium Discus Granules
             </p>
-            <p className="text-xs text-slate-300">
+            <p className="px-1 text-xs text-slate-300">
               Color-enhancing · high protein
             </p>
-            <p className="mt-2 text-lg font-bold text-cyan-200">$14.99</p>
+            <p className="mt-2 px-1 text-lg font-bold text-cyan-200">$14.99</p>
           </div>
         </div>
       </div>

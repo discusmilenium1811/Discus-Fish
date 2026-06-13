@@ -3,6 +3,7 @@ import { Navbar } from './components/Navbar'
 import { Hero } from './components/Hero'
 import { ProductGrid } from './components/ProductGrid'
 import { Features } from './components/Features'
+import { CtaBanner } from './components/CtaBanner'
 import { Footer } from './components/Footer'
 import { CartDrawer } from './components/CartDrawer'
 import { useCart } from './hooks/useCart'
@@ -27,11 +28,12 @@ function App() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-slate-950 text-slate-100">
       <Navbar cartCount={cart.count} onCartClick={() => setCartOpen(true)} />
       <main>
         <Hero />
         <ProductGrid products={products} onAdd={cart.add} />
+        <CtaBanner />
         <Features />
       </main>
       <Footer />

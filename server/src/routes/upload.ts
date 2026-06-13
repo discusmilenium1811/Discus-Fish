@@ -26,7 +26,7 @@ uploadRouter.post(
     }
 
     const ext = req.file.originalname.split('.').pop()?.toLowerCase() ?? 'jpg'
-    const path = `products/${randomUUID()}.${ext}`
+    const path = `pictures/${randomUUID()}.${ext}`
 
     const { error } = await supabaseAdmin.storage
       .from(STORAGE_BUCKET)

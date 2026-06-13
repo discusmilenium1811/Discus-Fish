@@ -4,10 +4,12 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-5 py-14">
         <div className="flex flex-col items-start justify-between gap-8 sm:flex-row">
           <div className="max-w-xs">
-            <div className="flex items-center gap-2">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-cyan-500 to-teal-600 text-lg">
-                🐠
-              </span>
+            <div className="flex items-center gap-2.5">
+              <img
+                src="/pictures/logo.jpg"
+                alt="DiscusFish logo"
+                className="h-9 w-9 rounded-xl object-cover ring-1 ring-white/15"
+              />
               <span className="text-lg font-extrabold text-white">
                 Discus<span className="text-teal-400">Fish</span>
               </span>
