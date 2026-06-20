@@ -40,14 +40,11 @@ export function AdminLayout() {
       <aside className="hidden w-64 shrink-0 flex-col border-r border-white/10 bg-slate-900/60 lg:flex">
         <div className="flex items-center gap-2.5 px-5 py-4">
           <img
-            src="/pictures/logo.jpg"
+            src="/pictures/Logo/viber_image_2026-06-20_16-16-33-937.jpg"
             alt="DiscusFish"
-            className="h-8 w-8 rounded-lg object-cover"
+            className="h-24 w-auto rounded-xl object-contain"
           />
           <div>
-            <div className="text-sm font-extrabold leading-tight text-white">
-              Discus<span className="text-cyan-400">Fish</span>
-            </div>
             <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
               Admin Panel
             </div>

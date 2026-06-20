@@ -7,15 +7,12 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-5 py-14">
         <div className="flex flex-col items-start justify-between gap-8 sm:flex-row">
           <div className="max-w-xs">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center">
               <img
-                src="/pictures/logo.jpg"
+                src="/pictures/Logo/viber_image_2026-06-20_16-16-33-937.jpg"
                 alt="DiscusFish logo"
-                className="h-9 w-9 rounded-xl object-cover ring-1 ring-white/15"
+                className="h-28 w-auto rounded-2xl object-contain ring-1 ring-white/15 sm:h-36"
               />
-              <span className="text-lg font-extrabold text-white">
-                Discus<span className="text-teal-400">Fish</span>
-              </span>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-slate-400">
               {t('footer.tagline')}
