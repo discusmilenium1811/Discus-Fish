@@ -5,6 +5,7 @@ interface NavbarProps {
   cartCount: number
   onCartClick: () => void
   onLanguageClick: () => void
+  onCatalogClick: () => void
   onAuthClick: (mode: 'login' | 'signup') => void
   onAdminClick: () => void
 }
@@ -13,6 +14,7 @@ export function Navbar({
   cartCount,
   onCartClick,
   onLanguageClick,
+  onCatalogClick,
   onAuthClick,
   onAdminClick,
 }: NavbarProps) {
@@ -37,6 +39,13 @@ export function Navbar({
           <a href="#products" className="transition hover:text-cyan-300">
             {t('nav.shop')}
           </a>
+          <button
+            type="button"
+            onClick={onCatalogClick}
+            className="transition hover:text-cyan-300"
+          >
+            {t('nav.catalog')}
+          </button>
           <a href="#features" className="transition hover:text-cyan-300">
             {t('nav.whyUs')}
           </a>

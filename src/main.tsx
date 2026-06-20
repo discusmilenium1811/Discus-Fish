@@ -1,8 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import './index.css'
-import App from './App.tsx'
+import { StorefrontLayout } from './layouts/StorefrontLayout'
+import { Home } from './pages/Home'
+import { CatalogPage } from './pages/Catalog'
 import { LanguageProvider } from './i18n/LanguageContext'
 import { AuthProvider } from './auth/AuthContext'
 import { AdminLayout } from './admin/AdminLayout'
@@ -27,7 +29,15 @@ createRoot(document.getElementById('root')!).render(
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<App />} />
+            <Route element={<StorefrontLayout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/Cataloge" element={<Navigate to="/Cataloge/Products" replace />} />
+              <Route path="/Cataloge/Products" element={<CatalogPage tab="products" />} />
+              <Route
+                path="/Cataloge/NewProductsComingsoon"
+                element={<CatalogPage tab="coming" />}
+              />
+            </Route>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="products" element={<Products />} />

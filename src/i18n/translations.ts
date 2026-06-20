@@ -15,10 +15,19 @@ export const translations = {
   en: {
     // Navbar
     'nav.shop': 'Shop',
+    'nav.catalog': 'Catalog',
     'nav.whyUs': 'Why us',
     'nav.contact': 'Contact',
     'nav.cart': 'Cart',
     'nav.language': 'Language',
+
+    // Catalog drawer
+    'catalog.title': 'Catalog',
+    'catalog.close': 'Close catalog',
+    'catalog.tabProducts': 'Products',
+    'catalog.tabComing': 'New Products — Coming Soon',
+    'catalog.emptyProducts': 'No products available yet — check the “Coming Soon” tab!',
+    'catalog.emptyComing': 'No upcoming products right now.',
 
     // Language drawer
     'lang.title': 'Choose language',
@@ -124,10 +133,19 @@ export const translations = {
   el: {
     // Navbar
     'nav.shop': 'Κατάστημα',
+    'nav.catalog': 'Κατάλογος',
     'nav.whyUs': 'Γιατί εμάς',
     'nav.contact': 'Επικοινωνία',
     'nav.cart': 'Καλάθι',
     'nav.language': 'Γλώσσα',
+
+    // Catalog drawer
+    'catalog.title': 'Κατάλογος',
+    'catalog.close': 'Κλείσιμο καταλόγου',
+    'catalog.tabProducts': 'Προϊόντα',
+    'catalog.tabComing': 'Νέα Προϊόντα — Σύντομα',
+    'catalog.emptyProducts': 'Δεν υπάρχουν διαθέσιμα προϊόντα ακόμη — δείτε την καρτέλα «Σύντομα»!',
+    'catalog.emptyComing': 'Δεν υπάρχουν επερχόμενα προϊόντα αυτή τη στιγμή.',
 
     // Language drawer
     'lang.title': 'Επιλέξτε γλώσσα',
@@ -234,10 +252,19 @@ export const translations = {
   bg: {
     // Navbar
     'nav.shop': 'Магазин',
+    'nav.catalog': 'Каталог',
     'nav.whyUs': 'Защо нас',
     'nav.contact': 'Контакт',
     'nav.cart': 'Количка',
     'nav.language': 'Език',
+
+    // Catalog drawer
+    'catalog.title': 'Каталог',
+    'catalog.close': 'Затвори каталога',
+    'catalog.tabProducts': 'Продукти',
+    'catalog.tabComing': 'Нови продукти — Очаквайте скоро',
+    'catalog.emptyProducts': 'Все още няма налични продукти — вижте раздел „Очаквайте скоро“!',
+    'catalog.emptyComing': 'В момента няма предстоящи продукти.',
 
     // Language drawer
     'lang.title': 'Изберете език',
