@@ -7,8 +7,8 @@ import { LanguageProvider } from './i18n/LanguageContext'
 import { AuthProvider } from './auth/AuthContext'
 import { AdminLayout } from './admin/AdminLayout'
 import { Dashboard } from './admin/pages/Dashboard'
+import { Products } from './admin/pages/Products'
 import {
-  ProductsPage,
   CategoriesPage,
   InventoryPage,
   ReviewsPage,
@@ -32,7 +32,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/" element={<App />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Dashboard />} />
-              <Route path="products" element={<ProductsPage />} />
+              <Route path="products" element={<Products />} />
               <Route path="categories" element={<CategoriesPage />} />
               <Route path="inventory" element={<InventoryPage />} />
               <Route path="reviews" element={<ReviewsPage />} />
