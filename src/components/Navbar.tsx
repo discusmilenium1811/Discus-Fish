@@ -1,13 +1,23 @@
 import { useTranslation } from '../i18n/LanguageContext'
+import { useAuth } from '../auth/AuthContext'
 
 interface NavbarProps {
   cartCount: number
   onCartClick: () => void
   onLanguageClick: () => void
+  onAuthClick: (mode: 'login' | 'signup') => void
+  onAdminClick: () => void
 }
 
-export function Navbar({ cartCount, onCartClick, onLanguageClick }: NavbarProps) {
+export function Navbar({
+  cartCount,
+  onCartClick,
+  onLanguageClick,
+  onAuthClick,
+  onAdminClick,
+}: NavbarProps) {
   const { t, lang } = useTranslation()
+  const { user, profile, isAdmin, signOut } = useAuth()
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/60 backdrop-blur-lg">
@@ -59,6 +69,48 @@ export function Navbar({ cartCount, onCartClick, onLanguageClick }: NavbarProps)
               </span>
             )}
           </button>
+
+          {/* Auth controls (top-right corner) */}
+          {user ? (
+            <div className="flex items-center gap-2.5">
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={onAdminClick}
+                  className="hidden rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3.5 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-400/20 sm:inline-flex"
+                >
+                  {t('auth.adminPanel')}
+                </button>
+              )}
+              <span className="hidden text-sm font-medium text-slate-300 sm:inline">
+                {profile?.username ?? user.email}
+              </span>
+              <button
+                type="button"
+                onClick={() => signOut()}
+                className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-sm font-semibold text-slate-200 transition hover:border-rose-400/40 hover:text-white"
+              >
+                {t('auth.logout')}
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => onAuthClick('login')}
+                className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-sm font-semibold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white"
+              >
+                {t('auth.login')}
+              </button>
+              <button
+                type="button"
+                onClick={() => onAuthClick('signup')}
+                className="inline-flex items-center rounded-full bg-white px-3.5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-200"
+              >
+                {t('auth.signup')}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

@@ -46,6 +46,7 @@ export const translations = {
     // Product card
     'product.addToCart': 'Add to cart',
     'product.soldOut': 'Sold out',
+    'product.comingSoon': 'Coming soon…',
 
     // CTA banner
     'cta.title': 'Nutrition that brings out their best',
@@ -95,6 +96,29 @@ export const translations = {
       'Checkout isn’t available yet — the payments back-end still needs to be configured.',
     'cart.decrease': 'Decrease quantity',
     'cart.increase': 'Increase quantity',
+
+    // Auth
+    'auth.login': 'Log in',
+    'auth.signup': 'Sign up',
+    'auth.logout': 'Log out',
+    'auth.loginTitle': 'Welcome back',
+    'auth.signupTitle': 'Create your account',
+    'auth.username': 'User name',
+    'auth.email': 'Email',
+    'auth.password': 'Password',
+    'auth.passwordHint': 'At least 6 characters',
+    'auth.confirmPassword': 'Confirm password',
+    'auth.createAccount': 'Create account',
+    'auth.haveAccount': 'Already have an account?',
+    'auth.noAccount': 'No account yet?',
+    'auth.close': 'Close',
+    'auth.adminPanel': 'Admin panel',
+    'auth.signingIn': 'Logging in…',
+    'auth.creating': 'Creating…',
+    'auth.errPasswordShort': 'Password must be at least 6 characters.',
+    'auth.errPasswordMatch': 'Passwords do not match.',
+    'auth.errFields': 'Please fill in all fields.',
+    'auth.signupSuccess': 'Account created! You can now log in.',
   },
 
   el: {
@@ -131,6 +155,7 @@ export const translations = {
     // Product card
     'product.addToCart': 'Προσθήκη στο καλάθι',
     'product.soldOut': 'Εξαντλήθηκε',
+    'product.comingSoon': 'Σύντομα κοντά σας…',
 
     // CTA banner
     'cta.title': 'Διατροφή που αναδεικνύει τον καλύτερό τους εαυτό',
@@ -181,6 +206,29 @@ export const translations = {
       'Η ολοκλήρωση αγοράς δεν είναι ακόμη διαθέσιμη — το σύστημα πληρωμών πρέπει να ρυθμιστεί.',
     'cart.decrease': 'Μείωση ποσότητας',
     'cart.increase': 'Αύξηση ποσότητας',
+
+    // Auth
+    'auth.login': 'Σύνδεση',
+    'auth.signup': 'Εγγραφή',
+    'auth.logout': 'Αποσύνδεση',
+    'auth.loginTitle': 'Καλώς ήρθατε ξανά',
+    'auth.signupTitle': 'Δημιουργήστε τον λογαριασμό σας',
+    'auth.username': 'Όνομα χρήστη',
+    'auth.email': 'Email',
+    'auth.password': 'Κωδικός',
+    'auth.passwordHint': 'Τουλάχιστον 6 χαρακτήρες',
+    'auth.confirmPassword': 'Επιβεβαίωση κωδικού',
+    'auth.createAccount': 'Δημιουργία λογαριασμού',
+    'auth.haveAccount': 'Έχετε ήδη λογαριασμό;',
+    'auth.noAccount': 'Δεν έχετε λογαριασμό;',
+    'auth.close': 'Κλείσιμο',
+    'auth.adminPanel': 'Πίνακας διαχείρισης',
+    'auth.signingIn': 'Σύνδεση…',
+    'auth.creating': 'Δημιουργία…',
+    'auth.errPasswordShort': 'Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες.',
+    'auth.errPasswordMatch': 'Οι κωδικοί δεν ταιριάζουν.',
+    'auth.errFields': 'Συμπληρώστε όλα τα πεδία.',
+    'auth.signupSuccess': 'Ο λογαριασμός δημιουργήθηκε! Μπορείτε τώρα να συνδεθείτε.',
   },
 
   bg: {
@@ -217,6 +265,7 @@ export const translations = {
     // Product card
     'product.addToCart': 'Добави в количката',
     'product.soldOut': 'Изчерпано',
+    'product.comingSoon': 'Очаквайте скоро…',
 
     // CTA banner
     'cta.title': 'Хранене, което разкрива най-доброто от тях',
@@ -267,5 +316,28 @@ export const translations = {
       'Плащането все още не е достъпно — системата за плащания трябва да бъде конфигурирана.',
     'cart.decrease': 'Намали количеството',
     'cart.increase': 'Увеличи количеството',
+
+    // Auth
+    'auth.login': 'Вход',
+    'auth.signup': 'Регистрация',
+    'auth.logout': 'Изход',
+    'auth.loginTitle': 'Добре дошли отново',
+    'auth.signupTitle': 'Създайте своя акаунт',
+    'auth.username': 'Потребителско име',
+    'auth.email': 'Имейл',
+    'auth.password': 'Парола',
+    'auth.passwordHint': 'Поне 6 символа',
+    'auth.confirmPassword': 'Потвърдете паролата',
+    'auth.createAccount': 'Създай акаунт',
+    'auth.haveAccount': 'Вече имате акаунт?',
+    'auth.noAccount': 'Нямате акаунт?',
+    'auth.close': 'Затвори',
+    'auth.adminPanel': 'Админ панел',
+    'auth.signingIn': 'Влизане…',
+    'auth.creating': 'Създаване…',
+    'auth.errPasswordShort': 'Паролата трябва да е поне 6 символа.',
+    'auth.errPasswordMatch': 'Паролите не съвпадат.',
+    'auth.errFields': 'Моля, попълнете всички полета.',
+    'auth.signupSuccess': 'Акаунтът е създаден! Вече можете да влезете.',
   },
 } as const

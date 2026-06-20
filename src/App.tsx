@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
 import { Hero } from './components/Hero'
 import { ProductGrid } from './components/ProductGrid'
@@ -7,6 +8,7 @@ import { CtaBanner } from './components/CtaBanner'
 import { Footer } from './components/Footer'
 import { CartDrawer } from './components/CartDrawer'
 import { LanguageDrawer } from './components/LanguageDrawer'
+import { AuthModal } from './components/AuthModal'
 import { useCart } from './hooks/useCart'
 import { fetchProducts } from './lib/api'
 import { sampleProducts } from './data/sampleProducts'
@@ -14,9 +16,12 @@ import type { Product } from './types'
 
 function App() {
   const cart = useCart()
+  const navigate = useNavigate()
   const [products, setProducts] = useState<Product[]>(sampleProducts)
   const [cartOpen, setCartOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
+  const [authOpen, setAuthOpen] = useState(false)
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
 
   // Load the live catalog; fall back to sample data if the API isn't up yet.
   useEffect(() => {
@@ -35,6 +40,11 @@ function App() {
         cartCount={cart.count}
         onCartClick={() => setCartOpen(true)}
         onLanguageClick={() => setLanguageOpen(true)}
+        onAuthClick={(mode) => {
+          setAuthMode(mode)
+          setAuthOpen(true)
+        }}
+        onAdminClick={() => navigate('/admin')}
       />
       <main>
         <Hero />
@@ -55,6 +65,12 @@ function App() {
       <LanguageDrawer
         open={languageOpen}
         onClose={() => setLanguageOpen(false)}
+      />
+      <AuthModal
+        open={authOpen}
+        mode={authMode}
+        onClose={() => setAuthOpen(false)}
+        onModeChange={setAuthMode}
       />
     </div>
   )

@@ -11,4 +11,5 @@ export interface Product {
   weightGrams?: number | null
   stock: number
   isActive: boolean
+  isComingSoon?: boolean
 }

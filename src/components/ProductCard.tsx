@@ -20,6 +20,7 @@ interface ProductCardProps {
 export function ProductCard({ product, index, onAdd }: ProductCardProps) {
   const { t } = useTranslation()
   const fallback = CARD_IMAGES[index % CARD_IMAGES.length]
+  const comingSoon = product.isComingSoon
   const soldOut = product.stock <= 0
 
   return (
@@ -31,6 +32,11 @@ export function ProductCard({ product, index, onAdd }: ProductCardProps) {
           className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 to-transparent" />
+        {comingSoon && (
+          <span className="absolute left-3 top-3 rounded-full bg-cyan-400/90 px-2.5 py-1 text-xs font-bold text-slate-900 backdrop-blur">
+            {t('product.comingSoon')}
+          </span>
+        )}
         {product.weightGrams && (
           <span className="absolute right-3 top-3 rounded-full bg-slate-950/60 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur">
             {product.weightGrams}g
@@ -45,16 +51,26 @@ export function ProductCard({ product, index, onAdd }: ProductCardProps) {
         </p>
 
         <div className="mt-4 flex items-center justify-between">
-          <span className="text-lg font-extrabold text-white">
-            {formatPrice(product.priceCents, product.currency)}
-          </span>
+          {comingSoon ? (
+            <span className="text-base font-bold text-cyan-300">
+              {t('product.comingSoon')}
+            </span>
+          ) : (
+            <span className="text-lg font-extrabold text-white">
+              {formatPrice(product.priceCents, product.currency)}
+            </span>
+          )}
           <button
             type="button"
-            disabled={soldOut}
+            disabled={comingSoon || soldOut}
             onClick={() => onAdd(product)}
             className="rounded-full bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-300"
           >
-            {soldOut ? t('product.soldOut') : t('product.addToCart')}
+            {comingSoon
+              ? t('product.comingSoon')
+              : soldOut
+                ? t('product.soldOut')
+                : t('product.addToCart')}
           </button>
         </div>
       </div>
