@@ -309,17 +309,31 @@ function ShippingCalculator({ zones, methods }: { zones: Zone[]; methods: Method
           </p>
         ) : (
           <>
-            <p className="mb-2 text-sm text-slate-400">
-              Matched zone: <span className="font-semibold text-white">{zone.name}</span>
-            </p>
+            <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+              <span className="text-slate-400">
+                Matched zone: <span className="font-semibold text-white">{zone.name}</span>
+              </span>
+              <span className="text-slate-400">
+                Products (price as set): <span className="font-semibold text-white">€{centsToEuros(subtotalCents)}</span>
+              </span>
+              {options.some((o) => o.free) ? (
+                <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-300">
+                  ✓ Within free-shipping range — customer pays product price only
+                </span>
+              ) : (
+                <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-300">
+                  Shipping fee applies for this destination
+                </span>
+              )}
+            </div>
             <div className="overflow-hidden rounded-lg border border-white/10">
               <table className={tableCls}>
                 <thead className={theadCls}>
                   <tr>
                     <th className={thCls}>UPS service</th>
-                    <th className={thCls}>Base</th>
                     <th className={thCls}>Delivery</th>
-                    <th className={`${thCls} text-right`}>Cost for this order</th>
+                    <th className={thCls}>Shipping fee</th>
+                    <th className={`${thCls} text-right`}>Order total</th>
                   </tr>
                 </thead>
                 <tbody className={tbodyCls}>
@@ -329,18 +343,27 @@ function ShippingCalculator({ zones, methods }: { zones: Zone[]; methods: Method
                     options.map(({ m, costCents, free }) => (
                       <tr key={m.id} className={trCls}>
                         <td className="px-4 py-2.5 font-semibold text-white">{m.name}</td>
-                        <td className="px-4 py-2.5 text-slate-400">€{centsToEuros(m.price_cents)}</td>
                         <td className="px-4 py-2.5 text-slate-400">
                           {m.estimated_days_min != null
                             ? `${m.estimated_days_min}–${m.estimated_days_max ?? m.estimated_days_min} days`
                             : '—'}
                         </td>
-                        <td className="px-4 py-2.5 text-right font-semibold">
+                        <td className="px-4 py-2.5">
                           {free ? (
-                            <span className="text-emerald-300">FREE</span>
+                            <span className="font-semibold text-emerald-300">FREE</span>
                           ) : (
-                            <span className="text-white">€{centsToEuros(costCents)}</span>
+                            <>
+                              <span className="font-semibold text-white">€{centsToEuros(costCents)}</span>
+                              {m.free_over_cents != null && (
+                                <div className="text-xs text-slate-500">
+                                  free over €{centsToEuros(m.free_over_cents)}
+                                </div>
+                              )}
+                            </>
                           )}
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-bold text-white">
+                          €{centsToEuros(subtotalCents + costCents)}
                         </td>
                       </tr>
                     ))
@@ -348,6 +371,10 @@ function ShippingCalculator({ zones, methods }: { zones: Zone[]; methods: Method
                 </tbody>
               </table>
             </div>
+            <p className="mt-2 text-xs text-slate-500">
+              Rates are fully editable below — update any UPS fee or free-shipping
+              threshold whenever UPS changes their offers.
+            </p>
           </>
         )}
       </div>
