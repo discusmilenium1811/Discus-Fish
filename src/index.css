@@ -12,8 +12,15 @@ html {
 body {
   margin: 0;
   font-family: var(--font-sans);
+  background:
+    linear-gradient(rgba(2, 6, 23, 0.38), rgba(2, 6, 23, 0.56)),
+    url('/pictures/Backgrounds/hero-wide.jpg') center / cover fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
 }
 
 /* Subtle animated float used on the hero accent cards. */

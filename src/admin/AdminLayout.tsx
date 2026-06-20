@@ -7,7 +7,7 @@ export function AdminLayout() {
 
   if (loading) {
     return (
-      <div className="grid min-h-screen place-items-center bg-slate-950 text-slate-300">
+      <div className="grid min-h-screen place-items-center bg-slate-950/55 text-slate-300">
         Loading…
       </div>
     )
@@ -16,7 +16,7 @@ export function AdminLayout() {
   // Gate: only the admin may enter.
   if (!user || !isAdmin) {
     return (
-      <div className="grid min-h-screen place-items-center bg-slate-950 px-6 text-center text-slate-200">
+      <div className="grid min-h-screen place-items-center bg-slate-950/55 px-6 text-center text-slate-200">
         <div className="max-w-sm">
           <div className="mb-3 text-4xl">🔒</div>
           <h1 className="mb-2 text-xl font-bold text-white">Admins only</h1>
@@ -35,7 +35,7 @@ export function AdminLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100">
+    <div className="flex min-h-screen bg-slate-950/45 text-slate-100">
       {/* Sidebar */}
       <aside className="hidden w-64 shrink-0 flex-col border-r border-white/10 bg-slate-900/60 lg:flex">
         <div className="flex items-center gap-2.5 px-5 py-4">

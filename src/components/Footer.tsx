@@ -4,7 +4,7 @@ import { useTranslation } from '../i18n/LanguageContext'
 export function Footer() {
   const { t } = useTranslation()
   return (
-    <footer id="footer" className="bg-slate-900 text-slate-300">
+    <footer id="footer" className="bg-slate-900/70 text-slate-300">
       <div className="mx-auto max-w-6xl px-5 py-14">
         <div className="flex flex-col items-start justify-between gap-8 sm:flex-row">
           <div className="max-w-xs">

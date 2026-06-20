@@ -170,7 +170,7 @@ export function HomeProductShowcase({ products }: HomeProductShowcaseProps) {
   ]
 
   return (
-    <section id="products" className="relative overflow-hidden bg-slate-950">
+    <section id="products" className="relative overflow-hidden bg-slate-950/45">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(34,211,238,0.22),transparent_28%),radial-gradient(circle_at_85%_25%,rgba(244,114,182,0.18),transparent_26%),radial-gradient(circle_at_50%_90%,rgba(250,204,21,0.14),transparent_30%)]" />
       <div className="relative mx-auto max-w-7xl px-5 py-16 sm:px-6 sm:py-20">
         <div className="mb-10 max-w-3xl">

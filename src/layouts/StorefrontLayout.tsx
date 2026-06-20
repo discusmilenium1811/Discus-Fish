@@ -39,7 +39,7 @@ export function StorefrontLayout() {
   const ctx: StorefrontContext = { products, addToCart: cart.add }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-slate-950/35 text-slate-100">
       <Navbar
         cartCount={cart.count}
         onCartClick={() => setCartOpen(true)}

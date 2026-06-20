@@ -26,7 +26,7 @@ export function Navbar({
   return (
     <>
       <header className="border-b border-white/10 bg-slate-950/60 backdrop-blur-lg">
-        <div className="mx-auto flex max-w-7xl items-center gap-6 px-5 py-5 sm:gap-8 sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-6 px-5 py-5 sm:gap-8 sm:px-6">
           <Link
             to="/"
             className="flex items-center"
@@ -47,6 +47,10 @@ export function Navbar({
               </div>
             </div>
           )}
+
+          <p className="min-w-[14rem] flex-1 bg-gradient-to-r from-orange-300 via-cyan-200 via-45% to-teal-300 bg-clip-text text-3xl font-black leading-tight text-transparent drop-shadow-[0_0_18px_rgba(34,211,238,0.22)] sm:text-5xl lg:text-6xl">
+            Bring nature into your home
+          </p>
         </div>
       </header>
 
