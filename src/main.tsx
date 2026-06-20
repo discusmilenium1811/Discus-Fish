@@ -8,20 +8,18 @@ import { AuthProvider } from './auth/AuthContext'
 import { AdminLayout } from './admin/AdminLayout'
 import { Dashboard } from './admin/pages/Dashboard'
 import { Products } from './admin/pages/Products'
-import {
-  CategoriesPage,
-  InventoryPage,
-  ReviewsPage,
-  OrdersPage,
-  PaymentsPage,
-  TrackingPage,
-  InvoicesPage,
-  ReturnsPage,
-  CouponsPage,
-  OffersPage,
-  GiftCardsPage,
-  ShippingPage,
-} from './admin/pages/sections'
+import { Categories } from './admin/pages/Categories'
+import { Inventory } from './admin/pages/Inventory'
+import { Reviews } from './admin/pages/Reviews'
+import { Orders } from './admin/pages/Orders'
+import { Payments } from './admin/pages/Payments'
+import { Tracking } from './admin/pages/Tracking'
+import { Invoices } from './admin/pages/Invoices'
+import { Returns } from './admin/pages/Returns'
+import { Coupons } from './admin/pages/Coupons'
+import { Offers } from './admin/pages/Offers'
+import { GiftCards } from './admin/pages/GiftCards'
+import { Shipping } from './admin/pages/Shipping'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -33,18 +31,18 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="products" element={<Products />} />
-              <Route path="categories" element={<CategoriesPage />} />
-              <Route path="inventory" element={<InventoryPage />} />
-              <Route path="reviews" element={<ReviewsPage />} />
-              <Route path="orders" element={<OrdersPage />} />
-              <Route path="payments" element={<PaymentsPage />} />
-              <Route path="tracking" element={<TrackingPage />} />
-              <Route path="invoices" element={<InvoicesPage />} />
-              <Route path="returns" element={<ReturnsPage />} />
-              <Route path="coupons" element={<CouponsPage />} />
-              <Route path="offers" element={<OffersPage />} />
-              <Route path="gift-cards" element={<GiftCardsPage />} />
-              <Route path="shipping" element={<ShippingPage />} />
+              <Route path="categories" element={<Categories />} />
+              <Route path="inventory" element={<Inventory />} />
+              <Route path="reviews" element={<Reviews />} />
+              <Route path="orders" element={<Orders />} />
+              <Route path="payments" element={<Payments />} />
+              <Route path="tracking" element={<Tracking />} />
+              <Route path="invoices" element={<Invoices />} />
+              <Route path="returns" element={<Returns />} />
+              <Route path="coupons" element={<Coupons />} />
+              <Route path="offers" element={<Offers />} />
+              <Route path="gift-cards" element={<GiftCards />} />
+              <Route path="shipping" element={<Shipping />} />
             </Route>
           </Routes>
         </BrowserRouter>
