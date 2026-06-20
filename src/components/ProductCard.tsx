@@ -25,11 +25,11 @@ export function ProductCard({ product, index, onAdd }: ProductCardProps) {
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-xl shadow-black/30 backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:border-cyan-400/40 hover:bg-white/10">
-      <div className="relative h-44 overflow-hidden">
+      <div className="relative h-52 overflow-hidden bg-slate-950">
         <img
           src={product.imageUrl ?? fallback}
           alt={product.name}
-          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+          className="h-full w-full object-contain p-2 transition duration-300 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 to-transparent" />
         {comingSoon && (
