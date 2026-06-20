@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useTranslation } from '../i18n/LanguageContext'
 
 export function Footer() {
@@ -39,9 +40,9 @@ export function Footer() {
               <h4 className="font-semibold text-white">{t('footer.support')}</h4>
               <ul className="mt-3 space-y-2 text-slate-400">
                 <li>
-                  <a href="#features" className="hover:text-teal-400">
+                  <Link to="/why-us" className="hover:text-teal-400">
                     {t('footer.whyUs')}
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <a

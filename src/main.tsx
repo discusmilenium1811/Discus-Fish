@@ -5,6 +5,7 @@ import './index.css'
 import { StorefrontLayout } from './layouts/StorefrontLayout'
 import { Home } from './pages/Home'
 import { CatalogPage } from './pages/Catalog'
+import { WhyUs } from './pages/WhyUs'
 import { LanguageProvider } from './i18n/LanguageContext'
 import { AuthProvider } from './auth/AuthContext'
 import { AdminLayout } from './admin/AdminLayout'
@@ -31,6 +32,7 @@ createRoot(document.getElementById('root')!).render(
           <Routes>
             <Route element={<StorefrontLayout />}>
               <Route path="/" element={<Home />} />
+              <Route path="/why-us" element={<WhyUs />} />
               <Route path="/Cataloge" element={<Navigate to="/Cataloge/Products" replace />} />
               <Route path="/Cataloge/Products" element={<CatalogPage tab="products" />} />
               <Route

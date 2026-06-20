@@ -67,9 +67,13 @@ export function Navbar({
             >
               {t('nav.catalog')}
             </button>
-            <a href="#features" className="transition hover:text-cyan-300">
+            <Link
+              to="/why-us"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="transition hover:text-cyan-300"
+            >
               {t('nav.whyUs')}
-            </a>
+            </Link>
             <a href="#footer" className="transition hover:text-cyan-300">
               {t('nav.contact')}
             </a>
