@@ -31,13 +31,6 @@ export function ProductCard({ product, index, onAdd }: ProductCardProps) {
     product.slug.toLowerCase().includes('probiotic') ||
     product.name.toLowerCase().includes('probiotic')
   const imagePadding = needsBreathingRoom ? 'p-9 sm:p-10' : 'p-3'
-  const needsLightProductPanel = product.slug.toLowerCase().startsWith('best-heart-flakes')
-  const imagePanelClass = needsLightProductPanel
-    ? 'bg-gradient-to-br from-slate-100 via-white to-cyan-100/80'
-    : ''
-  const imageEffects = needsLightProductPanel
-    ? 'drop-shadow-[0_18px_26px_rgba(15,23,42,0.35)]'
-    : 'drop-shadow-2xl'
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-xl shadow-black/30 backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:border-cyan-400/40 hover:bg-white/[0.08]">
@@ -45,12 +38,12 @@ export function ProductCard({ product, index, onAdd }: ProductCardProps) {
           same as behind the description) shows through. White-bg product photos
           have had their background removed to transparency; dark studio pouches
           blend into the tint on their own. */}
-      <div className={`relative aspect-square overflow-hidden ${imagePanelClass}`}>
+      <div className="relative aspect-square overflow-hidden">
         <img
           src={image}
           alt={product.name}
           loading="lazy"
-          className={`absolute inset-0 h-full w-full object-contain ${imagePadding} ${imageEffects} transition duration-300 group-hover:scale-[1.04] ${
+          className={`absolute inset-0 h-full w-full object-contain ${imagePadding} drop-shadow-2xl transition duration-300 group-hover:scale-[1.04] ${
             hasImage ? 'opacity-100' : 'opacity-25'
           }`}
         />
