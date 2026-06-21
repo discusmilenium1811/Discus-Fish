@@ -3,10 +3,24 @@ import { supabase } from './supabase'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 const NATURAL_HUMIN_IMAGE = '/pictures/products/natural-humin.png?v=natural-humin-bmp'
+const PRODUCT_IMAGE_OVERRIDES: Record<string, string> = {
+  'additive-1-probiotics': '/pictures/products/Probio/additive-1-probiotics.png',
+  'additive-d7-pro-breeding': '/pictures/products/Probio/additive-d7-pro-breeding.png',
+  'best-heart-flakes-pro-breed': '/pictures/products/Probio/imagediscus3.png',
+  'golden-color-booster': '/pictures/products/Probio/golden-color-booster.png',
+  'blue-color-booster': '/pictures/products/Probio/blue-color-booster.png',
+  'red-color-booster': '/pictures/products/Probio/red-color-booster.png',
+}
 
 function productImageUrl(slug: string, name: string, imageUrl?: string | null) {
+  const normalizedSlug = slug.toLowerCase()
+
+  if (PRODUCT_IMAGE_OVERRIDES[normalizedSlug]) {
+    return PRODUCT_IMAGE_OVERRIDES[normalizedSlug]
+  }
+
   if (
-    slug.toLowerCase() === 'natural-humin' ||
+    normalizedSlug === 'natural-humin' ||
     name.toLowerCase() === 'natural humin'
   ) {
     return NATURAL_HUMIN_IMAGE
