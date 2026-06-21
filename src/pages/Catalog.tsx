@@ -16,18 +16,18 @@ export function CatalogPage({ tab }: CatalogPageProps) {
   const list = tab === 'products' ? available : coming
 
   const tabBase =
-    'rounded-full px-4 py-2 text-sm font-semibold transition'
+    'rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:py-2 sm:text-sm'
   const active = 'bg-cyan-400 text-slate-900'
   const idle = 'border border-white/15 text-slate-300 hover:bg-white/10'
 
   return (
-    <section className="mx-auto max-w-6xl px-5 py-12">
-      <h1 className="text-3xl font-extrabold tracking-tight text-white">
+    <section className="mx-auto max-w-6xl px-4 py-10 sm:px-5 sm:py-12">
+      <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
         {t('catalog.title')}
       </h1>
 
       {/* Section switcher (each links to its own URL) */}
-      <div className="mt-6 flex flex-wrap gap-3">
+      <div className="mt-5 flex flex-wrap gap-2.5 sm:mt-6 sm:gap-3">
         <Link
           to="/Cataloge/Products"
           className={`${tabBase} ${tab === 'products' ? active : idle}`}
@@ -43,11 +43,11 @@ export function CatalogPage({ tab }: CatalogPageProps) {
       </div>
 
       {list.length === 0 ? (
-        <p className="mt-12 rounded-2xl border border-white/10 bg-white/5 px-6 py-16 text-center text-slate-400">
+        <p className="mt-10 rounded-2xl border border-white/10 bg-white/5 px-4 py-12 text-center text-sm text-slate-400 sm:mt-12 sm:px-6 sm:py-16 sm:text-base">
           {tab === 'products' ? t('catalog.emptyProducts') : t('catalog.emptyComing')}
         </p>
       ) : (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {list.map((product, i) => (
             <ProductCard key={product.id} product={product} index={i} onAdd={addToCart} />
           ))}

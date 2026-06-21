@@ -19,17 +19,17 @@ export function ProductGrid({ products, onAdd }: ProductGridProps) {
       />
       <div className="absolute inset-0 bg-slate-950/85" />
 
-      <div className="relative mx-auto max-w-6xl px-5 py-20">
-        <div className="mb-10 text-center">
-          <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+      <div className="relative mx-auto max-w-6xl px-4 py-14 sm:px-5 sm:py-20">
+        <div className="mb-8 text-center sm:mb-10">
+          <h2 className="text-2xl font-extrabold tracking-tight text-white sm:text-4xl">
             {t('products.title')}
           </h2>
-          <p className="mx-auto mt-3 max-w-xl text-slate-300">
+          <p className="mx-auto mt-2 max-w-xl text-sm text-slate-300 sm:mt-3 sm:text-base">
             {t('products.subtitle')}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {products.map((product, i) => (
             <ProductCard
               key={product.id}

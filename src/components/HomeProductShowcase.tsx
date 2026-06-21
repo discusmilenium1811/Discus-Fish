@@ -1,238 +1,216 @@
+import { Link } from 'react-router-dom'
 import type { Product } from '../types'
 import { formatPrice } from '../lib/format'
 
-interface ComingSoonItem {
-  title: string
-  image: string
-  description: string
-}
-
 interface HomeProductShowcaseProps {
   products: Product[]
+  onAdd: (product: Product) => void
 }
 
-const COMING_SOON_ITEMS: ComingSoonItem[] = [
-  {
-    title: 'Vitamin Shot',
-    image: '/pictures/New%20products%20Coming%20Soon/vitamin-shot.png',
-    description: 'A bright boost for daily vitality, color, and recovery.',
-  },
-  {
-    title: 'Anti Stress',
-    image: '/pictures/New%20products%20Coming%20Soon/anti-stress.png',
-    description: 'Gentle support for calmer fish during changes and transport.',
-  },
-  {
-    title: 'NaturePur Artemia',
-    image: '/pictures/New%20products%20Coming%20Soon/naturepur-artemia-adult.png',
-    description: 'Natural artemia nutrition for lively feeding and clean energy.',
-  },
-  {
-    title: 'FD Bloodworms XL',
-    image: '/pictures/New%20products%20Coming%20Soon/fd-bloodworms-xl.png',
-    description: 'A rich treat-style food made for bigger, showy appetites.',
-  },
-  {
-    title: 'Black Water Nitrate Remover',
-    image: '/pictures/New%20products%20Coming%20Soon/black-water-nitrate-remover.png',
-    description: 'Aquarium care with a natural black-water inspired finish.',
-  },
-  {
-    title: 'Firstbite Daphnia',
-    image: '/pictures/New%20products%20Coming%20Soon/firstbite-daphnia.png',
-    description: 'Tiny, clean first food for young fish and delicate feeders.',
-  },
-]
+// A small, curated set of hero products for the Home page, shown as large,
+// wide showcase blocks (discusfood.com style) instead of the full catalogue
+// grid. Each uses a clean, full-package studio photo (shot on black) so the
+// whole packaging is visible — not a tight crop. Live data from Supabase is
+// merged in by slug so price/description stay in sync; the fields here are the
+// offline fallback and the (better) image always wins.
+interface Featured {
+  slug: string
+  name: string
+  description: string
+  image: string
+  weightGrams?: number
+  priceCents: number
+  currency: string
+}
 
-const PRODUCT_FALLBACKS: Product[] = [
+const FEATURED: Featured[] = [
   {
-    id: 'home-grand-champion',
     slug: 'grand-champion-granulate',
     name: 'Grand Champion Granulate',
-    description: 'A colorful daily granulate for strong growth and show-ready condition.',
-    priceCents: 1599,
-    currency: 'usd',
-    imageUrl: '/pictures/products/grand-champion-granulate.png',
-    stock: 10,
-    isActive: true,
+    description:
+      'Balanced staple granulate for discus with carefully selected vitamins, trace elements and animal/plant energy sources — formulated to grow champions. Sizes 80 g / 230 g.',
+    image: '/pictures/products/clean/grand-champion-granulate.jpg',
+    priceCents: 1000,
+    currency: 'eur',
   },
   {
-    id: 'home-for-discus-daily',
     slug: 'for-discus-daily-granulate',
     name: 'For Discus Daily Granulate',
-    description: 'Balanced everyday food for vibrant discus and steady appetite.',
-    priceCents: 1299,
-    currency: 'usd',
-    imageUrl: '/pictures/products/for-discus-daily-granulate.png',
-    stock: 10,
-    isActive: true,
+    description:
+      'Balanced complete granulate especially for discus and all granulate-loving fish, with vitamins, minerals, trace elements and probiotics for everyday nutrition. Sizes 80 g / 230 g / 2800 g.',
+    image: '/pictures/products/clean/for-discus-daily-granulate.jpg',
+    priceCents: 1000,
+    currency: 'eur',
   },
   {
-    id: 'home-red-color-booster',
-    slug: 'red-color-booster',
-    name: 'Red Color Booster',
-    description: 'Designed to bring out warmer reds with a compact feeding routine.',
-    priceCents: 1199,
-    currency: 'usd',
-    imageUrl: '/pictures/products/red-color-booster.png',
-    stock: 10,
-    isActive: true,
+    slug: 'turkey-heart-soft-granulate',
+    name: 'Turkey Heart Soft Granulate',
+    description:
+      'Soft granulate staple for keepers who want animal protein without beef — only the digestible parts of turkey protein, with far lower water load than frozen turkey heart. Sizes 80 g / 230 g.',
+    image: '/pictures/products/clean/turkey-heart-soft-granulate.jpg',
+    priceCents: 1000,
+    currency: 'eur',
   },
   {
-    id: 'home-blue-color-booster',
-    slug: 'blue-color-booster',
-    name: 'Blue Color Booster',
-    description: 'A vivid formula for cooler tones, sparkle, and active display.',
-    priceCents: 1199,
-    currency: 'usd',
-    imageUrl: '/pictures/products/blue-color-booster.png',
-    stock: 10,
-    isActive: true,
+    slug: 'betta-special-all-colors-soft',
+    name: 'Betta Special All Colors Soft',
+    description:
+      'Soft granulate tuned to labyrinth fish (bettas). The soft texture protects the delicate mouth; omega-3 fish oil and digestible krill support vitality and intense colour. 50 g.',
+    image: '/pictures/products/clean/betta-special-all-colors-soft.jpg',
+    weightGrams: 50,
+    priceCents: 1000,
+    currency: 'eur',
   },
   {
-    id: 'home-artemia-soft',
-    slug: 'artemia-50-soft-granulate',
-    name: 'Artemia 50 Soft Granulate',
-    description: 'Soft, protein-rich bites with artemia for eager feeding.',
-    priceCents: 1399,
-    currency: 'usd',
-    imageUrl: '/pictures/products/artemia-50-soft-granulate.png',
-    stock: 10,
-    isActive: true,
-  },
-  {
-    id: 'home-beef-heart',
-    slug: 'beef-heart-soft-granulate',
-    name: 'Beef Heart Soft Granulate',
-    description: 'A hearty soft granulate for growth phases and full-bodied fish.',
-    priceCents: 1499,
-    currency: 'usd',
-    imageUrl: '/pictures/products/beef-heart-soft-granulate.png',
-    stock: 10,
-    isActive: true,
+    slug: 'cichlids-xl-granulate-1',
+    name: 'Cichlids XL Premium Granulate · Comp. 1',
+    description:
+      'High-quality complete granulate for cichlids and large fish — plant-forward with 13.5% Chlorella, fennel and a little zeolite for healthy digestion. Ideal paired with Composition 2. 500 g.',
+    image: '/pictures/products/clean/cichlids-xl-granulate-1.jpg',
+    weightGrams: 500,
+    priceCents: 1000,
+    currency: 'eur',
   },
 ]
 
-const CARD_STYLES = [
-  {
-    shell: 'from-cyan-400/30 via-slate-900 to-rose-500/25',
-    glow: 'bg-cyan-300/20',
-    price: 'text-cyan-200',
-  },
-  {
-    shell: 'from-amber-300/30 via-slate-900 to-teal-400/25',
-    glow: 'bg-amber-300/20',
-    price: 'text-amber-200',
-  },
-  {
-    shell: 'from-fuchsia-400/25 via-slate-900 to-sky-400/25',
-    glow: 'bg-fuchsia-300/20',
-    price: 'text-fuchsia-200',
-  },
-  {
-    shell: 'from-lime-300/25 via-slate-900 to-orange-400/25',
-    glow: 'bg-lime-300/20',
-    price: 'text-lime-200',
-  },
+// One accent palette per block, cycled by position, to keep the long list of
+// dark blocks lively without overwhelming the photography.
+const ACCENTS = [
+  { tag: 'text-rose-200', price: 'text-rose-200', button: 'bg-rose-400 hover:bg-rose-300', glow: 'bg-rose-400/25', border: 'from-rose-500/30 via-white/10 to-amber-400/20' },
+  { tag: 'text-cyan-200', price: 'text-cyan-200', button: 'bg-cyan-400 hover:bg-cyan-300', glow: 'bg-cyan-400/25', border: 'from-cyan-500/30 via-white/10 to-teal-400/20' },
+  { tag: 'text-amber-200', price: 'text-amber-200', button: 'bg-amber-300 hover:bg-amber-200', glow: 'bg-amber-300/25', border: 'from-amber-400/30 via-white/10 to-lime-400/20' },
+  { tag: 'text-fuchsia-200', price: 'text-fuchsia-200', button: 'bg-fuchsia-400 hover:bg-fuchsia-300', glow: 'bg-fuchsia-400/25', border: 'from-fuchsia-500/30 via-white/10 to-sky-400/20' },
+  { tag: 'text-sky-200', price: 'text-sky-200', button: 'bg-sky-400 hover:bg-sky-300', glow: 'bg-sky-400/25', border: 'from-sky-500/30 via-white/10 to-emerald-400/20' },
 ]
 
-function shortText(text: string): string {
-  if (text.length <= 92) return text
-  return `${text.slice(0, 89).trim()}...`
+// Build the cart payload from the curated entry, overlaid with any live fields.
+function toProduct(item: Featured, live?: Product): Product {
+  return {
+    id: live?.id ?? `home-${item.slug}`,
+    slug: item.slug,
+    name: live?.name ?? item.name,
+    description: live?.description ?? item.description,
+    priceCents: live?.priceCents ?? item.priceCents,
+    currency: live?.currency ?? item.currency,
+    imageUrl: item.image,
+    weightGrams: live?.weightGrams ?? item.weightGrams ?? null,
+    stock: live?.stock ?? 100,
+    isActive: true,
+  }
 }
 
-export function HomeProductShowcase({ products }: HomeProductShowcaseProps) {
-  const liveProducts = products
-    .filter((product) => !product.isComingSoon && product.imageUrl)
-    .slice(0, 6)
-
-  const featuredProducts = [
-    ...liveProducts,
-    ...PRODUCT_FALLBACKS.filter(
-      (fallback) => !liveProducts.some((product) => product.slug === fallback.slug),
-    ),
-  ].slice(0, 6)
-  const cards = [
-    ...featuredProducts.map((product) => ({
-      kind: 'product' as const,
-      title: product.name,
-      image: product.imageUrl ?? '',
-      description: shortText(product.description),
-      footer: formatPrice(product.priceCents, product.currency),
-    })),
-    ...COMING_SOON_ITEMS.map((item) => ({
-      kind: 'coming' as const,
-      title: item.title,
-      image: item.image,
-      description: item.description,
-      footer: 'Coming soon',
-    })),
-  ]
-
+export function HomeProductShowcase({ products, onAdd }: HomeProductShowcaseProps) {
   return (
-    <section id="products" className="relative overflow-hidden bg-slate-950/45">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(34,211,238,0.22),transparent_28%),radial-gradient(circle_at_85%_25%,rgba(244,114,182,0.18),transparent_26%),radial-gradient(circle_at_50%_90%,rgba(250,204,21,0.14),transparent_30%)]" />
-      <div className="relative mx-auto max-w-7xl px-5 py-16 sm:px-6 sm:py-20">
-        <div className="mb-10 max-w-3xl">
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-cyan-200">
-            Colorful nutrition
+    <section id="products" className="relative overflow-hidden bg-slate-950/60">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(34,211,238,0.16),transparent_30%),radial-gradient(circle_at_85%_30%,rgba(244,114,182,0.12),transparent_28%),radial-gradient(circle_at_50%_95%,rgba(250,204,21,0.08),transparent_32%)]" />
+
+      <div className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-24">
+        {/* Section intro */}
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-200 sm:text-sm">
+            Premium aquarium nutrition
           </p>
           <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
-            Food and care that look as good as they feed.
+            Food that grows champions.
           </h2>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
-            A brighter Home selection with real product photos, quick notes, and a clean
-            price or launch status at a glance.
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-lg">
+            A handful of our favourites — soft granulates developed for discus and demanding
+            aquarium fish. Explore the full range in the catalogue.
           </p>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {cards.map((card, index) => {
-            const style = CARD_STYLES[index % CARD_STYLES.length]
+        {/* Large alternating showcase blocks */}
+        <div className="mt-12 space-y-6 sm:mt-16 sm:space-y-8">
+          {FEATURED.map((item, index) => {
+            const accent = ACCENTS[index % ACCENTS.length]
+            const live = products.find((p) => p.slug === item.slug)
+            const product = toProduct(item, live)
+            const imageRight = index % 2 === 1
 
             return (
               <article
-                key={`${card.kind}-${card.title}`}
-                className={`group relative min-h-[27rem] overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${style.shell} p-px shadow-2xl shadow-black/30 transition duration-300 hover:-translate-y-1 hover:border-white/25`}
+                key={item.slug}
+                className={`group relative overflow-hidden rounded-3xl bg-gradient-to-br ${accent.border} p-px shadow-2xl shadow-black/50 transition duration-300`}
               >
-                <div className="relative flex h-full flex-col overflow-hidden rounded-2xl bg-slate-950/82 p-4">
+                <div className="grid items-stretch gap-0 overflow-hidden rounded-3xl bg-slate-950/85 sm:grid-cols-2">
+                  {/* Image panel — package shot floats on near-black so the whole
+                      packaging is visible, never cropped. */}
                   <div
-                    className={`absolute -right-16 -top-16 h-36 w-36 rounded-full ${style.glow} blur-3xl`}
-                  />
-                  <div className="relative z-10 min-h-14">
-                    <h3 className="text-lg font-extrabold leading-tight text-white">
-                      {card.title}
-                    </h3>
-                  </div>
-
-                  <div className="relative z-10 my-4 grid aspect-[4/3] place-items-center overflow-hidden rounded-xl bg-white/[0.07]">
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20" />
+                    className={`relative flex items-center justify-center bg-gradient-to-br from-slate-900 to-black p-4 sm:p-8 ${
+                      imageRight ? 'sm:order-2' : ''
+                    }`}
+                  >
+                    <div
+                      className={`pointer-events-none absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full ${accent.glow} blur-3xl`}
+                    />
                     <img
-                      src={card.image}
-                      alt={card.title}
+                      src={item.image}
+                      alt={item.name}
                       loading="lazy"
-                      className="relative z-10 h-full w-full object-contain p-4 drop-shadow-2xl transition duration-300 group-hover:scale-105"
+                      className="relative z-10 max-h-[22rem] w-auto max-w-full object-contain drop-shadow-2xl transition duration-500 group-hover:scale-[1.03] sm:max-h-[26rem]"
                     />
                   </div>
 
-                  <p className="relative z-10 min-h-16 text-sm leading-relaxed text-slate-300">
-                    {card.description}
-                  </p>
+                  {/* Text panel */}
+                  <div
+                    className={`flex flex-col justify-center p-6 sm:p-10 ${
+                      imageRight ? 'sm:order-1' : ''
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span
+                        className={`text-xs font-bold uppercase tracking-[0.18em] ${accent.tag}`}
+                      >
+                        Featured
+                      </span>
+                      {product.weightGrams ? (
+                        <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-white">
+                          {product.weightGrams} g
+                        </span>
+                      ) : null}
+                    </div>
 
-                  <div className="relative z-10 mt-auto flex items-center justify-between border-t border-white/10 pt-4">
-                    <span
-                      className={`text-lg font-extrabold ${
-                        card.kind === 'coming' ? 'text-rose-200' : style.price
-                      }`}
-                    >
-                      {card.footer}
-                    </span>
-                    <span className="h-2.5 w-2.5 rounded-full bg-white/70 shadow-[0_0_18px_rgba(255,255,255,0.7)]" />
+                    <h3 className="mt-3 text-2xl font-extrabold leading-tight text-white sm:text-3xl">
+                      {product.name}
+                    </h3>
+                    <p className="mt-4 text-sm leading-relaxed text-slate-300 sm:text-base">
+                      {product.description}
+                    </p>
+
+                    <div className="mt-6 flex flex-wrap items-center gap-4 sm:mt-8">
+                      <span className={`text-2xl font-extrabold sm:text-3xl ${accent.price}`}>
+                        {formatPrice(product.priceCents, product.currency)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => onAdd(product)}
+                        className={`rounded-full px-5 py-2.5 text-sm font-bold text-slate-900 shadow-lg shadow-black/30 transition sm:px-6 sm:py-3 ${accent.button}`}
+                      >
+                        Add to cart
+                      </button>
+                      <Link
+                        to="/Cataloge/Products"
+                        className="rounded-full border border-white/25 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/10 sm:px-6 sm:py-3"
+                      >
+                        View details
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </article>
             )
           })}
+        </div>
+
+        {/* Catalogue link */}
+        <div className="mt-12 text-center sm:mt-16">
+          <Link
+            to="/Cataloge/Products"
+            className="inline-flex items-center gap-2 rounded-full bg-cyan-400 px-7 py-3 text-sm font-bold text-slate-900 shadow-lg shadow-cyan-500/30 transition hover:bg-cyan-300"
+          >
+            Browse the full catalogue
+            <span aria-hidden="true">→</span>
+          </Link>
         </div>
       </div>
     </section>
