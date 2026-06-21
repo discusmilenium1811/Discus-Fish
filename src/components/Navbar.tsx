@@ -58,7 +58,7 @@ export function Navbar({
             <button
             type="button"
             onClick={onCartClick}
-            className="relative inline-flex h-9 items-center gap-2 rounded-full bg-cyan-400 px-3 text-xs font-bold text-slate-900 transition hover:bg-cyan-300 sm:h-12 sm:px-5 sm:text-base"
+            className="relative inline-flex h-9 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
           >
             <span>{t('nav.cart')}</span>
             {cartCount > 0 && (
@@ -90,7 +90,7 @@ export function Navbar({
                 <button
                   type="button"
                   onClick={onAdminClick}
-                  className="inline-flex h-9 items-center rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 text-xs font-bold text-cyan-200 transition hover:bg-cyan-400/20 sm:h-12 sm:px-5 sm:text-base"
+                  className="inline-flex h-9 items-center rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
                 >
                   {t('auth.adminPanel')}
                 </button>
@@ -108,7 +108,7 @@ export function Navbar({
               <button
                 type="button"
                 onClick={() => onAuthClick('signup')}
-                className="inline-flex h-9 items-center rounded-full bg-white px-3 text-xs font-bold text-slate-900 transition hover:bg-slate-200 sm:h-12 sm:px-5 sm:text-base"
+                className="inline-flex h-9 items-center rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
               >
                 {t('auth.signup')}
               </button>
