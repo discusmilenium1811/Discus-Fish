@@ -2,6 +2,18 @@ import type { Product } from '../types'
 import { supabase } from './supabase'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+const NATURAL_HUMIN_IMAGE = '/pictures/products/natural-humin.png?v=natural-humin-bmp'
+
+function productImageUrl(slug: string, name: string, imageUrl?: string | null) {
+  if (
+    slug.toLowerCase() === 'natural-humin' ||
+    name.toLowerCase() === 'natural humin'
+  ) {
+    return NATURAL_HUMIN_IMAGE
+  }
+
+  return imageUrl
+}
 
 /** Fetch the active product catalog from Supabase (public, RLS-protected). */
 export async function fetchProducts(): Promise<Product[]> {
@@ -24,7 +36,7 @@ export async function fetchProducts(): Promise<Product[]> {
     details: p.details,
     priceCents: p.price_cents,
     currency: p.currency,
-    imageUrl: p.image_url,
+    imageUrl: productImageUrl(p.slug, p.name, p.image_url),
     weightGrams: p.weight_grams,
     stock: p.stock,
     isActive: p.is_active,
