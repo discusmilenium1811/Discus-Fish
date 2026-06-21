@@ -3,6 +3,8 @@ import { supabase } from './supabase'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 const NATURAL_HUMIN_IMAGE = '/pictures/products/natural-humin.png?v=natural-humin-bmp'
+const COMING_SOON_IMAGE =
+  '/pictures/New%20products%20Coming%20Soon/yearbook-2026-cover.png'
 const PRODUCT_IMAGE_OVERRIDES: Record<string, string> = {
   'additive-1-probiotics': '/pictures/products/Probio/additive-1-probiotics.png',
   'additive-d7-pro-breeding': '/pictures/products/Probio/additive-d7-pro-breeding.png',
@@ -13,8 +15,17 @@ const PRODUCT_IMAGE_OVERRIDES: Record<string, string> = {
   'red-color-booster': '/pictures/products/Probio/red-color-booster.png',
 }
 
-function productImageUrl(slug: string, name: string, imageUrl?: string | null) {
+function productImageUrl(
+  slug: string,
+  name: string,
+  isComingSoon: boolean,
+  imageUrl?: string | null,
+) {
   const normalizedSlug = slug.toLowerCase()
+
+  if (isComingSoon) {
+    return COMING_SOON_IMAGE
+  }
 
   if (PRODUCT_IMAGE_OVERRIDES[normalizedSlug]) {
     return PRODUCT_IMAGE_OVERRIDES[normalizedSlug]
@@ -51,7 +62,7 @@ export async function fetchProducts(): Promise<Product[]> {
     details: p.details,
     priceCents: p.price_cents,
     currency: p.currency,
-    imageUrl: productImageUrl(p.slug, p.name, p.image_url),
+    imageUrl: productImageUrl(p.slug, p.name, p.is_coming_soon, p.image_url),
     weightGrams: p.weight_grams,
     stock: p.stock,
     isActive: p.is_active,
