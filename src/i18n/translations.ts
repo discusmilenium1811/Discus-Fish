@@ -28,6 +28,12 @@ export const translations = {
     'catalog.tabComing': 'New Products — Coming Soon',
     'catalog.emptyProducts': 'No products available yet — check the “Coming Soon” tab!',
     'catalog.emptyComing': 'No upcoming products right now.',
+    'search.heading': 'Find your fish food',
+    'search.placeholder': 'Search products…',
+    'search.button': 'Search',
+    'search.noResults': 'No products found.',
+    'search.viewAll': 'View all results',
+    'search.comingSoon': 'Coming soon',
 
     // Language drawer
     'lang.title': 'Choose language',
@@ -180,6 +186,12 @@ export const translations = {
     'catalog.tabComing': 'Νέα Προϊόντα — Σύντομα',
     'catalog.emptyProducts': 'Δεν υπάρχουν διαθέσιμα προϊόντα ακόμη — δείτε την καρτέλα «Σύντομα»!',
     'catalog.emptyComing': 'Δεν υπάρχουν επερχόμενα προϊόντα αυτή τη στιγμή.',
+    'search.heading': 'Βρείτε την τροφή σας',
+    'search.placeholder': 'Αναζήτηση προϊόντων…',
+    'search.button': 'Αναζήτηση',
+    'search.noResults': 'Δεν βρέθηκαν προϊόντα.',
+    'search.viewAll': 'Δείτε όλα τα αποτελέσματα',
+    'search.comingSoon': 'Σύντομα',
 
     // Language drawer
     'lang.title': 'Επιλέξτε γλώσσα',
@@ -333,6 +345,12 @@ export const translations = {
     'catalog.tabComing': 'Нови продукти — Очаквайте скоро',
     'catalog.emptyProducts': 'Все още няма налични продукти — вижте раздел „Очаквайте скоро“!',
     'catalog.emptyComing': 'В момента няма предстоящи продукти.',
+    'search.heading': 'Намерете вашата храна',
+    'search.placeholder': 'Търсене на продукти…',
+    'search.button': 'Търсене',
+    'search.noResults': 'Няма намерени продукти.',
+    'search.viewAll': 'Вижте всички резултати',
+    'search.comingSoon': 'Очаквайте скоро',
 
     // Language drawer
     'lang.title': 'Изберете език',
