@@ -29,6 +29,8 @@ import {
   tbodyCls,
   trCls,
 } from '../components/ui'
+import { PageSearch } from '../components/PageSearch'
+import { useQuery, matchQuery } from '../lib/pageQuery'
 
 type DType = 'percent' | 'fixed'
 interface Coupon {
@@ -54,6 +56,7 @@ export function Coupons() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editing, setEditing] = useState<Coupon | 'new' | null>(null)
+  const [q, setQ] = useQuery()
 
   async function refresh() {
     setLoading(true)
@@ -80,6 +83,8 @@ export function Coupons() {
     }
   }
 
+  const shown = rows.filter((c) => matchQuery(q, [c.code, c.description]))
+
   return (
     <div>
       <PageHeader
@@ -87,9 +92,12 @@ export function Coupons() {
         title="Coupons"
         description="Discount codes customers enter at checkout."
         action={
-          <button className={btnPrimary} onClick={() => setEditing('new')}>
-            + Add coupon
-          </button>
+          <div className="flex items-center gap-2">
+            <PageSearch q={q} setQ={setQ} placeholder="Search coupons…" />
+            <button className={btnPrimary} onClick={() => setEditing('new')}>
+              + Add coupon
+            </button>
+          </div>
         }
       />
       <ErrorNote msg={error} />
@@ -109,10 +117,10 @@ export function Coupons() {
           <tbody className={tbodyCls}>
             {loading ? (
               <TableState colSpan={7} text="Loading…" />
-            ) : rows.length === 0 ? (
-              <TableState colSpan={7} text="No coupons yet." />
+            ) : shown.length === 0 ? (
+              <TableState colSpan={7} text={q ? 'No matching coupons.' : 'No coupons yet.'} />
             ) : (
-              rows.map((c) => (
+              shown.map((c) => (
                 <tr key={c.id} className={trCls}>
                   <td className="px-4 py-3">
                     <div className="font-mono font-semibold text-white">{c.code}</div>

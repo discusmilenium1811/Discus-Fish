@@ -15,6 +15,8 @@ import {
   tbodyCls,
   trCls,
 } from '../components/ui'
+import { PageSearch } from '../components/PageSearch'
+import { useQuery, matchQuery } from '../lib/pageQuery'
 
 interface Row {
   id: string
@@ -30,6 +32,7 @@ export function Inventory() {
   const [error, setError] = useState('')
   const [drafts, setDrafts] = useState<Record<string, string>>({})
   const [savingId, setSavingId] = useState('')
+  const [q, setQ] = useQuery()
 
   async function refresh() {
     setLoading(true)
@@ -78,6 +81,7 @@ export function Inventory() {
   }
 
   const lowCount = rows.filter((r) => r.stock <= r.low_stock_threshold).length
+  const shown = rows.filter((r) => matchQuery(q, [r.name, r.sku]))
 
   return (
     <div>
@@ -85,6 +89,7 @@ export function Inventory() {
         icon="📦"
         title="Stock & Inventory"
         description="Track and adjust stock levels. Changes are logged to the movement history."
+        action={<PageSearch q={q} setQ={setQ} placeholder="Search inventory…" />}
       />
       {lowCount > 0 && (
         <p className="mb-4 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-300">
@@ -106,10 +111,10 @@ export function Inventory() {
           <tbody className={tbodyCls}>
             {loading ? (
               <TableState colSpan={5} text="Loading…" />
-            ) : rows.length === 0 ? (
-              <TableState colSpan={5} text="No products yet." />
+            ) : shown.length === 0 ? (
+              <TableState colSpan={5} text={q ? 'No matching products.' : 'No products yet.'} />
             ) : (
-              rows.map((r) => {
+              shown.map((r) => {
                 const low = r.stock <= r.low_stock_threshold
                 const out = r.stock <= 0
                 return (

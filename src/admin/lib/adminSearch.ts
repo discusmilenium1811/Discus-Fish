@@ -8,6 +8,11 @@ export type AdminCat =
   | 'shipments'
   | 'invoices'
   | 'returns'
+  | 'products'
+  | 'inventory'
+  | 'coupons'
+  | 'offers'
+  | 'giftcards'
 
 export interface CatMeta {
   key: AdminCat
@@ -18,12 +23,17 @@ export interface CatMeta {
 
 /** The categories exposed as filters (order matters for display). */
 export const SEARCH_CATS: CatMeta[] = [
+  { key: 'products', label: 'Products', icon: '🐟', to: '/admin/products' },
+  { key: 'inventory', label: 'Stock & Inventory', icon: '📦', to: '/admin/inventory' },
   { key: 'reviews', label: 'Comments & Reviews', icon: '💬', to: '/admin/reviews' },
   { key: 'orders', label: 'Manage Orders', icon: '🧾', to: '/admin/orders' },
   { key: 'payments', label: 'Order Payments', icon: '💳', to: '/admin/payments' },
   { key: 'shipments', label: 'Track Orders', icon: '🚚', to: '/admin/tracking' },
   { key: 'invoices', label: 'Invoices', icon: '📄', to: '/admin/invoices' },
   { key: 'returns', label: 'Returns', icon: '↩️', to: '/admin/returns' },
+  { key: 'coupons', label: 'Coupons', icon: '🏷️', to: '/admin/coupons' },
+  { key: 'offers', label: 'Offers', icon: '✨', to: '/admin/offers' },
+  { key: 'giftcards', label: 'Gift Cards', icon: '🎁', to: '/admin/gift-cards' },
 ]
 
 const CAT_BY_KEY = Object.fromEntries(SEARCH_CATS.map((c) => [c.key, c])) as Record<
@@ -77,6 +87,24 @@ type ShipmentRow = AttachedRow & {
 }
 type InvoiceRow = AttachedRow & { invoice_number: string }
 type ReturnRow = AttachedRow & { reason: string | null }
+
+type ProductRow = {
+  id: string
+  name: string
+  slug: string | null
+  sku: string | null
+  stock: number | null
+  low_stock_threshold: number | null
+}
+type CouponRow = { id: string; code: string; description: string | null }
+type OfferRow = { id: string; title: string; description: string | null }
+type GiftCardRow = {
+  id: string
+  code: string
+  recipient_email: string | null
+  note: string | null
+  status: string | null
+}
 
 const orderName = (o?: Partial<OrderLite> | null): string =>
   o?.billing_company ||
@@ -308,6 +336,117 @@ export async function searchAdmin(
           to: linkTo('returns', term),
         }))
         groups.set('returns', hits)
+      })(),
+    )
+  }
+
+  // Products + Stock & Inventory share the products table.
+  if (active.has('products') || active.has('inventory')) {
+    tasks.push(
+      (async () => {
+        const { data } = await supabase
+          .from('products')
+          .select('id, name, slug, sku, stock, low_stock_threshold')
+          .or(`name.ilike.${like},slug.ilike.${like},sku.ilike.${like}`)
+          .limit(perCat)
+        const products = (data ?? []) as unknown as ProductRow[]
+        if (active.has('products')) {
+          groups.set(
+            'products',
+            products.map((p): SearchHit => ({
+              cat: 'products',
+              id: p.id,
+              title: p.name,
+              subtitle: p.sku ? `SKU ${p.sku}` : (p.slug ?? '—'),
+              to: linkTo('products', term),
+            })),
+          )
+        }
+        if (active.has('inventory')) {
+          groups.set(
+            'inventory',
+            products.map((p): SearchHit => {
+              const stock = p.stock ?? 0
+              const low =
+                p.low_stock_threshold != null && stock <= p.low_stock_threshold
+              return {
+                cat: 'inventory',
+                id: p.id,
+                title: p.name,
+                subtitle: `Stock: ${stock}${low ? ' · low' : ''}`,
+                to: linkTo('inventory', term),
+              }
+            }),
+          )
+        }
+      })(),
+    )
+  }
+
+  if (active.has('coupons')) {
+    tasks.push(
+      (async () => {
+        const { data } = await supabase
+          .from('coupons')
+          .select('id, code, description')
+          .or(`code.ilike.${like},description.ilike.${like}`)
+          .limit(perCat)
+        groups.set(
+          'coupons',
+          ((data ?? []) as unknown as CouponRow[]).map((c): SearchHit => ({
+            cat: 'coupons',
+            id: c.id,
+            title: `Coupon ${c.code}`,
+            subtitle: c.description || '—',
+            to: linkTo('coupons', term),
+          })),
+        )
+      })(),
+    )
+  }
+
+  if (active.has('offers')) {
+    tasks.push(
+      (async () => {
+        const { data } = await supabase
+          .from('offers')
+          .select('id, title, description')
+          .or(`title.ilike.${like},description.ilike.${like}`)
+          .limit(perCat)
+        groups.set(
+          'offers',
+          ((data ?? []) as unknown as OfferRow[]).map((o): SearchHit => ({
+            cat: 'offers',
+            id: o.id,
+            title: `Offer · ${o.title}`,
+            subtitle: o.description || '—',
+            to: linkTo('offers', term),
+          })),
+        )
+      })(),
+    )
+  }
+
+  if (active.has('giftcards')) {
+    tasks.push(
+      (async () => {
+        const { data } = await supabase
+          .from('gift_cards')
+          .select('id, code, recipient_email, note, status')
+          .or(
+            `code.ilike.${like},recipient_email.ilike.${like},note.ilike.${like}`,
+          )
+          .limit(perCat)
+        groups.set(
+          'giftcards',
+          ((data ?? []) as unknown as GiftCardRow[]).map((g): SearchHit => ({
+            cat: 'giftcards',
+            id: g.id,
+            title: `Gift card ${g.code}`,
+            subtitle: g.recipient_email || g.note || g.status || '—',
+            to: linkTo('giftcards', term),
+          })),
+        )
       })(),
     )
   }

@@ -29,6 +29,8 @@ import {
   tbodyCls,
   trCls,
 } from '../components/ui'
+import { PageSearch } from '../components/PageSearch'
+import { useQuery, matchQuery } from '../lib/pageQuery'
 
 type GCStatus = 'active' | 'redeemed' | 'disabled' | 'expired'
 interface GiftCard {
@@ -52,6 +54,7 @@ export function GiftCards() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editing, setEditing] = useState<GiftCard | 'new' | null>(null)
+  const [q, setQ] = useQuery()
 
   async function refresh() {
     setLoading(true)
@@ -78,6 +81,10 @@ export function GiftCards() {
     }
   }
 
+  const shown = rows.filter((g) =>
+    matchQuery(q, [g.code, g.recipient_email, g.note, g.status]),
+  )
+
   return (
     <div>
       <PageHeader
@@ -85,9 +92,12 @@ export function GiftCards() {
         title="Gift Cards"
         description="Issue and manage store gift cards."
         action={
-          <button className={btnPrimary} onClick={() => setEditing('new')}>
-            + Issue gift card
-          </button>
+          <div className="flex items-center gap-2">
+            <PageSearch q={q} setQ={setQ} placeholder="Search gift cards…" />
+            <button className={btnPrimary} onClick={() => setEditing('new')}>
+              + Issue gift card
+            </button>
+          </div>
         }
       />
       <ErrorNote msg={error} />
@@ -106,10 +116,10 @@ export function GiftCards() {
           <tbody className={tbodyCls}>
             {loading ? (
               <TableState colSpan={6} text="Loading…" />
-            ) : rows.length === 0 ? (
-              <TableState colSpan={6} text="No gift cards yet." />
+            ) : shown.length === 0 ? (
+              <TableState colSpan={6} text={q ? 'No matching gift cards.' : 'No gift cards yet.'} />
             ) : (
-              rows.map((g) => (
+              shown.map((g) => (
                 <tr key={g.id} className={trCls}>
                   <td className="px-4 py-3 font-mono font-semibold text-white">{g.code}</td>
                   <td className="px-4 py-3 text-slate-200">

@@ -29,6 +29,8 @@ import {
   tbodyCls,
   trCls,
 } from '../components/ui'
+import { PageSearch } from '../components/PageSearch'
+import { useQuery, matchQuery } from '../lib/pageQuery'
 
 type DType = 'percent' | 'fixed'
 interface Offer {
@@ -56,6 +58,7 @@ export function Offers() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editing, setEditing] = useState<Offer | 'new' | null>(null)
+  const [q, setQ] = useQuery()
 
   async function refresh() {
     setLoading(true)
@@ -96,6 +99,8 @@ export function Offers() {
     }
   }
 
+  const shown = rows.filter((o) => matchQuery(q, [o.title, o.description]))
+
   return (
     <div>
       <PageHeader
@@ -103,9 +108,12 @@ export function Offers() {
         title="Offers"
         description="Automatic promotions on products or categories."
         action={
-          <button className={btnPrimary} onClick={() => setEditing('new')}>
-            + Add offer
-          </button>
+          <div className="flex items-center gap-2">
+            <PageSearch q={q} setQ={setQ} placeholder="Search offers…" />
+            <button className={btnPrimary} onClick={() => setEditing('new')}>
+              + Add offer
+            </button>
+          </div>
         }
       />
       <ErrorNote msg={error} />
@@ -124,10 +132,10 @@ export function Offers() {
           <tbody className={tbodyCls}>
             {loading ? (
               <TableState colSpan={6} text="Loading…" />
-            ) : rows.length === 0 ? (
-              <TableState colSpan={6} text="No offers yet." />
+            ) : shown.length === 0 ? (
+              <TableState colSpan={6} text={q ? 'No matching offers.' : 'No offers yet.'} />
             ) : (
-              rows.map((o) => (
+              shown.map((o) => (
                 <tr key={o.id} className={trCls}>
                   <td className="px-4 py-3">
                     <div className="font-semibold text-white">{o.title}</div>

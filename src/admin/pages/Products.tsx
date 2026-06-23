@@ -14,6 +14,8 @@ import {
   eurosToCents,
   centsToEuros,
 } from '../lib/adminProducts'
+import { PageSearch } from '../components/PageSearch'
+import { useQuery, matchQuery } from '../lib/pageQuery'
 
 export function Products() {
   const [products, setProducts] = useState<AdminProduct[]>([])
@@ -21,6 +23,7 @@ export function Products() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editing, setEditing] = useState<AdminProduct | 'new' | null>(null)
+  const [q, setQ] = useQuery()
 
   const categoryName = useMemo(() => {
     const map = new Map(categories.map((c) => [c.id, c.name]))
@@ -66,6 +69,8 @@ export function Products() {
     }
   }
 
+  const shown = products.filter((p) => matchQuery(q, [p.name, p.sku, p.slug]))
+
   return (
     <div>
       <div className="mb-6 flex items-start justify-between gap-4">
@@ -77,13 +82,16 @@ export function Products() {
             Create and edit the fish foods and preparations you sell.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setEditing('new')}
-          className="shrink-0 rounded-full bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-300"
-        >
-          + Add product
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <PageSearch q={q} setQ={setQ} placeholder="Search products…" />
+          <button
+            type="button"
+            onClick={() => setEditing('new')}
+            className="rounded-full bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-300"
+          >
+            + Add product
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -111,14 +119,16 @@ export function Products() {
                   Loading…
                 </td>
               </tr>
-            ) : products.length === 0 ? (
+            ) : shown.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
-                  No products yet. Click “Add product” to create your first one.
+                  {q
+                    ? 'No products match your search.'
+                    : 'No products yet. Click “Add product” to create your first one.'}
                 </td>
               </tr>
             ) : (
-              products.map((p) => (
+              shown.map((p) => (
                 <tr key={p.id} className="hover:bg-white/5">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
