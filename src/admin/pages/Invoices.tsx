@@ -18,6 +18,8 @@ import {
   tbodyCls,
   trCls,
 } from '../components/ui'
+import { PageSearch } from '../components/PageSearch'
+import { useQuery, matchQuery } from '../lib/pageQuery'
 
 interface Invoice {
   id: string
@@ -41,6 +43,7 @@ export function Invoices() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [adding, setAdding] = useState(false)
+  const [q, setQ] = useQuery()
 
   async function refresh() {
     setLoading(true)
@@ -75,6 +78,10 @@ export function Invoices() {
     }
   }
 
+  const shown = rows.filter((i) =>
+    matchQuery(q, [i.invoice_number, i.orders?.order_number]),
+  )
+
   return (
     <div>
       <PageHeader
@@ -82,9 +89,12 @@ export function Invoices() {
         title="Invoices"
         description="Auto-numbered invoices (INV-1001…). Generate one for an order and attach a PDF link."
         action={
-          <button className={btnPrimary} onClick={() => setAdding(true)} disabled={orders.length === 0}>
-            + New invoice
-          </button>
+          <div className="flex items-center gap-2">
+            <PageSearch q={q} setQ={setQ} placeholder="Search invoices…" />
+            <button className={btnPrimary} onClick={() => setAdding(true)} disabled={orders.length === 0}>
+              + New invoice
+            </button>
+          </div>
         }
       />
       <ErrorNote msg={error} />
@@ -102,10 +112,10 @@ export function Invoices() {
           <tbody className={tbodyCls}>
             {loading ? (
               <TableState colSpan={5} text="Loading…" />
-            ) : rows.length === 0 ? (
-              <TableState colSpan={5} text="No invoices yet." />
+            ) : shown.length === 0 ? (
+              <TableState colSpan={5} text={q ? 'No matching invoices.' : 'No invoices yet.'} />
             ) : (
-              rows.map((i) => (
+              shown.map((i) => (
                 <tr key={i.id} className={trCls}>
                   <td className="px-4 py-3 font-semibold text-white">{i.invoice_number}</td>
                   <td className="px-4 py-3 text-slate-300">{i.orders?.order_number ?? '—'}</td>

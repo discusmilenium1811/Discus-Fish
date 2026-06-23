@@ -13,6 +13,8 @@ import {
   tbodyCls,
   trCls,
 } from '../components/ui'
+import { PageSearch } from '../components/PageSearch'
+import { useQuery, matchQuery } from '../lib/pageQuery'
 
 interface Review {
   id: string
@@ -32,6 +34,7 @@ export function Reviews() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
+  const [q, setQ] = useQuery()
 
   async function refresh() {
     setLoading(true)
@@ -71,7 +74,11 @@ export function Reviews() {
     }
   }
 
-  const shown = filter === 'all' ? rows : rows.filter((r) => r.status === filter)
+  const shown = rows.filter(
+    (r) =>
+      (filter === 'all' || r.status === filter) &&
+      matchQuery(q, [r.comment, r.author_name, r.products?.name]),
+  )
 
   return (
     <div>
@@ -79,6 +86,7 @@ export function Reviews() {
         icon="💬"
         title="Comments & Reviews"
         description="Moderate customer comments left after their orders. Only approved reviews show in the store."
+        action={<PageSearch q={q} setQ={setQ} placeholder="Search comments…" />}
       />
       <ErrorNote msg={error} />
       <div className="mb-4 flex gap-2">

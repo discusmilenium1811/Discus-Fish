@@ -14,6 +14,8 @@ import {
   tbodyCls,
   trCls,
 } from '../components/ui'
+import { PageSearch } from '../components/PageSearch'
+import { useQuery, matchQuery } from '../lib/pageQuery'
 
 type PayStatus = 'pending' | 'succeeded' | 'failed' | 'refunded' | 'partially_refunded'
 
@@ -38,6 +40,7 @@ export function Payments() {
   const [rows, setRows] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [q, setQ] = useQuery()
 
   async function refresh() {
     setLoading(true)
@@ -69,12 +72,22 @@ export function Payments() {
     }
   }
 
+  const shown = rows.filter((p) =>
+    matchQuery(q, [
+      p.orders?.order_number,
+      p.stripe_payment_intent_id,
+      p.method,
+      p.status,
+    ]),
+  )
+
   return (
     <div>
       <PageHeader
         icon="💳"
         title="Order Payments"
         description="Stripe payment records. These are created automatically by the payment webhook; you can reconcile status here."
+        action={<PageSearch q={q} setQ={setQ} placeholder="Search payments…" />}
       />
       <ErrorNote msg={error} />
       <Card>
@@ -92,10 +105,10 @@ export function Payments() {
           <tbody className={tbodyCls}>
             {loading ? (
               <TableState colSpan={6} text="Loading…" />
-            ) : rows.length === 0 ? (
-              <TableState colSpan={6} text="No payments yet." />
+            ) : shown.length === 0 ? (
+              <TableState colSpan={6} text={q ? 'No matching payments.' : 'No payments yet.'} />
             ) : (
-              rows.map((p) => (
+              shown.map((p) => (
                 <tr key={p.id} className={trCls}>
                   <td className="px-4 py-3 text-slate-300">{fmtDate(p.created_at)}</td>
                   <td className="px-4 py-3 text-slate-300">

@@ -23,6 +23,7 @@ import { Coupons } from './admin/pages/Coupons'
 import { Offers } from './admin/pages/Offers'
 import { GiftCards } from './admin/pages/GiftCards'
 import { Shipping } from './admin/pages/Shipping'
+import { SearchResults } from './admin/pages/SearchResults'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -42,6 +43,7 @@ createRoot(document.getElementById('root')!).render(
             </Route>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Dashboard />} />
+              <Route path="search" element={<SearchResults />} />
               <Route path="products" element={<Products />} />
               <Route path="categories" element={<Categories />} />
               <Route path="inventory" element={<Inventory />} />

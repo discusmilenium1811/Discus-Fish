@@ -19,6 +19,8 @@ import {
   tbodyCls,
   trCls,
 } from '../components/ui'
+import { PageSearch } from '../components/PageSearch'
+import { useQuery, matchQuery } from '../lib/pageQuery'
 
 type Fulfillment = 'unfulfilled' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned'
 
@@ -67,6 +69,7 @@ export function Orders() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [open, setOpen] = useState<Order | null>(null)
+  const [q, setQ] = useQuery()
 
   async function refresh() {
     setLoading(true)
@@ -88,12 +91,23 @@ export function Orders() {
     refresh()
   }, [])
 
+  const shown = rows.filter((o) =>
+    matchQuery(q, [
+      o.order_number,
+      o.email,
+      o.ship_name,
+      o.status,
+      o.fulfillment_status,
+    ]),
+  )
+
   return (
     <div>
       <PageHeader
         icon="🧾"
         title="Manage Orders"
         description="View and process customer orders. Orders appear here once checkout is live."
+        action={<PageSearch q={q} setQ={setQ} placeholder="Search orders…" />}
       />
       <ErrorNote msg={error} />
       <Card>
@@ -111,10 +125,10 @@ export function Orders() {
           <tbody className={tbodyCls}>
             {loading ? (
               <TableState colSpan={6} text="Loading…" />
-            ) : rows.length === 0 ? (
-              <TableState colSpan={6} text="No orders yet." />
+            ) : shown.length === 0 ? (
+              <TableState colSpan={6} text={q ? 'No matching orders.' : 'No orders yet.'} />
             ) : (
-              rows.map((o) => (
+              shown.map((o) => (
                 <tr key={o.id} className={trCls}>
                   <td className="px-4 py-3">
                     <div className="font-semibold text-white">{o.order_number ?? o.id.slice(0, 8)}</div>

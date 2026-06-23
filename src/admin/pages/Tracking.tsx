@@ -18,6 +18,8 @@ import {
   tbodyCls,
   trCls,
 } from '../components/ui'
+import { PageSearch } from '../components/PageSearch'
+import { useQuery, matchQuery } from '../lib/pageQuery'
 
 interface Shipment {
   id: string
@@ -40,6 +42,8 @@ export function Tracking() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [adding, setAdding] = useState(false)
+
+  const [q, setQ] = useQuery()
 
   async function refresh() {
     setLoading(true)
@@ -83,6 +87,10 @@ export function Tracking() {
     }
   }
 
+  const shown = rows.filter((s) =>
+    matchQuery(q, [s.orders?.order_number, s.carrier, s.tracking_number]),
+  )
+
   return (
     <div>
       <PageHeader
@@ -90,9 +98,12 @@ export function Tracking() {
         title="Track Orders"
         description="Add carriers and tracking numbers, and mark orders shipped or delivered."
         action={
-          <button className={btnPrimary} onClick={() => setAdding(true)} disabled={orders.length === 0}>
-            + Add shipment
-          </button>
+          <div className="flex items-center gap-2">
+            <PageSearch q={q} setQ={setQ} placeholder="Search shipments…" />
+            <button className={btnPrimary} onClick={() => setAdding(true)} disabled={orders.length === 0}>
+              + Add shipment
+            </button>
+          </div>
         }
       />
       {orders.length === 0 && !loading && (
@@ -115,10 +126,10 @@ export function Tracking() {
           <tbody className={tbodyCls}>
             {loading ? (
               <TableState colSpan={5} text="Loading…" />
-            ) : rows.length === 0 ? (
-              <TableState colSpan={5} text="No shipments yet." />
+            ) : shown.length === 0 ? (
+              <TableState colSpan={5} text={q ? 'No matching shipments.' : 'No shipments yet.'} />
             ) : (
-              rows.map((s) => (
+              shown.map((s) => (
                 <tr key={s.id} className={trCls}>
                   <td className="px-4 py-3 font-semibold text-white">
                     {s.orders?.order_number ?? s.order_id.slice(0, 8)}

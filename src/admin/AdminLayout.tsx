@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { adminNav } from './adminNav'
+import { GlobalSearch } from './components/GlobalSearch'
 
 export function AdminLayout() {
   const { user, profile, loading, isAdmin, signOut } = useAuth()
@@ -115,6 +116,12 @@ export function AdminLayout() {
             Store →
           </Link>
         </div>
+
+        {/* Search header */}
+        <div className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/70 px-5 py-3 backdrop-blur lg:px-8">
+          <GlobalSearch />
+        </div>
+
         <div className="mx-auto max-w-6xl px-5 py-6 lg:px-8 lg:py-8">
           <Outlet />
         </div>

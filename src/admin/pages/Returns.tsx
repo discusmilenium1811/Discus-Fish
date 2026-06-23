@@ -19,6 +19,8 @@ import {
   tbodyCls,
   trCls,
 } from '../components/ui'
+import { PageSearch } from '../components/PageSearch'
+import { useQuery, matchQuery } from '../lib/pageQuery'
 
 type ReturnStatus = 'requested' | 'approved' | 'rejected' | 'received' | 'refunded'
 
@@ -42,6 +44,7 @@ export function Returns() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [open, setOpen] = useState<Return | null>(null)
+  const [q, setQ] = useQuery()
 
   async function refresh() {
     setLoading(true)
@@ -63,12 +66,17 @@ export function Returns() {
     refresh()
   }, [])
 
+  const shown = rows.filter((r) =>
+    matchQuery(q, [r.orders?.order_number, r.reason, r.status]),
+  )
+
   return (
     <div>
       <PageHeader
         icon="↩️"
         title="Returns"
         description="Review return requests, approve or reject them, and record refunds."
+        action={<PageSearch q={q} setQ={setQ} placeholder="Search returns…" />}
       />
       <ErrorNote msg={error} />
       <Card>
@@ -86,10 +94,10 @@ export function Returns() {
           <tbody className={tbodyCls}>
             {loading ? (
               <TableState colSpan={6} text="Loading…" />
-            ) : rows.length === 0 ? (
-              <TableState colSpan={6} text="No return requests yet." />
+            ) : shown.length === 0 ? (
+              <TableState colSpan={6} text={q ? 'No matching returns.' : 'No return requests yet.'} />
             ) : (
-              rows.map((r) => (
+              shown.map((r) => (
                 <tr key={r.id} className={trCls}>
                   <td className="px-4 py-3 font-semibold text-white">
                     {r.orders?.order_number ?? r.order_id.slice(0, 8)}
