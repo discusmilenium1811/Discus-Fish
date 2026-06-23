@@ -20,6 +20,16 @@ export const translations = {
     'nav.contact': 'Contact',
     'nav.cart': 'Cart',
     'nav.language': 'Language',
+    'nav.home': 'Home',
+    'nav.welcome': 'Welcome',
+    'nav.tagline': 'Bring nature into your home',
+    'home.eyebrow': 'Premium aquarium nutrition',
+    'home.heading': 'Food that grows champions.',
+    'home.subtitle':
+      'A handful of our favourites — soft granulates developed for discus and demanding aquarium fish. Explore the full range in the catalogue.',
+    'home.featured': 'Featured',
+    'home.viewDetails': 'View details',
+    'home.browseAll': 'Browse the full catalogue',
 
     // Catalog drawer
     'catalog.title': 'Catalog',
@@ -178,6 +188,16 @@ export const translations = {
     'nav.contact': 'Επικοινωνία',
     'nav.cart': 'Καλάθι',
     'nav.language': 'Γλώσσα',
+    'nav.home': 'Αρχική',
+    'nav.welcome': 'Καλώς ήρθατε',
+    'nav.tagline': 'Φέρτε τη φύση στο σπίτι σας',
+    'home.eyebrow': 'Premium διατροφή ενυδρείου',
+    'home.heading': 'Τροφή που μεγαλώνει πρωταθλητές.',
+    'home.subtitle':
+      'Μερικά από τα αγαπημένα μας — μαλακά granulate σχεδιασμένα για discus και απαιτητικά ψάρια ενυδρείου. Εξερευνήστε όλη τη γκάμα στον κατάλογο.',
+    'home.featured': 'Προτεινόμενο',
+    'home.viewDetails': 'Δείτε λεπτομέρειες',
+    'home.browseAll': 'Δείτε όλον τον κατάλογο',
 
     // Catalog drawer
     'catalog.title': 'Κατάλογος',
@@ -337,6 +357,16 @@ export const translations = {
     'nav.contact': 'Контакт',
     'nav.cart': 'Количка',
     'nav.language': 'Език',
+    'nav.home': 'Начало',
+    'nav.welcome': 'Добре дошли',
+    'nav.tagline': 'Внесете природата у дома',
+    'home.eyebrow': 'Премиум аквариумно хранене',
+    'home.heading': 'Храна, която отглежда шампиони.',
+    'home.subtitle':
+      'Няколко от нашите любими — меки гранули, разработени за дискус и взискателни аквариумни риби. Разгледайте цялата гама в каталога.',
+    'home.featured': 'Препоръчано',
+    'home.viewDetails': 'Вижте детайли',
+    'home.browseAll': 'Разгледайте целия каталог',
 
     // Catalog drawer
     'catalog.title': 'Каталог',

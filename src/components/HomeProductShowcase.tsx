@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { Product } from '../types'
 import { formatPrice } from '../lib/format'
+import { useTranslation } from '../i18n/LanguageContext'
 
 interface HomeProductShowcaseProps {
   products: Product[]
@@ -100,6 +101,7 @@ function toProduct(item: Featured, live?: Product): Product {
 }
 
 export function HomeProductShowcase({ products, onAdd }: HomeProductShowcaseProps) {
+  const { t } = useTranslation()
   return (
     <section id="products" className="relative overflow-hidden bg-slate-950/60">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(34,211,238,0.16),transparent_30%),radial-gradient(circle_at_85%_30%,rgba(244,114,182,0.12),transparent_28%),radial-gradient(circle_at_50%_95%,rgba(250,204,21,0.08),transparent_32%)]" />
@@ -108,14 +110,13 @@ export function HomeProductShowcase({ products, onAdd }: HomeProductShowcaseProp
         {/* Section intro */}
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-200 sm:text-sm">
-            Premium aquarium nutrition
+            {t('home.eyebrow')}
           </p>
           <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
-            Food that grows champions.
+            {t('home.heading')}
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-lg">
-            A handful of our favourites — soft granulates developed for discus and demanding
-            aquarium fish. Explore the full range in the catalogue.
+            {t('home.subtitle')}
           </p>
         </div>
 
@@ -161,7 +162,7 @@ export function HomeProductShowcase({ products, onAdd }: HomeProductShowcaseProp
                       <span
                         className={`text-xs font-bold uppercase tracking-[0.18em] ${accent.tag}`}
                       >
-                        Featured
+                        {t('home.featured')}
                       </span>
                       {product.weightGrams ? (
                         <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-white">
@@ -186,13 +187,13 @@ export function HomeProductShowcase({ products, onAdd }: HomeProductShowcaseProp
                         onClick={() => onAdd(product)}
                         className={`rounded-full px-5 py-2.5 text-sm font-bold text-slate-900 shadow-lg shadow-black/30 transition sm:px-6 sm:py-3 ${accent.button}`}
                       >
-                        Add to cart
+                        {t('product.addToCart')}
                       </button>
                       <Link
                         to="/Cataloge/Products"
                         className="rounded-full border border-white/25 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/10 sm:px-6 sm:py-3"
                       >
-                        View details
+                        {t('home.viewDetails')}
                       </Link>
                     </div>
                   </div>
@@ -208,7 +209,7 @@ export function HomeProductShowcase({ products, onAdd }: HomeProductShowcaseProp
             to="/Cataloge/Products"
             className="inline-flex items-center gap-2 rounded-full bg-cyan-400 px-7 py-3 text-sm font-bold text-slate-900 shadow-lg shadow-cyan-500/30 transition hover:bg-cyan-300"
           >
-            Browse the full catalogue
+            {t('home.browseAll')}
             <span aria-hidden="true">→</span>
           </Link>
         </div>

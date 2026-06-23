@@ -43,7 +43,7 @@ export function Navbar({
 
             {accountName && (
               <div className="min-w-0 text-left">
-                <div className="text-xs font-semibold text-slate-400 sm:text-base">Welcome</div>
+                <div className="text-xs font-semibold text-slate-400 sm:text-base">{t('nav.welcome')}</div>
                 <div className="max-w-28 truncate text-base font-extrabold text-white sm:max-w-36 sm:text-2xl">
                   {accountName}
                 </div>
@@ -51,7 +51,7 @@ export function Navbar({
             )}
 
             <p className="min-w-[11rem] flex-1 bg-gradient-to-r from-orange-300 via-cyan-200 via-45% to-teal-300 bg-clip-text text-2xl font-black leading-tight text-transparent drop-shadow-[0_0_18px_rgba(34,211,238,0.22)] sm:min-w-[14rem] sm:text-5xl lg:text-6xl">
-              Bring nature into your home
+              {t('nav.tagline')}
             </p>
           </div>
 
@@ -134,7 +134,7 @@ export function Navbar({
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               className="transition hover:text-cyan-300 focus:outline-none"
             >
-              Home
+              {t('nav.home')}
             </Link>
             <button
               type="button"
