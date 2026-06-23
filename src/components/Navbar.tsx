@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from '../i18n/LanguageContext'
 import { useAuth } from '../auth/AuthContext'
+import type { AuthMode } from './AuthModal'
 
 interface NavbarProps {
   cartCount: number
   onCartClick: () => void
   onLanguageClick: () => void
   onCatalogClick: () => void
-  onAuthClick: (mode: 'login' | 'signup') => void
+  onAuthClick: (mode: AuthMode) => void
   onAdminClick: () => void
 }
 
@@ -79,6 +80,13 @@ export function Navbar({
 
           {user ? (
             <div className="flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap sm:gap-3.5">
+              <button
+                type="button"
+                onClick={() => onAuthClick('changePassword')}
+                className="inline-flex h-9 items-center rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
+              >
+                {t('auth.changePassword')}
+              </button>
               <button
                 type="button"
                 onClick={() => signOut()}

@@ -4,7 +4,7 @@ import { Navbar } from '../components/Navbar'
 import { Footer } from '../components/Footer'
 import { CartDrawer } from '../components/CartDrawer'
 import { LanguageDrawer } from '../components/LanguageDrawer'
-import { AuthModal } from '../components/AuthModal'
+import { AuthModal, type AuthMode } from '../components/AuthModal'
 import { useCart } from '../hooks/useCart'
 import { fetchProducts } from '../lib/api'
 import { sampleProducts } from '../data/sampleProducts'
@@ -23,7 +23,7 @@ export function StorefrontLayout() {
   const [cartOpen, setCartOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
+  const [authMode, setAuthMode] = useState<AuthMode>('login')
 
   // Load the live catalog; fall back to sample data if the API isn't up yet.
   useEffect(() => {

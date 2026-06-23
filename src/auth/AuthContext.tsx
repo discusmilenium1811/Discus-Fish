@@ -19,6 +19,12 @@ interface AuthContextValue {
     password: string
   }) => Promise<void>
   signIn: (args: { email: string; password: string }) => Promise<void>
+  resetPassword: (args: { email: string }) => Promise<void>
+  changePassword: (args: {
+    email?: string
+    currentPassword: string
+    newPassword: string
+  }) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -89,6 +95,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
   }
 
+  async function resetPassword({ email }: { email: string }) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    })
+    if (error) throw error
+  }
+
+  async function changePassword({
+    email: accountEmail,
+    currentPassword,
+    newPassword,
+  }: {
+    email?: string
+    currentPassword: string
+    newPassword: string
+  }) {
+    const email = accountEmail?.trim() || user?.email
+    if (!email) throw new Error('You must be logged in to change your password.')
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password: currentPassword,
+    })
+    if (signInError) throw signInError
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) throw error
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
     setUser(null)
@@ -102,6 +137,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAdmin: profile?.role === 'admin',
     signUp,
     signIn,
+    resetPassword,
+    changePassword,
     signOut,
   }
 
