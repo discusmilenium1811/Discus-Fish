@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import type { CartItem } from '../hooks/useCart'
 import { formatPrice } from '../lib/format'
-import { createCheckout } from '../lib/api'
+import { createCheckout, type CheckoutCustomer } from '../lib/api'
+import { useAuth } from '../auth/AuthContext'
 import { useTranslation } from '../i18n/LanguageContext'
 
 const ITEM_FALLBACK = '/pictures/discus-closeup.webp'
@@ -26,6 +27,7 @@ export function CartDrawer({
   onClear,
 }: CartDrawerProps) {
   const { t } = useTranslation()
+  const { user, profile } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -33,8 +35,31 @@ export function CartDrawer({
     setLoading(true)
     setError(null)
     try {
+      // Attach the logged-in customer, plus company billing for business accounts.
+      let customer: CheckoutCustomer | undefined
+      if (user) {
+        customer = { userId: user.id, email: user.email ?? undefined }
+        if (profile?.account_type === 'business' && profile.company_name) {
+          customer.billing = {
+            company: profile.company_name,
+            vatNumber: profile.vat_number ?? '',
+            registrationNumber: profile.registration_number ?? undefined,
+            contactName: profile.contact_name ?? undefined,
+            phone: profile.phone ?? undefined,
+            email: profile.billing_email ?? profile.email ?? undefined,
+            address1: profile.address_line1 ?? undefined,
+            address2: profile.address_line2 ?? undefined,
+            city: profile.city ?? undefined,
+            state: profile.state ?? undefined,
+            postalCode: profile.postal_code ?? undefined,
+            country: profile.country ?? undefined,
+          }
+        }
+      }
+
       const { url } = await createCheckout(
         items.map((i) => ({ productId: i.product.id, quantity: i.quantity })),
+        customer,
       )
       window.location.href = url
     } catch {

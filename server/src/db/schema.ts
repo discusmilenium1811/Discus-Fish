@@ -46,6 +46,20 @@ export const orders = pgTable('orders', {
   amountTotalCents: integer('amount_total_cents').notNull(),
   currency: text('currency').notNull().default('usd'),
   status: text('status').notNull().default('pending'), // pending | paid | failed
+  userId: uuid('user_id'),
+  // Company / billing snapshot for invoices (business accounts).
+  billingCompany: text('billing_company'),
+  billingVatNumber: text('billing_vat_number'),
+  billingRegistrationNumber: text('billing_registration_number'),
+  billingContactName: text('billing_contact_name'),
+  billingPhone: text('billing_phone'),
+  billingEmail: text('billing_email'),
+  billingAddress1: text('billing_address1'),
+  billingAddress2: text('billing_address2'),
+  billingCity: text('billing_city'),
+  billingState: text('billing_state'),
+  billingPostalCode: text('billing_postal_code'),
+  billingCountry: text('billing_country'),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

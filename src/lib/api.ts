@@ -75,14 +75,36 @@ export interface CheckoutItem {
   quantity: number
 }
 
+export interface CheckoutBilling {
+  company: string
+  vatNumber: string
+  registrationNumber?: string
+  contactName?: string
+  phone?: string
+  email?: string
+  address1?: string
+  address2?: string
+  city?: string
+  state?: string
+  postalCode?: string
+  country?: string
+}
+
+export interface CheckoutCustomer {
+  userId?: string
+  email?: string
+  billing?: CheckoutBilling
+}
+
 /** Create a Stripe Checkout session and return its redirect URL. */
 export async function createCheckout(
   items: CheckoutItem[],
+  customer?: CheckoutCustomer,
 ): Promise<{ id: string; url: string }> {
   const res = await fetch(`${API_URL}/api/checkout`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ items }),
+    body: JSON.stringify({ items, ...customer }),
   })
   if (!res.ok) throw new Error(`Checkout failed (${res.status})`)
   return res.json()

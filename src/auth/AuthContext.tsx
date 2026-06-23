@@ -6,7 +6,11 @@ import {
   type ReactNode,
 } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
-import { supabase, type Profile } from '../lib/supabase'
+import {
+  supabase,
+  type BusinessDetails,
+  type Profile,
+} from '../lib/supabase'
 
 interface AuthContextValue {
   user: User | null
@@ -17,6 +21,7 @@ interface AuthContextValue {
     username: string
     email: string
     password: string
+    business?: BusinessDetails
   }) => Promise<void>
   signIn: (args: { email: string; password: string }) => Promise<void>
   resetPassword: (args: { email: string }) => Promise<void>
@@ -33,7 +38,9 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 async function loadProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, username, email, role')
+    .select(
+      'id, username, email, role, account_type, company_name, vat_number, registration_number, contact_name, phone, billing_email, address_line1, address_line2, city, state, postal_code, country',
+    )
     .eq('id', userId)
     .single()
   if (error) return null
@@ -71,15 +78,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     username,
     email,
     password,
+    business,
   }: {
     username: string
     email: string
     password: string
+    business?: BusinessDetails
   }) {
+    const data: Record<string, string> = {
+      username,
+      account_type: business ? 'business' : 'personal',
+    }
+
+    if (business) {
+      data.company_name = business.companyName
+      data.vat_number = business.vatNumber
+      data.contact_name = business.contactName
+      data.phone = business.phone
+      data.address_line1 = business.addressLine1
+      data.city = business.city
+      data.postal_code = business.postalCode
+      data.country = business.country
+      if (business.registrationNumber)
+        data.registration_number = business.registrationNumber
+      if (business.billingEmail) data.billing_email = business.billingEmail
+      if (business.addressLine2) data.address_line2 = business.addressLine2
+      if (business.state) data.state = business.state
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { username } },
+      options: { data },
     })
     if (error) throw error
   }

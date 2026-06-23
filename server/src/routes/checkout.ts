@@ -8,6 +8,21 @@ import { env } from '../env.js'
 
 export const checkoutRouter = Router()
 
+const billingInput = z.object({
+  company: z.string().trim().min(1).max(200),
+  vatNumber: z.string().trim().min(1).max(64),
+  registrationNumber: z.string().trim().max(64).optional().default(''),
+  contactName: z.string().trim().max(200).optional().default(''),
+  phone: z.string().trim().max(64).optional().default(''),
+  email: z.string().trim().email().max(200).optional().or(z.literal('')),
+  address1: z.string().trim().max(200).optional().default(''),
+  address2: z.string().trim().max(200).optional().default(''),
+  city: z.string().trim().max(120).optional().default(''),
+  state: z.string().trim().max(120).optional().default(''),
+  postalCode: z.string().trim().max(32).optional().default(''),
+  country: z.string().trim().max(120).optional().default(''),
+})
+
 const checkoutInput = z.object({
   items: z
     .array(
@@ -17,6 +32,10 @@ const checkoutInput = z.object({
       }),
     )
     .min(1),
+  // Optional: logged-in customer + business billing details for invoicing.
+  userId: z.string().uuid().optional(),
+  email: z.string().trim().email().max(200).optional(),
+  billing: billingInput.optional(),
 })
 
 // --- Public: create a Stripe Checkout session (guest checkout) ---
@@ -26,7 +45,7 @@ checkoutRouter.post('/', async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: z.flattenError(parsed.error) })
   }
-  const { items } = parsed.data
+  const { items, userId, email, billing } = parsed.data
 
   const ids = items.map((i) => i.productId)
   const rows = await db
@@ -62,17 +81,40 @@ checkoutRouter.post('/', async (req, res) => {
     })
   }
 
+  // Carry the customer + billing snapshot through to the webhook via metadata.
+  const metadata: Record<string, string> = {
+    cart: JSON.stringify(items.map((i) => ({ id: i.productId, q: i.quantity }))),
+  }
+  if (userId) metadata.userId = userId
+  if (billing) metadata.billing = JSON.stringify(billing)
+
+  const customerEmail = email || billing?.email || undefined
+
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     line_items: lineItems,
     success_url: `${env.CLIENT_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${env.CLIENT_URL}/cart`,
-    // Compact cart snapshot for the webhook to build the order from.
-    metadata: {
-      cart: JSON.stringify(
-        items.map((i) => ({ id: i.productId, q: i.quantity })),
-      ),
-    },
+    ...(customerEmail ? { customer_email: customerEmail } : {}),
+    billing_address_collection: 'required',
+    // Generate a Stripe invoice with the company's tax details on it.
+    ...(billing
+      ? {
+          invoice_creation: {
+            enabled: true,
+            invoice_data: {
+              custom_fields: [
+                { name: 'Company', value: billing.company.slice(0, 30) },
+                { name: 'VAT / Tax ID', value: billing.vatNumber.slice(0, 30) },
+              ],
+              footer: billing.registrationNumber
+                ? `Company registration: ${billing.registrationNumber}`
+                : undefined,
+            },
+          },
+        }
+      : {}),
+    metadata,
   })
 
   res.json({ id: session.id, url: session.url })

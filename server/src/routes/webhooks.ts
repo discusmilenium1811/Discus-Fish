@@ -43,6 +43,17 @@ async function recordOrder(session: Stripe.Checkout.Session) {
     cart = []
   }
 
+  // Optional business billing snapshot stored at checkout time.
+  let billing: Record<string, string> | null = null
+  try {
+    billing = session.metadata?.billing
+      ? JSON.parse(session.metadata.billing)
+      : null
+  } catch {
+    billing = null
+  }
+  const userId = session.metadata?.userId ?? null
+
   const ids = cart.map((c) => c.id)
   const productRows = ids.length
     ? await db.select().from(products).where(inArray(products.id, ids))
@@ -62,6 +73,19 @@ async function recordOrder(session: Stripe.Checkout.Session) {
         amountTotalCents: session.amount_total ?? 0,
         currency: session.currency ?? 'usd',
         status: 'paid',
+        userId,
+        billingCompany: billing?.company ?? null,
+        billingVatNumber: billing?.vatNumber ?? null,
+        billingRegistrationNumber: billing?.registrationNumber || null,
+        billingContactName: billing?.contactName || null,
+        billingPhone: billing?.phone || null,
+        billingEmail: billing?.email || null,
+        billingAddress1: billing?.address1 || null,
+        billingAddress2: billing?.address2 || null,
+        billingCity: billing?.city || null,
+        billingState: billing?.state || null,
+        billingPostalCode: billing?.postalCode || null,
+        billingCountry: billing?.country || null,
       })
       .onConflictDoNothing({ target: orders.stripeSessionId })
       .returning()

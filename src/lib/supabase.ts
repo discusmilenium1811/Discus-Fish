@@ -22,9 +22,41 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 export type UserRole = 'user' | 'admin'
 
+export type AccountType = 'personal' | 'business'
+
 export interface Profile {
   id: string
   username: string | null
   email: string | null
   role: UserRole
+  account_type: AccountType
+  // Business / invoicing details (null for personal accounts)
+  company_name: string | null
+  vat_number: string | null
+  registration_number: string | null
+  contact_name: string | null
+  phone: string | null
+  billing_email: string | null
+  address_line1: string | null
+  address_line2: string | null
+  city: string | null
+  state: string | null
+  postal_code: string | null
+  country: string | null
+}
+
+/** Company / invoicing fields collected when creating a business account. */
+export interface BusinessDetails {
+  companyName: string
+  vatNumber: string
+  registrationNumber?: string
+  contactName: string
+  phone: string
+  billingEmail?: string
+  addressLine1: string
+  addressLine2?: string
+  city: string
+  state?: string
+  postalCode: string
+  country: string
 }
