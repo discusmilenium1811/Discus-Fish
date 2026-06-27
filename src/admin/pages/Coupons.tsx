@@ -92,7 +92,7 @@ export function Coupons() {
         title="Coupons"
         description="Discount codes customers enter at checkout."
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <PageSearch q={q} setQ={setQ} placeholder="Search coupons…" />
             <button className={btnPrimary} onClick={() => setEditing('new')}>
               + Add coupon

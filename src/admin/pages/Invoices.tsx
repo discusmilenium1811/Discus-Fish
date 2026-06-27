@@ -115,7 +115,7 @@ export function Invoices() {
         title="Invoices"
         description="Auto-numbered invoices (INV-1001…). Generate one for an order and attach a PDF link."
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <PageSearch q={q} setQ={setQ} placeholder="Search invoices…" />
             <button className={btnPrimary} onClick={() => setAdding(true)} disabled={orders.length === 0}>
               + New invoice

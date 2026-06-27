@@ -92,7 +92,7 @@ export function GiftCards() {
         title="Gift Cards"
         description="Issue and manage store gift cards."
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <PageSearch q={q} setQ={setQ} placeholder="Search gift cards…" />
             <button className={btnPrimary} onClick={() => setEditing('new')}>
               + Issue gift card

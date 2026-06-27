@@ -98,7 +98,7 @@ export function Tracking() {
         title="Track Orders"
         description="Add carriers and tracking numbers, and mark orders shipped or delivered."
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <PageSearch q={q} setQ={setQ} placeholder="Search shipments…" />
             <button className={btnPrimary} onClick={() => setAdding(true)} disabled={orders.length === 0}>
               + Add shipment

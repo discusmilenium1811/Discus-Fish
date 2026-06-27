@@ -23,9 +23,9 @@ export function PageHeader({
   action?: ReactNode
 }) {
   return (
-    <div className="mb-6 flex items-start justify-between gap-4">
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h1 className="flex items-center gap-2.5 text-2xl font-extrabold text-white">
+        <h1 className="flex items-center gap-2.5 text-xl font-extrabold text-white sm:text-2xl">
           <span aria-hidden="true">{icon}</span> {title}
         </h1>
         <p className="mt-1 max-w-2xl text-sm text-slate-400">{description}</p>
@@ -59,7 +59,7 @@ export function Field({
 
 export function Card({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/50">
+    <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-900/50">
       {children}
     </div>
   )

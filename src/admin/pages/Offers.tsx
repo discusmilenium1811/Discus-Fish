@@ -108,7 +108,7 @@ export function Offers() {
         title="Offers"
         description="Automatic promotions on products or categories."
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <PageSearch q={q} setQ={setQ} placeholder="Search offers…" />
             <button className={btnPrimary} onClick={() => setEditing('new')}>
               + Add offer

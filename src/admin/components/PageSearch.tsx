@@ -9,7 +9,7 @@ export function PageSearch({
   placeholder?: string
 }) {
   return (
-    <div className="relative w-64 max-w-full">
+    <div className="relative w-full sm:w-64">
       <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
         🔎
       </span>
