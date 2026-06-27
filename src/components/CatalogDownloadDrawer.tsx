@@ -108,13 +108,23 @@ export function CatalogDownloadDrawer({ open, onClose }: CatalogDownloadDrawerPr
               <div className="flex flex-1 flex-col">
                 <p className="text-sm font-semibold text-white">{t(file.titleKey)}</p>
                 <p className="mt-0.5 text-xs text-slate-400">{t(file.descKey)}</p>
-                <a
-                  href={file.href}
-                  download={file.download}
-                  className="mt-3 inline-flex w-fit items-center gap-2 rounded-full bg-cyan-400 px-4 py-2 text-xs font-bold text-slate-900 transition hover:bg-cyan-300"
-                >
-                  ⬇ {t('catalog.dlButton')}
-                </a>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <a
+                    href={file.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-4 py-2 text-xs font-bold text-slate-200 transition hover:bg-white/10"
+                  >
+                    ↗ {t('catalog.dlOpen')}
+                  </a>
+                  <a
+                    href={file.href}
+                    download={file.download}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-cyan-400 px-4 py-2 text-xs font-bold text-slate-900 transition hover:bg-cyan-300"
+                  >
+                    ⬇ {t('catalog.dlButton')}
+                  </a>
+                </div>
               </div>
             </div>
           ))}
