@@ -174,7 +174,7 @@ export const translations = {
     'cart.redirecting': 'Redirecting…',
     'cart.securePayment': 'Secure payment powered by Stripe',
     'cart.error':
-      ‘Something went wrong. Please try again or contact us.’,
+      'Something went wrong. Please try again or contact us.',
     'cart.decrease': 'Decrease quantity',
     'cart.increase': 'Increase quantity',
     'cart.shipping': 'Shipping',
@@ -409,7 +409,7 @@ export const translations = {
     'cart.redirecting': 'Ανακατεύθυνση…',
     'cart.securePayment': 'Ασφαλής πληρωμή μέσω Stripe',
     'cart.error':
-      'Η ολοκλήρωση αγοράς δεν είναι ακόμη διαθέσιμη — το σύστημα πληρωμών πρέπει να ρυθμιστεί.',
+      'Κάτι πήγε στραβά. Δοκιμάστε ξανά ή επικοινωνήστε μαζί μας.',
     'cart.decrease': 'Μείωση ποσότητας',
     'cart.increase': 'Αύξηση ποσότητας',
     'cart.shipping': 'Μεταφορικά',
@@ -644,7 +644,7 @@ export const translations = {
     'cart.redirecting': 'Пренасочване…',
     'cart.securePayment': 'Сигурно плащане чрез Stripe',
     'cart.error':
-      'Плащането все още не е достъпно — системата за плащания трябва да бъде конфигурирана.',
+      'Нещо се обърка. Опитайте отново или се свържете с нас.',
     'cart.decrease': 'Намали количеството',
     'cart.increase': 'Увеличи количеството',
     'cart.shipping': 'Доставка',
