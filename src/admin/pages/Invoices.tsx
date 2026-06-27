@@ -1,6 +1,22 @@
 import { useEffect, useState } from 'react'
-import { fetchAll, insertRow, deleteRow, fmtDate, eurosToCents, centsToEuros } from '../lib/adminApi'
+import {
+  fetchAll,
+  fetchOne,
+  insertRow,
+  deleteRow,
+  fmtDate,
+  eurosToCents,
+  centsToEuros,
+} from '../lib/adminApi'
 import { formatPrice } from '../../lib/format'
+import {
+  printInvoice,
+  downloadInvoiceHtml,
+  invoiceMailto,
+  invoiceRecipient,
+  type InvoiceDoc,
+  type InvoiceOrder,
+} from '../lib/invoiceDoc'
 import {
   PageHeader,
   ErrorNote,
@@ -31,6 +47,15 @@ interface Invoice {
   order_id: string
   orders: { order_number: string | null } | null
 }
+
+const ORDER_COLS =
+  'order_number, email, created_at, currency, subtotal_cents, shipping_cents, ' +
+  'discount_cents, tax_cents, amount_total_cents, customer_note, ' +
+  'billing_company, billing_vat_number, billing_registration_number, billing_contact_name, ' +
+  'billing_email, billing_phone, billing_address1, billing_address2, billing_city, ' +
+  'billing_state, billing_postal_code, billing_country, ' +
+  'ship_name, ship_phone, ship_address1, ship_address2, ship_city, ship_postal_code, ' +
+  'ship_country, order_items(name, quantity, unit_price_cents)'
 interface OrderOpt {
   id: string
   order_number: string | null
@@ -43,6 +68,7 @@ export function Invoices() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [adding, setAdding] = useState(false)
+  const [open, setOpen] = useState<Invoice | null>(null)
   const [q, setQ] = useQuery()
 
   async function refresh() {
@@ -122,11 +148,9 @@ export function Invoices() {
                   <td className="px-4 py-3 text-slate-200">{formatPrice(i.total_cents, i.currency)}</td>
                   <td className="px-4 py-3 text-slate-400">{fmtDate(i.issued_at)}</td>
                   <td className="px-4 py-3 text-right">
-                    {i.pdf_url && (
-                      <a href={i.pdf_url} target="_blank" rel="noreferrer" className={`${btnSmall} text-cyan-300`}>
-                        PDF
-                      </a>
-                    )}
+                    <button className={btnSmall} onClick={() => setOpen(i)}>
+                      Open
+                    </button>
                     <button className={`${btnSmall} ml-2 text-rose-300`} onClick={() => remove(i)}>
                       Delete
                     </button>
@@ -148,7 +172,206 @@ export function Invoices() {
           }}
         />
       )}
+
+      {open && <InvoiceDetail invoice={open} onClose={() => setOpen(null)} />}
     </div>
+  )
+}
+
+function InvoiceDetail({ invoice, onClose }: { invoice: Invoice; onClose: () => void }) {
+  const [order, setOrder] = useState<InvoiceOrder | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let alive = true
+    ;(async () => {
+      try {
+        const data = await fetchOne<InvoiceOrder>('orders', ORDER_COLS, { id: invoice.order_id })
+        if (alive) setOrder(data)
+      } catch (e) {
+        if (alive) setError(e instanceof Error ? e.message : 'Failed to load order')
+      } finally {
+        if (alive) setLoading(false)
+      }
+    })()
+    return () => {
+      alive = false
+    }
+  }, [invoice.order_id])
+
+  const doc: InvoiceDoc = {
+    invoice_number: invoice.invoice_number,
+    issued_at: invoice.issued_at,
+    total_cents: invoice.total_cents,
+    currency: invoice.currency,
+    pdf_url: invoice.pdf_url,
+    order_id: invoice.order_id,
+    order,
+  }
+  const money = (c: number) => formatPrice(c, invoice.currency)
+  const recipient = invoiceRecipient(doc)
+
+  return (
+    <Modal
+      title={`Invoice ${invoice.invoice_number}`}
+      onClose={onClose}
+      footer={
+        <>
+          <button className={btnGhost} onClick={onClose}>
+            Close
+          </button>
+          <button
+            className={btnSmall}
+            onClick={() => downloadInvoiceHtml(doc)}
+            disabled={loading}
+            title="Download a standalone HTML copy"
+          >
+            ⬇ Download
+          </button>
+          {invoice.pdf_url && (
+            <a
+              href={invoice.pdf_url}
+              target="_blank"
+              rel="noreferrer"
+              className={`${btnSmall} text-cyan-300`}
+            >
+              PDF file
+            </a>
+          )}
+          <a
+            href={invoiceMailto(doc)}
+            className={`${btnSmall} ${recipient ? 'text-cyan-300' : 'pointer-events-none opacity-50'}`}
+            title={recipient ? `Email ${recipient}` : 'No customer email on file'}
+          >
+            ✉ Send
+          </a>
+          <button className={btnPrimary} onClick={() => printInvoice(doc)} disabled={loading}>
+            🖨 Print / Save PDF
+          </button>
+        </>
+      }
+    >
+      <ErrorNote msg={error} />
+      {loading ? (
+        <p className="py-8 text-center text-slate-400">Loading invoice…</p>
+      ) : (
+        <div className="grid gap-5">
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Invoice</p>
+              <p className="font-semibold text-white">{invoice.invoice_number}</p>
+              <p className="text-slate-400">Issued {fmtDate(invoice.issued_at)}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs uppercase tracking-wide text-slate-500">Order</p>
+              <p className="font-semibold text-white">{order?.order_number ?? '—'}</p>
+              <p className="text-slate-400">{order?.email ?? recipient ?? '—'}</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="mb-2 text-sm font-semibold text-slate-300">Bill to</h3>
+            <div className="rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-300">
+              <BillTo order={order} />
+            </div>
+          </div>
+
+          <div>
+            <h3 className="mb-2 text-sm font-semibold text-slate-300">Items</h3>
+            <div className="rounded-lg border border-white/10">
+              {!order || order.order_items.length === 0 ? (
+                <p className="px-3 py-3 text-sm text-slate-500">No line items.</p>
+              ) : (
+                order.order_items.map((it, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between border-b border-white/5 px-3 py-2 text-sm last:border-0"
+                  >
+                    <span className="text-slate-200">
+                      {it.quantity} × {it.name}
+                    </span>
+                    <span className="text-slate-400">{money(it.unit_price_cents * it.quantity)}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            {order && (
+              <>
+                <span className="text-slate-400">Subtotal</span>
+                <span className="text-right text-slate-200">{money(order.subtotal_cents)}</span>
+                {order.discount_cents > 0 && (
+                  <>
+                    <span className="text-slate-400">Discount</span>
+                    <span className="text-right text-slate-200">-{money(order.discount_cents)}</span>
+                  </>
+                )}
+                <span className="text-slate-400">Shipping</span>
+                <span className="text-right text-slate-200">{money(order.shipping_cents)}</span>
+                {order.tax_cents > 0 && (
+                  <>
+                    <span className="text-slate-400">Tax</span>
+                    <span className="text-right text-slate-200">{money(order.tax_cents)}</span>
+                  </>
+                )}
+              </>
+            )}
+            <span className="font-semibold text-white">Total</span>
+            <span className="text-right font-semibold text-white">{money(invoice.total_cents)}</span>
+          </div>
+
+          {order?.customer_note && (
+            <div className="text-sm">
+              <h3 className="mb-1 text-sm font-semibold text-slate-300">Customer note</h3>
+              <p className="text-slate-400">{order.customer_note}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </Modal>
+  )
+}
+
+function BillTo({ order }: { order: InvoiceOrder | null }) {
+  if (!order) return <span className="text-slate-500">—</span>
+  const useBilling = !!(
+    order.billing_company ||
+    order.billing_contact_name ||
+    order.billing_address1
+  )
+  const lines = useBilling
+    ? [
+        order.billing_company,
+        order.billing_contact_name,
+        order.billing_address1,
+        order.billing_address2,
+        [order.billing_postal_code, order.billing_city].filter(Boolean).join(' '),
+        [order.billing_state, order.billing_country].filter(Boolean).join(', '),
+        order.billing_vat_number ? `VAT: ${order.billing_vat_number}` : null,
+        order.billing_registration_number ? `Reg: ${order.billing_registration_number}` : null,
+        order.billing_email || order.email,
+        order.billing_phone,
+      ]
+    : [
+        order.ship_name,
+        order.ship_address1,
+        order.ship_address2,
+        [order.ship_postal_code, order.ship_city].filter(Boolean).join(' '),
+        order.ship_country,
+        order.email,
+        order.ship_phone,
+      ]
+  const shown = lines.filter((l): l is string => !!l && l.trim() !== '')
+  if (shown.length === 0) return <span className="text-slate-500">No billing details on file.</span>
+  return (
+    <>
+      {shown.map((l, i) => (
+        <div key={i}>{l}</div>
+      ))}
+    </>
   )
 }
 

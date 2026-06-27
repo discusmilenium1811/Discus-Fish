@@ -30,6 +30,19 @@ export async function fetchAll<T = any>(
   return (data ?? []) as T[]
 }
 
+/** Fetch a single row matching the given equality filters (or null). */
+export async function fetchOne<T = any>(
+  table: string,
+  columns: string,
+  match: Record<string, unknown>,
+): Promise<T | null> {
+  let q = supabase.from(table).select(columns)
+  for (const [k, v] of Object.entries(match)) q = q.eq(k, v as never)
+  const { data, error } = await q.maybeSingle()
+  if (error) throw error
+  return (data ?? null) as T | null
+}
+
 export async function insertRow(table: string, row: Record<string, unknown>): Promise<void> {
   const { error } = await supabase.from(table).insert(row)
   if (error) throw error
