@@ -8,6 +8,7 @@ import { CatalogPage } from './pages/Catalog'
 import { ProductDetail } from './pages/ProductDetail'
 import { WhyUs } from './pages/WhyUs'
 import { ContactPage } from './pages/Contact'
+import { CheckoutSuccess } from './pages/CheckoutSuccess'
 import { LanguageProvider } from './i18n/LanguageContext'
 import { AuthProvider } from './auth/AuthContext'
 import { AdminLayout } from './admin/AdminLayout'
@@ -35,6 +36,7 @@ createRoot(document.getElementById('root')!).render(
           <Routes>
             <Route element={<StorefrontLayout />}>
               <Route path="/" element={<Home />} />
+              <Route path="/checkout/success" element={<CheckoutSuccess />} />
               <Route path="/why-us" element={<WhyUs />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/Cataloge" element={<Navigate to="/Cataloge/Products" replace />} />

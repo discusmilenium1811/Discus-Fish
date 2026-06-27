@@ -1,7 +1,7 @@
 import type { Product } from '../types'
 import { supabase } from './supabase'
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/checkout`
 const NATURAL_HUMIN_IMAGE = '/pictures/products/natural-humin.png?v=natural-humin-bmp'
 const COMING_SOON_IMAGE =
   '/pictures/New%20products%20Coming%20Soon/yearbook-2026-cover.png'
@@ -101,7 +101,7 @@ export async function createCheckout(
   items: CheckoutItem[],
   customer?: CheckoutCustomer,
 ): Promise<{ id: string; url: string }> {
-  const res = await fetch(`${API_URL}/api/checkout`, {
+  const res = await fetch(CHECKOUT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ items, ...customer }),

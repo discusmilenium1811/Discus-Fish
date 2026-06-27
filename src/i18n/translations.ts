@@ -174,7 +174,7 @@ export const translations = {
     'cart.redirecting': 'Redirecting…',
     'cart.securePayment': 'Secure payment powered by Stripe',
     'cart.error':
-      'Checkout isn’t available yet — the payments back-end still needs to be configured.',
+      ‘Something went wrong. Please try again or contact us.’,
     'cart.decrease': 'Decrease quantity',
     'cart.increase': 'Increase quantity',
     'cart.shipping': 'Shipping',
@@ -182,6 +182,11 @@ export const translations = {
     'cart.shippingProgress': 'Add {amount} more for free shipping',
     'cart.shippingUnlocked': '🎉 You\'ve unlocked free shipping!',
     'cart.total': 'Total',
+
+    // Checkout success
+    'checkout.successTitle': 'Order confirmed!',
+    'checkout.successMessage': 'Thank you for your purchase. You will receive an email confirmation shortly.',
+    'checkout.continueShopping': 'Continue shopping',
 
     // Auth
     'auth.login': 'Log in',
@@ -413,6 +418,11 @@ export const translations = {
     'cart.shippingUnlocked': '🎉 Ξεκλειδώσατε τη δωρεάν αποστολή!',
     'cart.total': 'Σύνολο',
 
+    // Checkout success
+    'checkout.successTitle': 'Η παραγγελία επιβεβαιώθηκε!',
+    'checkout.successMessage': 'Ευχαριστούμε για την αγορά σας. Θα λάβετε σύντομα επιβεβαίωση μέσω email.',
+    'checkout.continueShopping': 'Συνέχεια αγορών',
+
     // Auth
     'auth.login': 'Σύνδεση',
     'auth.signup': 'Εγγραφή',
@@ -642,6 +652,11 @@ export const translations = {
     'cart.shippingProgress': 'Добавете още {amount} за безплатна доставка',
     'cart.shippingUnlocked': '🎉 Отключихте безплатна доставка!',
     'cart.total': 'Общо',
+
+    // Checkout success
+    'checkout.successTitle': 'Поръчката е потвърдена!',
+    'checkout.successMessage': 'Благодарим ви за покупката. Ще получите имейл потвърждение скоро.',
+    'checkout.continueShopping': 'Продължи пазаруването',
 
     // Auth
     'auth.login': 'Вход',
