@@ -112,6 +112,31 @@ export const translations = {
     'features.shipping.text':
       'Free delivery on orders over €75, shipped within 24 hours.',
 
+    // Why Us page
+    'whyUs.heading': 'Why Choose Discusfood?',
+    'whyUs.intro':
+      'When it comes to keeping discus and other demanding aquarium fish, there is no room for compromise. At Discusfood, we share your passion for fishkeeping and understand that the health, longevity, and vibrant colors of your fish begin with the perfect diet.',
+    'whyUs.ingredients.title': 'Uncompromising Ingredient Quality',
+    'whyUs.ingredients.text':
+      'Every pellet and flake we offer is crafted from premium raw materials. We use carefully selected proteins, vitamins, and minerals that replicate the natural diet of your fish. No unnecessary fillers, no artificial substitutes — just pure, wholesome nutrition.',
+    'whyUs.formulas.title': 'Specialized Formulas for Exceptional Results',
+    'whyUs.formulas.text':
+      'Discus and other delicate tropical species require a specific balance of nutrients. Our products are developed based on years of scientific research and hands-on experience to ensure:',
+    'whyUs.formulas.immune': 'Immune System Support: For stronger, more resilient fish.',
+    'whyUs.formulas.color':
+      "Natural Color Enhancement: Premium ingredients that bring out the absolute best in your fish's natural pigmentation.",
+    'whyUs.formulas.growth':
+      'Optimal Growth & Shape: Supporting healthy physical development from fry to fully grown adults.',
+    'whyUs.water.title': 'Crystal Clear Water',
+    'whyUs.water.text':
+      'One of the biggest challenges in feeding is aquarium pollution. Discusfood diets feature a specialized structure that holds its shape in the water for longer. Because our food is highly digestible, it drastically reduces fish waste, helping you maintain crystal-clear water and stable tank parameters.',
+    'whyUs.delivery.title': 'Fast & Secure Delivery',
+    'whyUs.delivery.text':
+      'We know how important it is that your fish never run out of their favourite food. We process and dispatch orders as quickly as possible. Every package is carefully sealed and shipped to ensure the food arrives at your door in perfect condition, locking in its maximum freshness and nutritional value.',
+    'whyUs.expertise.title': 'Expertise & Shared Passion',
+    'whyUs.expertise.text':
+      'We don\'t just sell fish food — we are proud members of the aquarist community. Whether you are a beginner enthusiast or a professional breeder, we are always here to help you choose the perfect nutritional plan tailored to your specific needs.',
+
     // Footer
     'footer.tagline':
       'Premium nutrition for vibrant, healthy discus. Made by keepers, for keepers.',
@@ -303,6 +328,31 @@ export const translations = {
     'features.shipping.text':
       'Δωρεάν παράδοση για παραγγελίες άνω των €75, αποστολή εντός 24 ωρών.',
 
+    // Why Us page
+    'whyUs.heading': 'Γιατί να Επιλέξετε το Discusfood;',
+    'whyUs.intro':
+      'Όταν πρόκειται για τη συντήρηση discus και άλλων απαιτητικών ενυδρείων ψαριών, δεν υπάρχουν περιθώρια συμβιβασμού. Στο Discusfood, μοιραζόμαστε το πάθος σας για τα ψάρια και κατανοούμε ότι η υγεία, η μακροζωία και τα ζωντανά χρώματά τους ξεκινούν από τη σωστή διατροφή.',
+    'whyUs.ingredients.title': 'Αδιαπραγμάτευτη Ποιότητα Συστατικών',
+    'whyUs.ingredients.text':
+      'Κάθε κόκκος και νιφάδα που προσφέρουμε παράγεται από premium πρώτες ύλες. Χρησιμοποιούμε προσεκτικά επιλεγμένες πρωτεΐνες, βιταμίνες και μέταλλα που αναπαράγουν τη φυσική διατροφή των ψαριών σας. Χωρίς περιττά γεμιστικά, χωρίς τεχνητά υποκατάστατα — μόνο αγνή, ολοκληρωμένη διατροφή.',
+    'whyUs.formulas.title': 'Εξειδικευμένοί Τύποι για Εξαιρετικά Αποτελέσματα',
+    'whyUs.formulas.text':
+      'Τα Discus και άλλα ευαίσθητα τροπικά είδη χρειάζονται συγκεκριμένη ισορροπία θρεπτικών συστατικών. Τα προϊόντα μας αναπτύσσονται βάσει χρόνων επιστημονικής έρευνας και πρακτικής εμπειρίας:',
+    'whyUs.formulas.immune': 'Ενίσχυση Ανοσοποιητικού: Για ισχυρότερα και πιο ανθεκτικά ψάρια.',
+    'whyUs.formulas.color':
+      'Φυσική Ενίσχυση Χρώματος: Premium συστατικά που αναδεικνύουν το απόλυτο καλύτερο από τη φυσική χρωματική τους αίγλη.',
+    'whyUs.formulas.growth':
+      'Βέλτιστη Ανάπτυξη & Σχήμα: Υποστήριξη υγιούς φυσικής ανάπτυξης από τα μεταγόνια ψάρια έως τα πλήρως ανεπτυγμένα.',
+    'whyUs.water.title': 'Κρυστάλλινο Νερό',
+    'whyUs.water.text':
+      'Μία από τις μεγαλύτερες προκλήσεις στη σίτιση είναι η ρύπανση του ενυδρείου. Οι τροφές Discusfood διαθέτουν εξειδικευμένη δομή που διατηρεί το σχήμα τους στο νερό για περισσότερο. Λόγω της υψηλής πεπτικότητάς τους, μειώνουν δραστικά τα απόβλητα των ψαριών, βοηθώντας σας να διατηρείτε κρυστάλλινο νερό και σταθερές παραμέτρους.',
+    'whyUs.delivery.title': 'Γρήγορη & Ασφαλής Παράδοση',
+    'whyUs.delivery.text':
+      'Ξέρουμε πόσο σημαντικό είναι τα ψάρια σας να μην ξεμένουν ποτέ από την αγαπημένη τους τροφή. Επεξεργαζόμαστε και αποστέλλουμε παραγγελίες το συντομότερο δυνατό. Κάθε πακέτο σφραγίζεται και αποστέλλεται προσεκτικά ώστε η τροφή να φτάσει στην πόρτα σας σε άριστη κατάσταση, διατηρώντας τη μέγιστη φρεσκάδα και θρεπτική αξία της.',
+    'whyUs.expertise.title': 'Τεχνογνωσία & Κοινό Πάθος',
+    'whyUs.expertise.text':
+      'Δεν πουλάμε απλώς τροφή για ψάρια — είμαστε περήφανα μέλη της κοινότητας των ενυδρειόφιλων. Είτε είστε αρχάριος λάτρης είτε επαγγελματίας εκτροφέας, είμαστε πάντα εδώ για να σας βοηθήσουμε να επιλέξετε το τέλειο διατροφικό πλάνο ανάλογα με τις συγκεκριμένες ανάγκες σας.',
+
     // Footer
     'footer.tagline':
       'Premium διατροφή για ζωντανά, υγιή discus. Φτιαγμένη από εκτροφείς, για εκτροφείς.',
@@ -493,6 +543,31 @@ export const translations = {
     'features.shipping.title': 'Бърза доставка',
     'features.shipping.text':
       'Безплатна доставка за поръчки над €75, изпратена в рамките на 24 часа.',
+
+    // Why Us page
+    'whyUs.heading': 'Защо да Изберете Discusfood?',
+    'whyUs.intro':
+      'Когато става дума за отглеждане на дискуси и други взискателни аквариумни риби, няма място за компромис. В Discusfood споделяме вашата страст към рибовъдството и разбираме, че здравето, дълголетието и ярките цветове на рибите ви започват с перфектната диета.',
+    'whyUs.ingredients.title': 'Безкомпромисно Качество на Съставките',
+    'whyUs.ingredients.text':
+      'Всяка гранула и люспица, която предлагаме, е изработена от висококачествени суровини. Използваме внимателно подбрани протеини, витамини и минерали, които пресъздават естествената диета на вашите риби. Без ненужни пълнители, без изкуствени заместители — само чисто, пълноценно хранене.',
+    'whyUs.formulas.title': 'Специализирани Формули за Изключителни Резултати',
+    'whyUs.formulas.text':
+      'Дискусите и другите деликатни тропически видове изискват специфичен баланс на хранителни вещества. Нашите продукти са разработени въз основа на години научни изследвания и практически опит:',
+    'whyUs.formulas.immune': 'Подкрепа на Имунната Система: За по-силни и по-устойчиви риби.',
+    'whyUs.formulas.color':
+      'Естествено Подобряване на Цвета: Премиум съставки, които извличат абсолютното най-добро от естественото оцветяване на рибите ви.',
+    'whyUs.formulas.growth':
+      'Оптимален Растеж и Форма: Подпомагане на здравословното физическо развитие от малки до напълно израснали екземпляри.',
+    'whyUs.water.title': 'Кристално Чиста Вода',
+    'whyUs.water.text':
+      'Едно от най-големите предизвикателства при храненето е замърсяването на аквариума. Храните Discusfood имат специализирана структура, която запазва формата си във водата по-дълго. Тъй като храната ни е силно смилаема, тя драстично намалява отпадъците от рибите, помагайки ви да поддържате кристално чиста вода и стабилни параметри на аквариума.',
+    'whyUs.delivery.title': 'Бърза и Сигурна Доставка',
+    'whyUs.delivery.text':
+      'Знаем колко е важно рибите ви никога да не останат без любимата им храна. Обработваме и изпращаме поръчките възможно най-бързо. Всеки пакет е внимателно запечатан и изпратен, за да пристигне храната при вас в перфектно състояние, запазвайки максималната си свежест и хранителна стойност.',
+    'whyUs.expertise.title': 'Експертиза и Споделена Страст',
+    'whyUs.expertise.text':
+      'Ние не просто продаваме рибна храна — ние сме горди членове на аквариумната общност. Независимо дали сте начинаещ ентусиаст или професионален развъдчик, ние винаги сме тук, за да ви помогнем да изберете перфектния хранителен план, съобразен с вашите специфични нужди.',
 
     // Footer
     'footer.tagline':
