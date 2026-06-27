@@ -68,7 +68,7 @@ export const translations = {
     'hero.shop': 'Shop the collection',
     'hero.why': 'Why DiscusFish',
     'hero.rating': '⭐ 4.9/5 from 2,000+ keepers',
-    'hero.shipping': '🚚 Free shipping over $35',
+    'hero.shipping': '🚚 Free shipping over €75',
     'hero.cardTitle': 'Premium Discus Granules',
     'hero.cardSubtitle': 'Color-enhancing · high protein',
 
@@ -81,6 +81,14 @@ export const translations = {
     'product.addToCart': 'Add to cart',
     'product.soldOut': 'Sold out',
     'product.comingSoon': 'Coming soon…',
+    'product.back': 'Back to catalog',
+    'product.details': 'Details',
+    'product.fromCatalog': 'From the Discusfood 2024/25 catalog',
+    'product.fromCatalogSub': 'The full product page exactly as it appears in our printed catalog.',
+    'product.noCatalog': 'No catalog page available for this product yet.',
+    'product.notFound': 'Product not found.',
+    'product.loading': 'Loading…',
+    'product.viewDetails': 'View details',
 
     // CTA banner
     'cta.title': 'Nutrition that brings out their best',
@@ -102,7 +110,7 @@ export const translations = {
       'Low-waste recipes that won’t cloud your tank or spike ammonia.',
     'features.shipping.title': 'Fast shipping',
     'features.shipping.text':
-      'Free delivery on orders over $35, shipped within 24 hours.',
+      'Free delivery on orders over €75, shipped within 24 hours.',
 
     // Footer
     'footer.tagline':
@@ -130,6 +138,11 @@ export const translations = {
       'Checkout isn’t available yet — the payments back-end still needs to be configured.',
     'cart.decrease': 'Decrease quantity',
     'cart.increase': 'Increase quantity',
+    'cart.shipping': 'Shipping',
+    'cart.shippingFree': 'FREE',
+    'cart.shippingProgress': 'Add {amount} more for free shipping',
+    'cart.shippingUnlocked': '🎉 You\'ve unlocked free shipping!',
+    'cart.total': 'Total',
 
     // Auth
     'auth.login': 'Log in',
@@ -245,7 +258,7 @@ export const translations = {
     'hero.shop': 'Δείτε τη συλλογή',
     'hero.why': 'Γιατί DiscusFish',
     'hero.rating': '⭐ 4.9/5 από 2.000+ εκτροφείς',
-    'hero.shipping': '🚚 Δωρεάν αποστολή άνω των $35',
+    'hero.shipping': '🚚 Δωρεάν αποστολή άνω των €75',
     'hero.cardTitle': 'Premium Κόκκοι Discus',
     'hero.cardSubtitle': 'Ενίσχυση χρώματος · υψηλή πρωτεΐνη',
 
@@ -258,6 +271,14 @@ export const translations = {
     'product.addToCart': 'Προσθήκη στο καλάθι',
     'product.soldOut': 'Εξαντλήθηκε',
     'product.comingSoon': 'Σύντομα κοντά σας…',
+    'product.back': 'Επιστροφή στον κατάλογο',
+    'product.details': 'Λεπτομέρειες',
+    'product.fromCatalog': 'Από τον κατάλογο Discusfood 2024/25',
+    'product.fromCatalogSub': 'Η πλήρης σελίδα προϊόντος όπως ακριβώς εμφανίζεται στον έντυπο κατάλογό μας.',
+    'product.noCatalog': 'Δεν υπάρχει ακόμη σελίδα καταλόγου για αυτό το προϊόν.',
+    'product.notFound': 'Το προϊόν δεν βρέθηκε.',
+    'product.loading': 'Φόρτωση…',
+    'product.viewDetails': 'Δείτε λεπτομέρειες',
 
     // CTA banner
     'cta.title': 'Διατροφή που αναδεικνύει τον καλύτερό τους εαυτό',
@@ -280,7 +301,7 @@ export const translations = {
       'Συνταγές χαμηλών αποβλήτων που δεν θολώνουν το ενυδρείο ούτε αυξάνουν την αμμωνία.',
     'features.shipping.title': 'Γρήγορη αποστολή',
     'features.shipping.text':
-      'Δωρεάν παράδοση για παραγγελίες άνω των $35, αποστολή εντός 24 ωρών.',
+      'Δωρεάν παράδοση για παραγγελίες άνω των €75, αποστολή εντός 24 ωρών.',
 
     // Footer
     'footer.tagline':
@@ -308,6 +329,11 @@ export const translations = {
       'Η ολοκλήρωση αγοράς δεν είναι ακόμη διαθέσιμη — το σύστημα πληρωμών πρέπει να ρυθμιστεί.',
     'cart.decrease': 'Μείωση ποσότητας',
     'cart.increase': 'Αύξηση ποσότητας',
+    'cart.shipping': 'Μεταφορικά',
+    'cart.shippingFree': 'ΔΩΡΕΑΝ',
+    'cart.shippingProgress': 'Προσθέστε άλλα {amount} για δωρεάν αποστολή',
+    'cart.shippingUnlocked': '🎉 Ξεκλειδώσατε τη δωρεάν αποστολή!',
+    'cart.total': 'Σύνολο',
 
     // Auth
     'auth.login': 'Σύνδεση',
@@ -423,7 +449,7 @@ export const translations = {
     'hero.shop': 'Разгледай колекцията',
     'hero.why': 'Защо DiscusFish',
     'hero.rating': '⭐ 4.9/5 от над 2000 развъдчици',
-    'hero.shipping': '🚚 Безплатна доставка над $35',
+    'hero.shipping': '🚚 Безплатна доставка над €75',
     'hero.cardTitle': 'Премиум гранули за дискус',
     'hero.cardSubtitle': 'Подсилва цвета · високо съдържание на протеин',
 
@@ -436,6 +462,14 @@ export const translations = {
     'product.addToCart': 'Добави в количката',
     'product.soldOut': 'Изчерпано',
     'product.comingSoon': 'Очаквайте скоро…',
+    'product.back': 'Обратно към каталога',
+    'product.details': 'Подробности',
+    'product.fromCatalog': 'От каталога Discusfood 2024/25',
+    'product.fromCatalogSub': 'Цялата продуктова страница, точно както изглежда в печатния ни каталог.',
+    'product.noCatalog': 'Все още няма каталожна страница за този продукт.',
+    'product.notFound': 'Продуктът не е намерен.',
+    'product.loading': 'Зареждане…',
+    'product.viewDetails': 'Виж подробности',
 
     // CTA banner
     'cta.title': 'Хранене, което разкрива най-доброто от тях',
@@ -458,7 +492,7 @@ export const translations = {
       'Рецепти с малко отпадъци, които няма да размътят аквариума или да повишат амоняка.',
     'features.shipping.title': 'Бърза доставка',
     'features.shipping.text':
-      'Безплатна доставка за поръчки над $35, изпратена в рамките на 24 часа.',
+      'Безплатна доставка за поръчки над €75, изпратена в рамките на 24 часа.',
 
     // Footer
     'footer.tagline':
@@ -486,6 +520,11 @@ export const translations = {
       'Плащането все още не е достъпно — системата за плащания трябва да бъде конфигурирана.',
     'cart.decrease': 'Намали количеството',
     'cart.increase': 'Увеличи количеството',
+    'cart.shipping': 'Доставка',
+    'cart.shippingFree': 'БЕЗПЛАТНО',
+    'cart.shippingProgress': 'Добавете още {amount} за безплатна доставка',
+    'cart.shippingUnlocked': '🎉 Отключихте безплатна доставка!',
+    'cart.total': 'Общо',
 
     // Auth
     'auth.login': 'Вход',

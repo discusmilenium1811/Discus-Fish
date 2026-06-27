@@ -190,7 +190,7 @@ export function HomeProductShowcase({ products, onAdd }: HomeProductShowcaseProp
                         {t('product.addToCart')}
                       </button>
                       <Link
-                        to="/Cataloge/Products"
+                        to={`/Cataloge/Products/${item.slug}`}
                         className="rounded-full border border-white/25 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/10 sm:px-6 sm:py-3"
                       >
                         {t('home.viewDetails')}

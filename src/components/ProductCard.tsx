@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import type { Product } from '../types'
 import { formatPrice } from '../lib/format'
 import { useTranslation } from '../i18n/LanguageContext'
@@ -19,6 +20,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, index, onAdd }: ProductCardProps) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const comingSoon = product.isComingSoon
   const soldOut = product.stock <= 0
 
@@ -32,8 +34,21 @@ export function ProductCard({ product, index, onAdd }: ProductCardProps) {
     product.name.toLowerCase().includes('probiotic')
   const imagePadding = needsBreathingRoom ? 'p-9 sm:p-10' : 'p-3'
 
+  const openDetail = () => navigate(`/Cataloge/Products/${product.slug}`)
+
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-xl shadow-black/30 backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:border-cyan-400/40 hover:bg-white/[0.08]">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={openDetail}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          openDetail()
+        }
+      }}
+      className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-xl shadow-black/30 backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:border-cyan-400/40 hover:bg-white/[0.08]"
+    >
       {/* Image panel — transparent so the card's own tint (the site colours,
           same as behind the description) shows through. White-bg product photos
           have had their background removed to transparency; dark studio pouches
@@ -81,7 +96,10 @@ export function ProductCard({ product, index, onAdd }: ProductCardProps) {
           <button
             type="button"
             disabled={comingSoon || soldOut}
-            onClick={() => onAdd(product)}
+            onClick={(e) => {
+              e.stopPropagation()
+              onAdd(product)
+            }}
             className="rounded-full bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-900 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-300 sm:px-4 sm:py-2 sm:text-sm"
           >
             {comingSoon

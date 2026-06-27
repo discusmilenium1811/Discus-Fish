@@ -7,6 +7,10 @@ import { useTranslation } from '../i18n/LanguageContext'
 
 const ITEM_FALLBACK = '/pictures/discus-closeup.webp'
 
+// Shipping policy — change these two constants to update the whole cart UI.
+const FREE_SHIPPING_CENTS = 7500   // €75.00
+const SHIPPING_FEE_CENTS  = 990    // €9.90
+
 interface CartDrawerProps {
   open: boolean
   onClose: () => void
@@ -176,17 +180,73 @@ export function CartDrawer({
 
         {items.length > 0 && (
           <div className="border-t border-white/10 px-5 py-4">
+            {/* Shipping progress banner */}
+            {(() => {
+              const freeShipping = totalCents >= FREE_SHIPPING_CENTS
+              const progressPct = Math.min(100, Math.round((totalCents / FREE_SHIPPING_CENTS) * 100))
+              const remaining = FREE_SHIPPING_CENTS - totalCents
+
+              return (
+                <div className="mb-4 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
+                  {freeShipping ? (
+                    <p className="text-center text-xs font-semibold text-emerald-400">
+                      {t('cart.shippingUnlocked')}
+                    </p>
+                  ) : (
+                    <>
+                      <p className="mb-1.5 text-xs text-slate-300">
+                        {t('cart.shippingProgress').replace(
+                          '{amount}',
+                          formatPrice(remaining, 'eur'),
+                        )}
+                      </p>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className="h-full rounded-full bg-cyan-400 transition-all duration-300"
+                          style={{ width: `${progressPct}%` }}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              )
+            })()}
+
             {error && (
               <p className="mb-3 rounded-lg bg-rose-500/15 px-3 py-2 text-xs text-rose-300">
                 {error}
               </p>
             )}
-            <div className="mb-4 flex items-center justify-between">
+
+            {/* Subtotal + shipping rows */}
+            <div className="mb-1 flex items-center justify-between">
               <span className="text-sm text-slate-400">{t('cart.subtotal')}</span>
-              <span className="text-xl font-extrabold text-white">
-                {formatPrice(totalCents)}
+              <span className="text-sm font-semibold text-white">
+                {formatPrice(totalCents, 'eur')}
               </span>
             </div>
+            <div className="mb-4 flex items-center justify-between">
+              <span className="text-sm text-slate-400">{t('cart.shipping')}</span>
+              {totalCents >= FREE_SHIPPING_CENTS ? (
+                <span className="text-sm font-bold text-emerald-400">{t('cart.shippingFree')}</span>
+              ) : (
+                <span className="text-sm font-semibold text-white">
+                  {formatPrice(SHIPPING_FEE_CENTS, 'eur')}
+                </span>
+              )}
+            </div>
+            <div className="mb-4 flex items-center justify-between border-t border-white/10 pt-3">
+              <span className="text-sm font-bold text-white">{t('cart.total')}</span>
+              <span className="text-xl font-extrabold text-white">
+                {formatPrice(
+                  totalCents >= FREE_SHIPPING_CENTS
+                    ? totalCents
+                    : totalCents + SHIPPING_FEE_CENTS,
+                  'eur',
+                )}
+              </span>
+            </div>
+
             <button
               type="button"
               onClick={handleCheckout}
