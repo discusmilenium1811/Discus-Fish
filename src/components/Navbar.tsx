@@ -56,19 +56,6 @@ export function Navbar({
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap sm:justify-end sm:gap-3.5">
-            <button
-            type="button"
-            onClick={onCartClick}
-            className="relative inline-flex h-9 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
-          >
-            <span>{t('nav.cart')}</span>
-            {cartCount > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 grid h-6 min-w-6 place-items-center rounded-full bg-rose-500 px-1.5 text-xs font-bold text-white">
-                {cartCount}
-              </span>
-            )}
-          </button>
-
           <button
             type="button"
             onClick={onLanguageClick}
@@ -128,7 +115,7 @@ export function Navbar({
 
       <div className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/80 backdrop-blur-lg">
         <div className="mx-auto flex max-w-7xl items-center px-4 py-2.5 sm:px-6 sm:py-4">
-          <nav className="grid w-full grid-cols-4 items-center gap-2 text-center text-xs font-semibold text-slate-300 sm:flex sm:justify-center sm:gap-8 sm:text-lg">
+          <nav className="grid w-full grid-cols-5 items-center gap-2 text-center text-xs font-semibold text-slate-300 sm:flex sm:justify-center sm:gap-8 sm:text-lg">
             <Link
               to="/"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -157,6 +144,18 @@ export function Navbar({
             >
               {t('nav.contact')}
             </Link>
+            <button
+              type="button"
+              onClick={onCartClick}
+              className="relative inline-flex h-8 items-center justify-center rounded-full border border-white/15 bg-white/5 px-2 font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-10 sm:px-5 sm:text-base"
+            >
+              <span>{t('nav.cart')}</span>
+              {cartCount > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 grid h-6 min-w-6 place-items-center rounded-full bg-rose-500 px-1.5 text-xs font-bold text-white">
+                  {cartCount}
+                </span>
+              )}
+            </button>
           </nav>
         </div>
       </div>
