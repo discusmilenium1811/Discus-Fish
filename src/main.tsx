@@ -11,6 +11,7 @@ import { ContactPage } from './pages/Contact'
 import { CheckoutSuccess } from './pages/CheckoutSuccess'
 import { LanguageProvider } from './i18n/LanguageContext'
 import { AuthProvider } from './auth/AuthContext'
+import { CartProvider } from './hooks/useCart'
 import { AdminLayout } from './admin/AdminLayout'
 import { Dashboard } from './admin/pages/Dashboard'
 import { Products } from './admin/pages/Products'
@@ -32,6 +33,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <LanguageProvider>
       <AuthProvider>
+        <CartProvider>
         <BrowserRouter>
           <Routes>
             <Route element={<StorefrontLayout />}>
@@ -66,6 +68,7 @@ createRoot(document.getElementById('root')!).render(
             </Route>
           </Routes>
         </BrowserRouter>
+        </CartProvider>
       </AuthProvider>
     </LanguageProvider>
   </StrictMode>,

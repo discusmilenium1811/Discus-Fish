@@ -1,4 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from 'react'
 import type { Product } from '../types'
 
 const STORAGE_KEY = 'discus-cart'
@@ -8,7 +15,24 @@ export interface CartItem {
   quantity: number
 }
 
-export function useCart() {
+interface CartContextValue {
+  items: CartItem[]
+  add: (product: Product) => void
+  setQuantity: (id: string, quantity: number) => void
+  remove: (id: string) => void
+  clear: () => void
+  count: number
+  totalCents: number
+}
+
+const CartContext = createContext<CartContextValue | null>(null)
+
+/**
+ * Single source of truth for the cart. Every consumer shares this state, so
+ * clearing the cart on the checkout-success page also updates the navbar and
+ * drawer immediately (previously each useCart() had its own isolated state).
+ */
+export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(() => {
     try {
       return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')
@@ -57,5 +81,17 @@ export function useCart() {
     0,
   )
 
-  return { items, add, setQuantity, remove, clear, count, totalCents }
+  return (
+    <CartContext.Provider
+      value={{ items, add, setQuantity, remove, clear, count, totalCents }}
+    >
+      {children}
+    </CartContext.Provider>
+  )
+}
+
+export function useCart() {
+  const ctx = useContext(CartContext)
+  if (!ctx) throw new Error('useCart must be used within a CartProvider')
+  return ctx
 }
