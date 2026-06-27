@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom'
 import { ProductCard } from '../components/ProductCard'
+import { CatalogDownloadDrawer } from '../components/CatalogDownloadDrawer'
 import { useTranslation } from '../i18n/LanguageContext'
 import { productMatches } from '../lib/productSearch'
 import type { StorefrontContext } from '../layouts/StorefrontLayout'
@@ -12,6 +14,7 @@ export function CatalogPage({ tab }: CatalogPageProps) {
   const { products, addToCart } = useOutletContext<StorefrontContext>()
   const { t } = useTranslation()
   const [params, setParams] = useSearchParams()
+  const [downloadOpen, setDownloadOpen] = useState(false)
   const q = params.get('q') ?? ''
 
   const setQ = (v: string) => {
@@ -54,7 +57,17 @@ export function CatalogPage({ tab }: CatalogPageProps) {
         >
           {t('catalog.tabComing')} ({coming.length})
         </Link>
+
+        <button
+          type="button"
+          onClick={() => setDownloadOpen(true)}
+          className={`${tabBase} ${idle}`}
+        >
+          {t('catalog.download')}
+        </button>
       </div>
+
+      <CatalogDownloadDrawer open={downloadOpen} onClose={() => setDownloadOpen(false)} />
 
       {/* Search / refine within the catalogue */}
       <div className="relative mt-5 max-w-md">
