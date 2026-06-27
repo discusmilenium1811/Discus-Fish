@@ -62,6 +62,9 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: lineItems,
+      payment_intent_data: {
+        description: 'Your order has been received and is being processed. Thank you for your order.',
+      },
       success_url: `${clientUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${clientUrl}/cart`,
       ...(customerEmail ? { customer_email: customerEmail } : {}),

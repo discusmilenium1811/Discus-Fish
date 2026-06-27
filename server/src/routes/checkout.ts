@@ -93,6 +93,9 @@ checkoutRouter.post('/', async (req, res) => {
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     line_items: lineItems,
+    payment_intent_data: {
+      description: 'Your order has been received and is being processed. Thank you for your order.',
+    },
     success_url: `${env.CLIENT_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${env.CLIENT_URL}/cart`,
     ...(customerEmail ? { customer_email: customerEmail } : {}),
