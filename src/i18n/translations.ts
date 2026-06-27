@@ -137,6 +137,20 @@ export const translations = {
     'whyUs.expertise.text':
       'We don\'t just sell fish food — we are proud members of the aquarist community. Whether you are a beginner enthusiast or a professional breeder, we are always here to help you choose the perfect nutritional plan tailored to your specific needs.',
 
+    // Contact page
+    'contact.heading': 'Contact Us',
+    'contact.intro': 'We are here for you. Reach us through any of the channels below.',
+    'contact.email': 'Email',
+    'contact.emailLabel': 'Email us directly',
+    'contact.whatsapp': 'WhatsApp',
+    'contact.whatsappLabel': 'Chat with us on WhatsApp',
+    'contact.facebook': 'Facebook',
+    'contact.facebookLabel': 'Follow us on Facebook',
+    'contact.instagram': 'Instagram',
+    'contact.instagramLabel': 'Follow us on Instagram',
+    'contact.tiktok': 'TikTok',
+    'contact.tiktokLabel': 'Watch us on TikTok',
+
     // Footer
     'footer.tagline':
       'Premium nutrition for vibrant, healthy discus. Made by keepers, for keepers.',
@@ -353,6 +367,20 @@ export const translations = {
     'whyUs.expertise.text':
       'Δεν πουλάμε απλώς τροφή για ψάρια — είμαστε περήφανα μέλη της κοινότητας των ενυδρειόφιλων. Είτε είστε αρχάριος λάτρης είτε επαγγελματίας εκτροφέας, είμαστε πάντα εδώ για να σας βοηθήσουμε να επιλέξετε το τέλειο διατροφικό πλάνο ανάλογα με τις συγκεκριμένες ανάγκες σας.',
 
+    // Contact page
+    'contact.heading': 'Επικοινωνήστε μαζί μας',
+    'contact.intro': 'Είμαστε εδώ για εσάς. Επικοινωνήστε μαζί μας μέσω οποιουδήποτε από τα παρακάτω κανάλια.',
+    'contact.email': 'Email',
+    'contact.emailLabel': 'Στείλτε μας email',
+    'contact.whatsapp': 'WhatsApp',
+    'contact.whatsappLabel': 'Συνομιλήστε μαζί μας στο WhatsApp',
+    'contact.facebook': 'Facebook',
+    'contact.facebookLabel': 'Ακολουθήστε μας στο Facebook',
+    'contact.instagram': 'Instagram',
+    'contact.instagramLabel': 'Ακολουθήστε μας στο Instagram',
+    'contact.tiktok': 'TikTok',
+    'contact.tiktokLabel': 'Παρακολουθήστε μας στο TikTok',
+
     // Footer
     'footer.tagline':
       'Premium διατροφή για ζωντανά, υγιή discus. Φτιαγμένη από εκτροφείς, για εκτροφείς.',
@@ -568,6 +596,20 @@ export const translations = {
     'whyUs.expertise.title': 'Експертиза и Споделена Страст',
     'whyUs.expertise.text':
       'Ние не просто продаваме рибна храна — ние сме горди членове на аквариумната общност. Независимо дали сте начинаещ ентусиаст или професионален развъдчик, ние винаги сме тук, за да ви помогнем да изберете перфектния хранителен план, съобразен с вашите специфични нужди.',
+
+    // Contact page
+    'contact.heading': 'Свържете се с нас',
+    'contact.intro': 'Тук сме за вас. Свържете се с нас чрез някой от каналите по-долу.',
+    'contact.email': 'Имейл',
+    'contact.emailLabel': 'Изпратете ни имейл',
+    'contact.whatsapp': 'WhatsApp',
+    'contact.whatsappLabel': 'Пишете ни в WhatsApp',
+    'contact.facebook': 'Facebook',
+    'contact.facebookLabel': 'Последвайте ни във Facebook',
+    'contact.instagram': 'Instagram',
+    'contact.instagramLabel': 'Последвайте ни в Instagram',
+    'contact.tiktok': 'TikTok',
+    'contact.tiktokLabel': 'Гледайте ни в TikTok',
 
     // Footer
     'footer.tagline':
