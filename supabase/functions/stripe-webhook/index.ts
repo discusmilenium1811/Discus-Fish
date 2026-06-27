@@ -71,7 +71,6 @@ async function recordOrder(session: Stripe.Checkout.Session) {
       amount_total_cents: session.amount_total ?? 0,
       currency: session.currency ?? 'eur',
       status: 'paid',
-      fulfillment_status: 'pending',
       user_id: userId,
       billing_company: billing?.company ?? null,
       billing_vat_number: billing?.vatNumber ?? null,
