@@ -39,17 +39,17 @@ interface CatalogFile {
   descKey: TranslationKey
 }
 
-// Static PDFs served from /public. The folder name contains spaces, so the
-// path is URL-encoded.
+// Catalog PDFs live in the public Supabase Storage `documents` bucket.
+const DOCS = 'https://vumjslsogdnexehutibj.supabase.co/storage/v1/object/public/documents'
 const FILES: CatalogFile[] = [
   {
-    href: '/pictures/products/Discusfood-Katalog-2025.pdf',
+    href: `${DOCS}/Discusfood-Katalog-2025.pdf`,
     download: 'Discusfood-Katalog-2025.pdf',
     titleKey: 'catalog.dlProducts',
     descKey: 'catalog.dlProductsDesc',
   },
   {
-    href: '/pictures/New%20products%20Coming%20Soon/Katalog-2026-EN-v1.pdf',
+    href: `${DOCS}/Katalog-2026-EN-v1.pdf`,
     download: 'New-Products-Coming-Soon-Katalog-2026-EN.pdf',
     titleKey: 'catalog.dlNew',
     descKey: 'catalog.dlNewDesc',

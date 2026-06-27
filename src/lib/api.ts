@@ -2,17 +2,18 @@ import type { Product } from '../types'
 import { supabase } from './supabase'
 
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/checkout`
-const NATURAL_HUMIN_IMAGE = '/pictures/products/natural-humin.png?v=natural-humin-bmp'
-const COMING_SOON_IMAGE =
-  '/pictures/New%20products%20Coming%20Soon/yearbook-2026-cover.png'
+// Product imagery lives in the public Supabase Storage `product-images` bucket.
+const STORAGE = 'https://vumjslsogdnexehutibj.supabase.co/storage/v1/object/public/product-images'
+const NATURAL_HUMIN_IMAGE = `${STORAGE}/products/natural-humin.png?v=natural-humin-bmp`
+const COMING_SOON_IMAGE = `${STORAGE}/New%20products%20Coming%20Soon/yearbook-2026-cover.png`
 const PRODUCT_IMAGE_OVERRIDES: Record<string, string> = {
-  'additive-1-probiotics': '/pictures/products/Probio/additive-1-probiotics.png',
-  'additive-d7-pro-breeding': '/pictures/products/Probio/additive-d7-pro-breeding.png',
-  'best-heart-flakes-blue-dream': '/pictures/products/card/best-heart-flakes-blue-dream.png',
-  'best-heart-flakes-pro-breed': '/pictures/products/card/best-heart-flakes-pro-breed.png',
-  'golden-color-booster': '/pictures/products/Probio/golden-color-booster.png',
-  'blue-color-booster': '/pictures/products/Probio/blue-color-booster.png',
-  'red-color-booster': '/pictures/products/Probio/red-color-booster.png',
+  'additive-1-probiotics': `${STORAGE}/products/Probio/additive-1-probiotics.png`,
+  'additive-d7-pro-breeding': `${STORAGE}/products/Probio/additive-d7-pro-breeding.png`,
+  'best-heart-flakes-blue-dream': `${STORAGE}/products/card/best-heart-flakes-blue-dream.png`,
+  'best-heart-flakes-pro-breed': `${STORAGE}/products/card/best-heart-flakes-pro-breed.png`,
+  'golden-color-booster': `${STORAGE}/products/Probio/golden-color-booster.png`,
+  'blue-color-booster': `${STORAGE}/products/Probio/blue-color-booster.png`,
+  'red-color-booster': `${STORAGE}/products/Probio/red-color-booster.png`,
 }
 
 function productImageUrl(

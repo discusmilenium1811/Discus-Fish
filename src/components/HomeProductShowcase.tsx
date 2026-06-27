@@ -30,7 +30,7 @@ const FEATURED: Featured[] = [
     name: 'Grand Champion Granulate',
     description:
       'Balanced staple granulate for discus with carefully selected vitamins, trace elements and animal/plant energy sources — formulated to grow champions. Sizes 80 g / 230 g.',
-    image: '/pictures/products/clean/grand-champion-granulate.jpg',
+    image: 'https://vumjslsogdnexehutibj.supabase.co/storage/v1/object/public/product-images/products/clean/grand-champion-granulate.jpg',
     priceCents: 1000,
     currency: 'eur',
   },
@@ -39,7 +39,7 @@ const FEATURED: Featured[] = [
     name: 'For Discus Daily Granulate',
     description:
       'Balanced complete granulate especially for discus and all granulate-loving fish, with vitamins, minerals, trace elements and probiotics for everyday nutrition. Sizes 80 g / 230 g / 2800 g.',
-    image: '/pictures/products/clean/for-discus-daily-granulate.jpg',
+    image: 'https://vumjslsogdnexehutibj.supabase.co/storage/v1/object/public/product-images/products/clean/for-discus-daily-granulate.jpg',
     priceCents: 1000,
     currency: 'eur',
   },
@@ -48,7 +48,7 @@ const FEATURED: Featured[] = [
     name: 'Turkey Heart Soft Granulate',
     description:
       'Soft granulate staple for keepers who want animal protein without beef — only the digestible parts of turkey protein, with far lower water load than frozen turkey heart. Sizes 80 g / 230 g.',
-    image: '/pictures/products/clean/turkey-heart-soft-granulate.jpg',
+    image: 'https://vumjslsogdnexehutibj.supabase.co/storage/v1/object/public/product-images/products/clean/turkey-heart-soft-granulate.jpg',
     priceCents: 1000,
     currency: 'eur',
   },
@@ -57,7 +57,7 @@ const FEATURED: Featured[] = [
     name: 'Betta Special All Colors Soft',
     description:
       'Soft granulate tuned to labyrinth fish (bettas). The soft texture protects the delicate mouth; omega-3 fish oil and digestible krill support vitality and intense colour. 50 g.',
-    image: '/pictures/products/clean/betta-special-all-colors-soft.jpg',
+    image: 'https://vumjslsogdnexehutibj.supabase.co/storage/v1/object/public/product-images/products/clean/betta-special-all-colors-soft.jpg',
     weightGrams: 50,
     priceCents: 1000,
     currency: 'eur',
@@ -67,7 +67,7 @@ const FEATURED: Featured[] = [
     name: 'Cichlids XL Premium Granulate · Comp. 1',
     description:
       'High-quality complete granulate for cichlids and large fish — plant-forward with 13.5% Chlorella, fennel and a little zeolite for healthy digestion. Ideal paired with Composition 2. 500 g.',
-    image: '/pictures/products/clean/cichlids-xl-granulate-1.jpg',
+    image: 'https://vumjslsogdnexehutibj.supabase.co/storage/v1/object/public/product-images/products/clean/cichlids-xl-granulate-1.jpg',
     weightGrams: 500,
     priceCents: 1000,
     currency: 'eur',
