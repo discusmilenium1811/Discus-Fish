@@ -3,6 +3,9 @@
   publish = "dist"
 
 [build.environment]
+  # Vite 8 / TypeScript 6 need Node >= 20.19. Pin it so the build doesn't fall
+  # back to an older site default (older Netlify sites default to Node 18).
+  NODE_VERSION               = "22"
   VITE_SUPABASE_URL          = "https://vumjslsogdnexehutibj.supabase.co"
   VITE_SUPABASE_ANON_KEY     = "sb_publishable_xGyIdQwX9eZqGDkCz893Pg_algfSfAm"
 
