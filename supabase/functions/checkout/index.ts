@@ -171,7 +171,7 @@ Deno.serve(async (req) => {
     // VAT is included in the prices; this is the portion contained in the total.
     const vatCents = Math.round(totalCents - totalCents / 1.19)
 
-    const clientUrl = Deno.env.get('CLIENT_URL') ?? 'https://willowy-nasturtium-e9e6aa.netlify.app'
+    const clientUrl = Deno.env.get('CLIENT_URL') ?? 'https://discusfishfood.netlify.app'
     const metadata: Record<string, string> = {
       cart: JSON.stringify(items.map((i: { productId: string; quantity: number }) => ({ id: i.productId, q: i.quantity }))),
       amounts: JSON.stringify({
