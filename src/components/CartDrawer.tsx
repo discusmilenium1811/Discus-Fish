@@ -1,15 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { CartItem } from '../hooks/useCart'
 import { formatPrice } from '../lib/format'
-import { createCheckout, type CheckoutCustomer } from '../lib/api'
+import {
+  createCheckout,
+  validateCoupon,
+  type CheckoutCustomer,
+} from '../lib/api'
+import { computeBreakdown, FREE_SHIPPING_CENTS } from '../lib/pricing'
 import { useAuth } from '../auth/AuthContext'
 import { useTranslation } from '../i18n/LanguageContext'
 
 const ITEM_FALLBACK = '/pictures/discus-closeup.webp'
 
-// Shipping policy — change these two constants to update the whole cart UI.
-const FREE_SHIPPING_CENTS = 7500   // €75.00
-const SHIPPING_FEE_CENTS  = 990    // €9.90
+const inputCls =
+  'w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-cyan-400/60 focus:bg-white/10'
 
 interface CartDrawerProps {
   open: boolean
@@ -21,28 +25,161 @@ interface CartDrawerProps {
   onClear: () => void
 }
 
+type Step = 'cart' | 'details'
+
+interface AppliedCoupon {
+  code: string
+  discountCents: number
+}
+
+const EMPTY_FORM = {
+  fullName: '',
+  email: '',
+  phone: '',
+  country: '',
+  state: '',
+  city: '',
+  street: '',
+  building: '',
+  floor: '',
+  apartment: '',
+  postalCode: '',
+}
+
 export function CartDrawer({
   open,
   onClose,
   items,
-  totalCents,
+  totalCents: subtotalCents,
   onSetQuantity,
   onRemove,
   onClear,
 }: CartDrawerProps) {
   const { t } = useTranslation()
   const { user, profile } = useAuth()
+  const [step, setStep] = useState<Step>('cart')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleCheckout() {
+  // Delivery details form.
+  const [form, setForm] = useState(EMPTY_FORM)
+  const upd =
+    (key: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      setForm((f) => ({ ...f, [key]: e.target.value }))
+
+  // Coupon.
+  const [couponCode, setCouponCode] = useState('')
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null)
+  const [couponMsg, setCouponMsg] = useState<string | null>(null)
+  const [couponLoading, setCouponLoading] = useState(false)
+  const couponRef = useRef<AppliedCoupon | null>(null)
+  useEffect(() => {
+    couponRef.current = coupon
+  }, [coupon])
+
+  // Re-validate an applied coupon when the cart subtotal changes so the shown
+  // discount stays accurate (the server re-checks authoritatively at pay time).
+  useEffect(() => {
+    const applied = couponRef.current
+    if (!applied) return
+    let active = true
+    validateCoupon(applied.code, subtotalCents)
+      .then((res) => {
+        if (!active) return
+        if (res.valid) {
+          setCoupon((prev) =>
+            prev ? { ...prev, discountCents: res.discountCents } : prev,
+          )
+        } else {
+          setCoupon(null)
+          setCouponMsg(t('cart.couponCleared'))
+        }
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [subtotalCents, t])
+
+  function handleClose() {
+    setStep('cart')
+    onClose()
+  }
+
+  const breakdown = computeBreakdown(subtotalCents, coupon?.discountCents ?? 0)
+
+  async function applyCoupon() {
+    const code = couponCode.trim()
+    if (!code) return
+    setCouponLoading(true)
+    setCouponMsg(null)
+    try {
+      const res = await validateCoupon(code, subtotalCents)
+      if (res.valid) {
+        setCoupon({ code: res.code ?? code.toUpperCase(), discountCents: res.discountCents })
+        setCouponCode('')
+        setCouponMsg(null)
+      } else {
+        setCoupon(null)
+        setCouponMsg(res.message ?? t('cart.couponInvalid'))
+      }
+    } catch {
+      setCoupon(null)
+      setCouponMsg(t('cart.couponInvalid'))
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
+  function removeCoupon() {
+    setCoupon(null)
+    setCouponMsg(null)
+  }
+
+  async function handlePay() {
+    // Required fields: name, full address, and at least one contact method.
+    const missingRequired =
+      !form.fullName.trim() ||
+      !form.country.trim() ||
+      !form.city.trim() ||
+      !form.street.trim() ||
+      !form.postalCode.trim()
+    if (missingRequired) {
+      setError(t('cart.requiredError'))
+      return
+    }
+    if (!form.email.trim() && !form.phone.trim()) {
+      setError(t('cart.contactRequired'))
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
+      const customer: CheckoutCustomer = {
+        contact: {
+          fullName: form.fullName.trim(),
+          email: form.email.trim() || undefined,
+          phone: form.phone.trim() || undefined,
+        },
+        shipping: {
+          country: form.country.trim(),
+          state: form.state.trim() || undefined,
+          city: form.city.trim(),
+          street: form.street.trim(),
+          building: form.building.trim() || undefined,
+          floor: form.floor.trim() || undefined,
+          apartment: form.apartment.trim() || undefined,
+          postalCode: form.postalCode.trim(),
+        },
+        couponCode: coupon?.code,
+      }
+
       // Attach the logged-in customer, plus company billing for business accounts.
-      let customer: CheckoutCustomer | undefined
       if (user) {
-        customer = { userId: user.id, email: user.email ?? undefined }
+        customer.userId = user.id
+        customer.email = user.email ?? (form.email.trim() || undefined)
         if (profile?.account_type === 'business' && profile.company_name) {
           customer.billing = {
             company: profile.company_name,
@@ -59,6 +196,8 @@ export function CartDrawer({
             country: profile.country ?? undefined,
           }
         }
+      } else {
+        customer.email = form.email.trim() || undefined
       }
 
       const { url } = await createCheckout(
@@ -77,7 +216,7 @@ export function CartDrawer({
     <>
       {/* Overlay */}
       <div
-        onClick={onClose}
+        onClick={handleClose}
         className={`fixed inset-0 z-50 bg-slate-950/70 transition-opacity duration-300 ${
           open ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
@@ -93,10 +232,24 @@ export function CartDrawer({
         aria-label={t('cart.title')}
       >
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-          <h2 className="text-lg font-bold text-white">{t('cart.title')}</h2>
+          <div className="flex items-center gap-2">
+            {step === 'details' && (
+              <button
+                type="button"
+                onClick={() => setStep('cart')}
+                className="grid h-8 w-8 place-items-center rounded-full text-slate-400 transition hover:bg-white/10 hover:text-white"
+                aria-label={t('cart.back')}
+              >
+                ←
+              </button>
+            )}
+            <h2 className="text-lg font-bold text-white">
+              {step === 'details' ? t('cart.deliveryDetails') : t('cart.title')}
+            </h2>
+          </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="grid h-8 w-8 place-items-center rounded-full text-slate-400 transition hover:bg-white/10 hover:text-white"
             aria-label={t('cart.close')}
           >
@@ -110,7 +263,8 @@ export function CartDrawer({
             <p className="font-semibold text-slate-200">{t('cart.empty')}</p>
             <p className="text-sm text-slate-400">{t('cart.emptyHint')}</p>
           </div>
-        ) : (
+        ) : step === 'cart' ? (
+          /* ---------------- STEP 1: cart items ---------------- */
           <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
             {items.map((item) => (
               <div
@@ -176,15 +330,187 @@ export function CartDrawer({
               {t('cart.clear')}
             </button>
           </div>
+        ) : (
+          /* ---------------- STEP 2: delivery details ---------------- */
+          <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4">
+            {/* Contact */}
+            <section className="space-y-3">
+              <h3 className="text-sm font-bold text-white">{t('cart.contactInfo')}</h3>
+              <FieldInput
+                label={`${t('cart.fullName')} *`}
+                value={form.fullName}
+                onChange={upd('fullName')}
+                autoComplete="name"
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <FieldInput
+                  label={t('cart.email')}
+                  type="email"
+                  value={form.email}
+                  onChange={upd('email')}
+                  autoComplete="email"
+                />
+                <FieldInput
+                  label={t('cart.phone')}
+                  type="tel"
+                  value={form.phone}
+                  onChange={upd('phone')}
+                  autoComplete="tel"
+                />
+              </div>
+              <p className="text-xs text-slate-500">{t('cart.contactHint')}</p>
+            </section>
+
+            {/* Delivery address */}
+            <section className="space-y-3">
+              <h3 className="text-sm font-bold text-white">{t('cart.shippingAddress')}</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <FieldInput
+                  label={`${t('cart.country')} *`}
+                  value={form.country}
+                  onChange={upd('country')}
+                  autoComplete="country-name"
+                />
+                <FieldInput
+                  label={t('cart.state')}
+                  value={form.state}
+                  onChange={upd('state')}
+                  autoComplete="address-level1"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <FieldInput
+                  label={`${t('cart.city')} *`}
+                  value={form.city}
+                  onChange={upd('city')}
+                  autoComplete="address-level2"
+                />
+                <FieldInput
+                  label={`${t('cart.postalCode')} *`}
+                  value={form.postalCode}
+                  onChange={upd('postalCode')}
+                  autoComplete="postal-code"
+                />
+              </div>
+              <FieldInput
+                label={`${t('cart.street')} *`}
+                value={form.street}
+                onChange={upd('street')}
+                autoComplete="address-line1"
+              />
+              <div className="grid grid-cols-3 gap-3">
+                <FieldInput
+                  label={t('cart.building')}
+                  value={form.building}
+                  onChange={upd('building')}
+                />
+                <FieldInput
+                  label={t('cart.floor')}
+                  value={form.floor}
+                  onChange={upd('floor')}
+                />
+                <FieldInput
+                  label={t('cart.apartment')}
+                  value={form.apartment}
+                  onChange={upd('apartment')}
+                />
+              </div>
+            </section>
+
+            {/* Coupon */}
+            <section className="space-y-2">
+              <h3 className="text-sm font-bold text-white">{t('cart.coupon')}</h3>
+              {coupon ? (
+                <div className="flex items-center justify-between rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 py-2">
+                  <span className="text-sm font-semibold text-emerald-300">
+                    {coupon.code} · −{formatPrice(coupon.discountCents, 'eur')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={removeCoupon}
+                    className="text-xs text-slate-300 hover:text-rose-300"
+                  >
+                    {t('cart.remove')}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    className={inputCls}
+                    placeholder={t('cart.couponPlaceholder')}
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        applyCoupon()
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={applyCoupon}
+                    disabled={couponLoading || !couponCode.trim()}
+                    className="shrink-0 rounded-lg border border-white/20 px-4 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-50"
+                  >
+                    {couponLoading ? '…' : t('cart.couponApply')}
+                  </button>
+                </div>
+              )}
+              {couponMsg && <p className="text-xs text-rose-300">{couponMsg}</p>}
+            </section>
+
+            {/* Order summary */}
+            <section className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <h3 className="mb-3 text-sm font-bold text-white">{t('cart.orderSummary')}</h3>
+              <div className="space-y-1.5 text-sm">
+                <Row
+                  label={t('cart.subtotal')}
+                  value={formatPrice(breakdown.subtotalCents, 'eur')}
+                />
+                <Row
+                  label={t('cart.vatIncluded')}
+                  value={formatPrice(breakdown.vatCents, 'eur')}
+                />
+                {breakdown.discountCents > 0 && (
+                  <Row
+                    label={`${t('cart.discount')}${coupon ? ` (${coupon.code})` : ''}`}
+                    value={`−${formatPrice(breakdown.discountCents, 'eur')}`}
+                    tone="discount"
+                  />
+                )}
+                <Row
+                  label={t('cart.shipping')}
+                  value={
+                    breakdown.shippingCents === 0
+                      ? t('cart.shippingFree')
+                      : formatPrice(breakdown.shippingCents, 'eur')
+                  }
+                  tone={breakdown.shippingCents === 0 ? 'free' : undefined}
+                />
+                <div className="my-2 border-t border-white/10" />
+                <div className="flex items-center justify-between">
+                  <span className="text-base font-bold text-white">{t('cart.total')}</span>
+                  <span className="text-xl font-extrabold text-white">
+                    {formatPrice(breakdown.totalCents, 'eur')}
+                  </span>
+                </div>
+              </div>
+            </section>
+          </div>
         )}
 
-        {items.length > 0 && (
+        {/* ---------------- STEP 1 footer: summary + checkout ---------------- */}
+        {items.length > 0 && step === 'cart' && (
           <div className="border-t border-white/10 px-5 py-4">
             {/* Shipping progress banner */}
             {(() => {
-              const freeShipping = totalCents >= FREE_SHIPPING_CENTS
-              const progressPct = Math.min(100, Math.round((totalCents / FREE_SHIPPING_CENTS) * 100))
-              const remaining = FREE_SHIPPING_CENTS - totalCents
+              const freeShipping = subtotalCents >= FREE_SHIPPING_CENTS
+              const progressPct = Math.min(
+                100,
+                Math.round((subtotalCents / FREE_SHIPPING_CENTS) * 100),
+              )
+              const remaining = FREE_SHIPPING_CENTS - subtotalCents
 
               return (
                 <div className="mb-4 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
@@ -212,48 +538,66 @@ export function CartDrawer({
               )
             })()}
 
-            {error && (
-              <p className="mb-3 rounded-lg bg-rose-500/15 px-3 py-2 text-xs text-rose-300">
-                {error}
-              </p>
-            )}
-
             {/* Subtotal + shipping rows */}
             <div className="mb-1 flex items-center justify-between">
               <span className="text-sm text-slate-400">{t('cart.subtotal')}</span>
               <span className="text-sm font-semibold text-white">
-                {formatPrice(totalCents, 'eur')}
+                {formatPrice(breakdown.subtotalCents, 'eur')}
               </span>
             </div>
             <div className="mb-4 flex items-center justify-between">
               <span className="text-sm text-slate-400">{t('cart.shipping')}</span>
-              {totalCents >= FREE_SHIPPING_CENTS ? (
-                <span className="text-sm font-bold text-emerald-400">{t('cart.shippingFree')}</span>
+              {breakdown.shippingCents === 0 ? (
+                <span className="text-sm font-bold text-emerald-400">
+                  {t('cart.shippingFree')}
+                </span>
               ) : (
                 <span className="text-sm font-semibold text-white">
-                  {formatPrice(SHIPPING_FEE_CENTS, 'eur')}
+                  {formatPrice(breakdown.shippingCents, 'eur')}
                 </span>
               )}
             </div>
             <div className="mb-4 flex items-center justify-between border-t border-white/10 pt-3">
               <span className="text-sm font-bold text-white">{t('cart.total')}</span>
               <span className="text-xl font-extrabold text-white">
-                {formatPrice(
-                  totalCents >= FREE_SHIPPING_CENTS
-                    ? totalCents
-                    : totalCents + SHIPPING_FEE_CENTS,
-                  'eur',
-                )}
+                {formatPrice(breakdown.totalCents, 'eur')}
               </span>
             </div>
 
             <button
               type="button"
-              onClick={handleCheckout}
+              onClick={() => {
+                setError(null)
+                setStep('details')
+              }}
+              className="w-full rounded-full bg-cyan-400 py-3 text-sm font-bold text-slate-900 transition hover:bg-cyan-300"
+            >
+              {t('cart.checkout')}
+            </button>
+          </div>
+        )}
+
+        {/* ---------------- STEP 2 footer: pay now ---------------- */}
+        {items.length > 0 && step === 'details' && (
+          <div className="border-t border-white/10 px-5 py-4">
+            {error && (
+              <p className="mb-3 rounded-lg bg-rose-500/15 px-3 py-2 text-xs text-rose-300">
+                {error}
+              </p>
+            )}
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-sm font-bold text-white">{t('cart.total')}</span>
+              <span className="text-xl font-extrabold text-white">
+                {formatPrice(breakdown.totalCents, 'eur')}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handlePay}
               disabled={loading}
               className="w-full rounded-full bg-cyan-400 py-3 text-sm font-bold text-slate-900 transition hover:bg-cyan-300 disabled:opacity-60"
             >
-              {loading ? t('cart.redirecting') : t('cart.checkout')}
+              {loading ? t('cart.redirecting') : t('cart.payNow')}
             </button>
             <p className="mt-2 text-center text-xs text-slate-500">
               {t('cart.securePayment')}
@@ -262,5 +606,42 @@ export function CartDrawer({
         )}
       </aside>
     </>
+  )
+}
+
+/** Labelled text input used across the delivery form. */
+function FieldInput({
+  label,
+  ...props
+}: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-xs font-medium text-slate-400">{label}</span>
+      <input className={inputCls} {...props} />
+    </label>
+  )
+}
+
+/** One line in the order summary. */
+function Row({
+  label,
+  value,
+  tone,
+}: {
+  label: string
+  value: string
+  tone?: 'discount' | 'free'
+}) {
+  const valueCls =
+    tone === 'discount'
+      ? 'text-emerald-300'
+      : tone === 'free'
+        ? 'font-bold text-emerald-400'
+        : 'text-white'
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-slate-400">{label}</span>
+      <span className={`font-semibold ${valueCls}`}>{value}</span>
+    </div>
   )
 }

@@ -49,7 +49,29 @@ async function recordOrder(session: Stripe.Checkout.Session) {
   let billing: Record<string, string> | null = null
   try { billing = session.metadata?.billing ? JSON.parse(session.metadata.billing) : null } catch { /* ignore */ }
 
+  let contact: Record<string, string> | null = null
+  try { contact = session.metadata?.contact ? JSON.parse(session.metadata.contact) : null } catch { /* ignore */ }
+
+  let ship: Record<string, string> | null = null
+  try { ship = session.metadata?.ship ? JSON.parse(session.metadata.ship) : null } catch { /* ignore */ }
+
+  let amounts: Record<string, number> | null = null
+  try { amounts = session.metadata?.amounts ? JSON.parse(session.metadata.amounts) : null } catch { /* ignore */ }
+
+  const couponCode = session.metadata?.coupon ?? null
   const userId = session.metadata?.userId ?? null
+
+  // Flatten the detailed delivery form into the order's two address lines.
+  const join = (...parts: (string | undefined | null)[]) =>
+    parts.filter((p) => p && p.trim()).join(', ') || null
+  const shipAddress1 = ship ? join(ship.street, ship.building && `Bldg ${ship.building}`) : null
+  const shipAddress2 = ship
+    ? join(
+        ship.floor && `Floor ${ship.floor}`,
+        ship.apartment && `Apt ${ship.apartment}`,
+        ship.state,
+      )
+    : null
 
   // Fetch product snapshots (name + price at time of purchase)
   const ids = cart.map((c) => c.id)
@@ -72,12 +94,25 @@ async function recordOrder(session: Stripe.Checkout.Session) {
       currency: session.currency ?? 'eur',
       status: 'paid',
       user_id: userId,
+      // Order totals (server-computed in the checkout function).
+      subtotal_cents: amounts?.subtotal ?? null,
+      shipping_cents: amounts?.shipping ?? null,
+      discount_cents: amounts?.discount ?? null,
+      tax_cents: amounts?.vat ?? null,
+      // Delivery address from the pre-checkout form.
+      ship_name: contact?.fullName || null,
+      ship_address1: shipAddress1,
+      ship_address2: shipAddress2,
+      ship_city: ship?.city || null,
+      ship_postal_code: ship?.postalCode || null,
+      ship_country: ship?.country || null,
+      // Contact / billing snapshot (business billing takes precedence).
       billing_company: billing?.company ?? null,
       billing_vat_number: billing?.vatNumber ?? null,
       billing_registration_number: billing?.registrationNumber || null,
-      billing_contact_name: billing?.contactName || null,
-      billing_phone: billing?.phone || null,
-      billing_email: billing?.email || null,
+      billing_contact_name: billing?.contactName || contact?.fullName || null,
+      billing_phone: billing?.phone || contact?.phone || null,
+      billing_email: billing?.email || contact?.email || null,
       billing_address1: billing?.address1 || null,
       billing_address2: billing?.address2 || null,
       billing_city: billing?.city || null,
@@ -110,5 +145,24 @@ async function recordOrder(session: Stripe.Checkout.Session) {
 
   if (lineRows.length) {
     await supabase.from('order_items').insert(lineRows)
+  }
+
+  // Best-effort: count the coupon redemption. Never let this break order recording.
+  if (couponCode) {
+    try {
+      const { data: c } = await supabase
+        .from('coupons')
+        .select('id, times_redeemed')
+        .eq('code', couponCode)
+        .maybeSingle()
+      if (c) {
+        await supabase
+          .from('coupons')
+          .update({ times_redeemed: ((c as { times_redeemed: number }).times_redeemed ?? 0) + 1 })
+          .eq('id', (c as { id: string }).id)
+      }
+    } catch (err) {
+      console.error('[stripe-webhook] coupon redemption update failed:', err)
+    }
   }
 }

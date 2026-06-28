@@ -91,10 +91,32 @@ export interface CheckoutBilling {
   country?: string
 }
 
+/** Who the order is for and how to reach them. */
+export interface CheckoutContact {
+  fullName: string
+  email?: string
+  phone?: string
+}
+
+/** Detailed delivery address collected before payment. */
+export interface CheckoutShipping {
+  country: string
+  state?: string
+  city: string
+  street: string
+  building?: string
+  floor?: string
+  apartment?: string
+  postalCode: string
+}
+
 export interface CheckoutCustomer {
   userId?: string
   email?: string
   billing?: CheckoutBilling
+  contact?: CheckoutContact
+  shipping?: CheckoutShipping
+  couponCode?: string
 }
 
 /** Create a Stripe Checkout session and return its redirect URL. */
@@ -108,5 +130,33 @@ export async function createCheckout(
     body: JSON.stringify({ items, ...customer }),
   })
   if (!res.ok) throw new Error(`Checkout failed (${res.status})`)
+  return res.json()
+}
+
+export interface CouponResult {
+  valid: boolean
+  /** Discount in cents for the given subtotal (0 when invalid). */
+  discountCents: number
+  /** Normalised coupon code echoed back when valid. */
+  code?: string
+  /** Human-readable reason shown when the coupon can't be applied. */
+  message?: string
+}
+
+/**
+ * Validate a coupon against the live `coupons` table and return the discount it
+ * would apply to the given subtotal. Runs server-side (service role) so it works
+ * regardless of table RLS and never exposes the full coupon list to the browser.
+ */
+export async function validateCoupon(
+  code: string,
+  subtotalCents: number,
+): Promise<CouponResult> {
+  const res = await fetch(CHECKOUT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'validate-coupon', code, subtotalCents }),
+  })
+  if (!res.ok) return { valid: false, discountCents: 0, message: 'Could not check coupon.' }
   return res.json()
 }
