@@ -95,7 +95,6 @@ copy each `.env.example` to `.env` and fill in your own values.
 | ----------------------------- | -------------------------------------------- |
 | `VITE_SUPABASE_URL`           | Supabase project URL                         |
 | `VITE_SUPABASE_ANON_KEY`      | Supabase anon key (used with RLS)            |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key                       |
 | `VITE_API_URL`                | Base URL of the Express back-end             |
 
 ### `server/.env` (server-only secrets — never sent to the browser)

@@ -5,7 +5,6 @@
 [build.environment]
   VITE_SUPABASE_URL          = "https://vumjslsogdnexehutibj.supabase.co"
   VITE_SUPABASE_ANON_KEY     = "sb_publishable_xGyIdQwX9eZqGDkCz893Pg_algfSfAm"
-  VITE_STRIPE_PUBLISHABLE_KEY = "pk_live_51JndOpCUoqNzIKpe5jnBTFsI4iCDdLZwhCZIwYT6cAjrofgOwGaKjOLXE00ZHSVFLv2qoaKBXHgvjzjapyvPfm7a00g9zh6Y9H"
 
 [[redirects]]
   from   = "/*"

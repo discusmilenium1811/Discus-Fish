@@ -52,8 +52,7 @@ The token is verified with Supabase and the email checked against `ADMIN_EMAILS`
 ## 4. Configure Stripe
 
 1. <https://dashboard.stripe.com> → **Developers → API keys**: copy the
-   **Secret key** → `STRIPE_SECRET_KEY` (and the **Publishable key** → the
-   client's `VITE_STRIPE_PUBLISHABLE_KEY`).
+   **Secret key** → `STRIPE_SECRET_KEY`.
 2. Local webhooks: install the Stripe CLI and run
    `stripe listen --forward-to localhost:3000/api/webhooks/stripe`.
    It prints a `whsec_...` secret → `STRIPE_WEBHOOK_SECRET`.
