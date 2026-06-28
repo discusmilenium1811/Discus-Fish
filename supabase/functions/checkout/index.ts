@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const clientUrl = Deno.env.get('CLIENT_URL') ?? 'https://discusmillenium.netlify.app'
+    const clientUrl = Deno.env.get('CLIENT_URL') ?? 'https://willowy-nasturtium-e9e6aa.netlify.app'
     const metadata: Record<string, string> = {
       cart: JSON.stringify(items.map((i: { productId: string; quantity: number }) => ({ id: i.productId, q: i.quantity }))),
     }
