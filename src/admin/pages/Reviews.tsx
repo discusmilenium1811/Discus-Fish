@@ -28,6 +28,11 @@ interface Review {
 }
 
 const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(5 - n)
+const CONTACT_REVIEW_PREFIX = '[[contact-review]]'
+
+const isContactReview = (review: Review) => review.comment.startsWith(CONTACT_REVIEW_PREFIX)
+const visibleComment = (review: Review) =>
+  isContactReview(review) ? review.comment.slice(CONTACT_REVIEW_PREFIX.length) : review.comment
 
 export function Reviews() {
   const [rows, setRows] = useState<Review[]>([])
@@ -123,14 +128,14 @@ export function Reviews() {
                 <tr key={r.id} className={trCls}>
                   <td className="px-4 py-3">
                     <div className="font-semibold text-white">
-                      {r.products?.name ?? 'General / Contact page'}
+                      {isContactReview(r) ? 'General / Contact page' : r.products?.name ?? '—'}
                     </div>
                     <div className="text-xs text-slate-500">
                       {r.author_name ?? 'Anonymous'} · {fmtDate(r.created_at)}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-amber-300">{stars(r.rating)}</td>
-                  <td className="max-w-xs px-4 py-3 text-slate-300">{r.comment}</td>
+                  <td className="max-w-xs px-4 py-3 text-slate-300">{visibleComment(r)}</td>
                   <td className="px-4 py-3">
                     {r.status === 'approved' ? (
                       <Pill tone="green">Approved</Pill>

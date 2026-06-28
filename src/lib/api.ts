@@ -151,13 +151,15 @@ export interface PublicReview {
   createdAt: string
 }
 
+const CONTACT_REVIEW_PREFIX = '[[contact-review]]'
+
 /** Load only admin-approved general reviews for the Contact page. */
 export async function fetchApprovedContactReviews(): Promise<PublicReview[]> {
   const { data, error } = await supabase
     .from('reviews')
     .select('id, author_name, rating, comment, created_at')
-    .is('product_id', null)
     .eq('status', 'approved')
+    .like('comment', `${CONTACT_REVIEW_PREFIX}%`)
     .order('created_at', { ascending: false })
 
   if (error) throw error
@@ -166,7 +168,7 @@ export async function fetchApprovedContactReviews(): Promise<PublicReview[]> {
     id: review.id,
     authorName: review.author_name ?? 'Anonymous',
     rating: review.rating,
-    comment: review.comment,
+    comment: review.comment.slice(CONTACT_REVIEW_PREFIX.length),
     createdAt: review.created_at,
   }))
 }
@@ -178,12 +180,26 @@ export async function submitContactReview(input: {
   rating: number
   comment: string
 }): Promise<void> {
+  // The existing production schema requires every review to reference a
+  // product. Contact-page reviews use the first active product internally and
+  // carry a private prefix so they can still be separated from product reviews.
+  const { data: product, error: productError } = await supabase
+    .from('products')
+    .select('id')
+    .eq('is_active', true)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  if (productError) throw productError
+  if (!product) throw new Error('No active product is available for this review.')
+
   const { error } = await supabase.from('reviews').insert({
-    product_id: null,
+    product_id: product.id,
     user_id: input.userId,
     author_name: input.authorName.trim(),
     rating: input.rating,
-    comment: input.comment.trim(),
+    comment: `${CONTACT_REVIEW_PREFIX}${input.comment.trim()}`,
     status: 'pending',
   })
 
