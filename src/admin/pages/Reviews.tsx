@@ -23,7 +23,7 @@ interface Review {
   comment: string
   status: 'pending' | 'approved' | 'rejected'
   created_at: string
-  product_id: string
+  product_id: string | null
   products: { name: string } | null
 }
 
@@ -85,7 +85,7 @@ export function Reviews() {
       <PageHeader
         icon="💬"
         title="Comments & Reviews"
-        description="Moderate customer comments left after their orders. Only approved reviews show in the store."
+        description="Moderate product and Contact-page reviews. Only approved reviews are shown publicly."
         action={<PageSearch q={q} setQ={setQ} placeholder="Search comments…" />}
       />
       <ErrorNote msg={error} />
@@ -122,7 +122,9 @@ export function Reviews() {
               shown.map((r) => (
                 <tr key={r.id} className={trCls}>
                   <td className="px-4 py-3">
-                    <div className="font-semibold text-white">{r.products?.name ?? '—'}</div>
+                    <div className="font-semibold text-white">
+                      {r.products?.name ?? 'General / Contact page'}
+                    </div>
                     <div className="text-xs text-slate-500">
                       {r.author_name ?? 'Anonymous'} · {fmtDate(r.created_at)}
                     </div>

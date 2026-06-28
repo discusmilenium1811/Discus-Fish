@@ -1,4 +1,11 @@
+import { useState } from 'react'
+import { useAuth } from '../auth/AuthContext'
 import { useTranslation } from '../i18n/LanguageContext'
+import {
+  fetchApprovedContactReviews,
+  submitContactReview,
+  type PublicReview,
+} from '../lib/api'
 
 const CONTACTS = [
   {
@@ -67,6 +74,67 @@ const CONTACTS = [
 
 export function ContactPage() {
   const { t } = useTranslation()
+  const { user, profile } = useAuth()
+  const [reviewsOpen, setReviewsOpen] = useState(false)
+  const [reviews, setReviews] = useState<PublicReview[]>([])
+  const [loadingReviews, setLoadingReviews] = useState(false)
+  const [loadError, setLoadError] = useState('')
+  const [authorName, setAuthorName] = useState('')
+  const [rating, setRating] = useState(5)
+  const [comment, setComment] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+  const suggestedAuthorName = profile?.username ?? user?.user_metadata?.username ?? ''
+
+  async function toggleReviews() {
+    const willOpen = !reviewsOpen
+    setReviewsOpen(willOpen)
+    if (!willOpen) return
+
+    setLoadingReviews(true)
+    setLoadError('')
+    try {
+      setReviews(await fetchApprovedContactReviews())
+    } catch {
+      setLoadError(t('reviews.loadError'))
+    } finally {
+      setLoadingReviews(false)
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setSubmitError('')
+    setSubmitted(false)
+
+    if (!user) {
+      setSubmitError(t('reviews.signIn'))
+      return
+    }
+    const submittedAuthorName = authorName.trim() || suggestedAuthorName
+    if (!submittedAuthorName || comment.trim().length < 3) {
+      setSubmitError(t('reviews.required'))
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      await submitContactReview({
+        userId: user.id,
+        authorName: submittedAuthorName,
+        rating,
+        comment,
+      })
+      setComment('')
+      setRating(5)
+      setSubmitted(true)
+    } catch {
+      setSubmitError(t('reviews.submitError'))
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <section className="relative min-h-[70vh] overflow-hidden">
@@ -77,7 +145,7 @@ export function ContactPage() {
       />
       <div className="absolute inset-0 bg-slate-950/90" />
 
-      <div className="relative mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-20">
+      <div className="relative mx-auto max-w-5xl px-4 py-14 sm:px-6 sm:py-20">
         <div className="mb-12 text-center sm:mb-16">
           <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
             {t('contact.heading')}
@@ -110,7 +178,139 @@ export function ContactPage() {
               </div>
             </a>
           ))}
+          <button
+            type="button"
+            onClick={toggleReviews}
+            aria-expanded={reviewsOpen}
+            aria-controls="customer-reviews"
+            className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-5 text-left backdrop-blur-md transition hover:border-amber-400/50 hover:bg-amber-500/5"
+          >
+            <span className="text-amber-300" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-7 w-7">
+                <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                <path d="m8.5 11 2 2 5-5" />
+              </svg>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                {t('reviews.eyebrow')}
+              </span>
+              <span className="mt-0.5 block text-sm font-bold text-white sm:text-base">
+                {t('reviews.open')}
+              </span>
+              <span className="mt-0.5 block text-xs text-slate-400">
+                {t('reviews.openLabel')}
+              </span>
+            </span>
+            <span className={`text-slate-400 transition ${reviewsOpen ? 'rotate-180' : ''}`} aria-hidden="true">
+              ↓
+            </span>
+          </button>
         </div>
+
+        {reviewsOpen && (
+          <div id="customer-reviews" className="mt-10 scroll-mt-24">
+            <div className="mb-6 text-center">
+              <h2 className="text-2xl font-extrabold text-white sm:text-3xl">{t('reviews.title')}</h2>
+              <p className="mt-2 text-sm text-slate-400">{t('reviews.subtitle')}</p>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="space-y-4">
+                {loadingReviews ? (
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-slate-400">
+                    {t('reviews.loading')}
+                  </div>
+                ) : loadError ? (
+                  <div className="rounded-2xl border border-rose-400/20 bg-rose-500/10 p-5 text-sm text-rose-200">
+                    {loadError}
+                  </div>
+                ) : reviews.length === 0 ? (
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-slate-400">
+                    {t('reviews.empty')}
+                  </div>
+                ) : (
+                  reviews.map((review) => (
+                    <article key={review.id} className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 backdrop-blur-md">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-bold text-white">{review.authorName}</div>
+                        <time className="text-xs text-slate-500" dateTime={review.createdAt}>
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </time>
+                      </div>
+                      <div className="mt-2 text-amber-300" aria-label={`${review.rating} / 5`}>
+                        {'★'.repeat(review.rating)}<span className="text-slate-600">{'★'.repeat(5 - review.rating)}</span>
+                      </div>
+                      <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-300">
+                        {review.comment}
+                      </p>
+                    </article>
+                  ))
+                )}
+              </div>
+
+              <form onSubmit={handleSubmit} className="h-fit rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md sm:p-6">
+                <h3 className="text-lg font-extrabold text-white">{t('reviews.write')}</h3>
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                  {user ? t('reviews.moderation') : t('reviews.signInHint')}
+                </p>
+
+                <label className="mt-5 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  {t('reviews.name')}
+                  <input
+                    value={authorName}
+                    onChange={(e) => setAuthorName(e.target.value)}
+                    placeholder={suggestedAuthorName}
+                    maxLength={100}
+                    disabled={!user || submitting}
+                    className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-white outline-none transition focus:border-cyan-400/60 disabled:opacity-50"
+                  />
+                </label>
+
+                <fieldset className="mt-5" disabled={!user || submitting}>
+                  <legend className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('reviews.rating')}</legend>
+                  <div className="mt-2 flex gap-1" aria-label={t('reviews.rating')}>
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setRating(value)}
+                        className={`text-2xl transition hover:scale-110 ${value <= rating ? 'text-amber-300' : 'text-slate-600'}`}
+                        aria-label={`${value} / 5`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+
+                <label className="mt-5 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  {t('reviews.comment')}
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    maxLength={1500}
+                    rows={5}
+                    disabled={!user || submitting}
+                    placeholder={t('reviews.placeholder')}
+                    className="mt-2 w-full resize-y rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-400/60 disabled:opacity-50"
+                  />
+                </label>
+
+                {submitError && <p className="mt-3 text-sm text-rose-300">{submitError}</p>}
+                {submitted && <p className="mt-3 text-sm text-emerald-300">{t('reviews.success')}</p>}
+
+                <button
+                  type="submit"
+                  disabled={!user || submitting}
+                  className="mt-5 w-full rounded-full bg-cyan-400 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {submitting ? t('reviews.submitting') : t('reviews.submit')}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   )

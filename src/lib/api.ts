@@ -143,6 +143,53 @@ export interface CouponResult {
   message?: string
 }
 
+export interface PublicReview {
+  id: string
+  authorName: string
+  rating: number
+  comment: string
+  createdAt: string
+}
+
+/** Load only admin-approved general reviews for the Contact page. */
+export async function fetchApprovedContactReviews(): Promise<PublicReview[]> {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('id, author_name, rating, comment, created_at')
+    .is('product_id', null)
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+
+  return (data ?? []).map((review) => ({
+    id: review.id,
+    authorName: review.author_name ?? 'Anonymous',
+    rating: review.rating,
+    comment: review.comment,
+    createdAt: review.created_at,
+  }))
+}
+
+/** Submit a general review to the admin moderation queue. */
+export async function submitContactReview(input: {
+  userId: string
+  authorName: string
+  rating: number
+  comment: string
+}): Promise<void> {
+  const { error } = await supabase.from('reviews').insert({
+    product_id: null,
+    user_id: input.userId,
+    author_name: input.authorName.trim(),
+    rating: input.rating,
+    comment: input.comment.trim(),
+    status: 'pending',
+  })
+
+  if (error) throw error
+}
+
 /**
  * Validate a coupon against the live `coupons` table and return the discount it
  * would apply to the given subtotal. Runs server-side (service role) so it works
