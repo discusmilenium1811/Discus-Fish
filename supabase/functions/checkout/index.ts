@@ -171,7 +171,13 @@ Deno.serve(async (req) => {
     // VAT is included in the prices; this is the portion contained in the total.
     const vatCents = Math.round(totalCents - totalCents / 1.19)
 
-    const clientUrl = Deno.env.get('CLIENT_URL') ?? 'https://discusfishfood.netlify.app'
+    // Send the buyer back to the storefront that started checkout: local dev
+    // returns to localhost, production returns to the live site. Unknown origins
+    // fall back to CLIENT_URL so this can't be abused as an open redirect.
+    const fallbackUrl = Deno.env.get('CLIENT_URL') ?? 'https://discusfishfood.netlify.app'
+    const origin = req.headers.get('origin') ?? ''
+    const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+    const clientUrl = isLocalhost || origin === fallbackUrl ? origin : fallbackUrl
     const metadata: Record<string, string> = {
       cart: JSON.stringify(items.map((i: { productId: string; quantity: number }) => ({ id: i.productId, q: i.quantity }))),
       amounts: JSON.stringify({
