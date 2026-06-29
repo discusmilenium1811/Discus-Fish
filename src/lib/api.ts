@@ -47,7 +47,7 @@ export async function fetchProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from('products')
     .select(
-      'id, slug, name, description, details, price_cents, currency, image_url, weight_grams, stock, is_active, is_coming_soon, created_at',
+      'id, slug, name, description, details, price_cents, currency, image_url, weight_grams, stock, is_active, is_coming_soon, created_at, categories(name, slug)',
     )
     .eq('is_active', true)
     .order('created_at', { ascending: false })
@@ -55,20 +55,28 @@ export async function fetchProducts(): Promise<Product[]> {
   if (error) throw error
 
   // Map Postgres snake_case columns to the front-end Product shape.
-  return (data ?? []).map((p) => ({
-    id: p.id,
-    slug: p.slug,
-    name: p.name,
-    description: p.description,
-    details: p.details,
-    priceCents: p.price_cents,
-    currency: p.currency,
-    imageUrl: productImageUrl(p.slug, p.name, p.is_coming_soon, p.image_url),
-    weightGrams: p.weight_grams,
-    stock: p.stock,
-    isActive: p.is_active,
-    isComingSoon: p.is_coming_soon,
-  }))
+  return (data ?? []).map((p) => {
+    const category = (Array.isArray(p.categories) ? p.categories[0] : p.categories) as
+      | { name: string; slug: string }
+      | null
+      | undefined
+    return {
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      description: p.description,
+      details: p.details,
+      priceCents: p.price_cents,
+      currency: p.currency,
+      imageUrl: productImageUrl(p.slug, p.name, p.is_coming_soon, p.image_url),
+      weightGrams: p.weight_grams,
+      stock: p.stock,
+      isActive: p.is_active,
+      isComingSoon: p.is_coming_soon,
+      categoryName: category?.name ?? null,
+      categorySlug: category?.slug ?? null,
+    }
+  })
 }
 
 export interface CheckoutItem {

@@ -5,9 +5,26 @@ import { CatalogDownloadDrawer } from '../components/CatalogDownloadDrawer'
 import { useTranslation } from '../i18n/LanguageContext'
 import { productMatches } from '../lib/productSearch'
 import type { StorefrontContext } from '../layouts/StorefrontLayout'
+import type { Product } from '../types'
+import type { TranslationKey } from '../i18n/translations'
 
 interface CatalogPageProps {
   tab: 'products' | 'coming'
+}
+
+type GroupId = 'fish-food' | 'water-conditioners' | 'equipment'
+
+const GROUPS: { id: GroupId; icon: string; title: TranslationKey; description: TranslationKey; accent: string }[] = [
+  { id: 'fish-food', icon: '🐟', title: 'catalog.group.food', description: 'catalog.group.foodText', accent: 'from-orange-400/15 to-amber-300/5 border-orange-300/20' },
+  { id: 'water-conditioners', icon: '💧', title: 'catalog.group.water', description: 'catalog.group.waterText', accent: 'from-cyan-400/15 to-blue-400/5 border-cyan-300/20' },
+  { id: 'equipment', icon: '⚙️', title: 'catalog.group.equipment', description: 'catalog.group.equipmentText', accent: 'from-violet-400/15 to-slate-400/5 border-violet-300/20' },
+]
+
+function productGroup(product: Product): GroupId {
+  const category = `${product.categoryName ?? ''} ${product.categorySlug ?? ''}`.toLowerCase()
+  if (/filter|equipment|pump|heater|tool/.test(category)) return 'equipment'
+  if (/water|preparation|conditioner|treatment/.test(category)) return 'water-conditioners'
+  return 'fish-food'
 }
 
 export function CatalogPage({ tab }: CatalogPageProps) {
@@ -31,6 +48,10 @@ export function CatalogPage({ tab }: CatalogPageProps) {
   const list = (tab === 'products' ? available : coming).filter((p) =>
     productMatches(p, q),
   )
+  const grouped = GROUPS.map((group) => ({
+    ...group,
+    products: list.filter((product) => productGroup(product) === group.id),
+  }))
 
   const tabBase =
     'rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:py-2 sm:text-sm'
@@ -103,10 +124,44 @@ export function CatalogPage({ tab }: CatalogPageProps) {
               : t('catalog.emptyComing')}
         </p>
       ) : (
-        <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-          {list.map((product, i) => (
-            <ProductCard key={product.id} product={product} index={i} onAdd={addToCart} />
-          ))}
+        <div className="mt-8">
+          <div className="grid gap-3 sm:grid-cols-3">
+            {grouped.map((group) => (
+              <a
+                key={group.id}
+                href={`#${group.id}`}
+                className={`flex items-center gap-3 rounded-2xl border bg-gradient-to-br p-4 transition hover:-translate-y-0.5 hover:border-cyan-300/40 ${group.accent}`}
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 text-xl ring-1 ring-white/10" aria-hidden="true">{group.icon}</span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-extrabold text-white">{t(group.title)}</span>
+                  <span className="mt-0.5 block text-xs text-slate-400">{group.products.length} {t('catalog.group.items')}</span>
+                </span>
+              </a>
+            ))}
+          </div>
+
+          <div className="mt-10 space-y-14">
+            {grouped.filter((group) => group.products.length > 0).map((group) => (
+              <section key={group.id} id={group.id} className="scroll-mt-28">
+                <div className={`rounded-2xl border bg-gradient-to-r px-5 py-4 ${group.accent}`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl" aria-hidden="true">{group.icon}</span>
+                    <div>
+                      <h2 className="text-xl font-black text-white sm:text-2xl">{t(group.title)}</h2>
+                      <p className="mt-1 text-xs leading-5 text-slate-400 sm:text-sm">{t(group.description)}</p>
+                    </div>
+                    <span className="ml-auto rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-slate-300">{group.products.length}</span>
+                  </div>
+                </div>
+                <div className="mt-5 grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+                  {group.products.map((product, index) => (
+                    <ProductCard key={product.id} product={product} index={index} onAdd={addToCart} />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
         </div>
       )}
     </section>

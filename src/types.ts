@@ -12,4 +12,6 @@ export interface Product {
   stock: number
   isActive: boolean
   isComingSoon?: boolean
+  categoryName?: string | null
+  categorySlug?: string | null
 }
