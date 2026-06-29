@@ -273,6 +273,9 @@ export const translations = {
     'cart.shippingFree': 'FREE',
     'cart.shippingProgress': 'Add {amount} more for free shipping',
     'cart.shippingUnlocked': '🎉 You\'ve unlocked free shipping!',
+    'cart.cyprusShippingProgress': 'Add {amount} more for free delivery to Cyprus',
+    'cart.cyprusUnlockedEuRemaining': '✓ Free for Cyprus · Add {amount} more for the EU',
+    'cart.cyprusEuUnlocked': '🎉 Free delivery unlocked for Cyprus & the EU!',
     'cart.total': 'Total',
 
     // Cart — delivery details step
@@ -629,6 +632,9 @@ export const translations = {
     'cart.shippingFree': 'ΔΩΡΕΑΝ',
     'cart.shippingProgress': 'Προσθέστε άλλα {amount} για δωρεάν αποστολή',
     'cart.shippingUnlocked': '🎉 Ξεκλειδώσατε τη δωρεάν αποστολή!',
+    'cart.cyprusShippingProgress': 'Προσθέστε άλλα {amount} για δωρεάν παράδοση στην Κύπρο',
+    'cart.cyprusUnlockedEuRemaining': '✓ Δωρεάν για Κύπρο · Άλλα {amount} για την ΕΕ',
+    'cart.cyprusEuUnlocked': '🎉 Δωρεάν παράδοση για Κύπρο & ΕΕ!',
     'cart.total': 'Σύνολο',
 
     // Cart — delivery details step
@@ -985,6 +991,9 @@ export const translations = {
     'cart.shippingFree': 'БЕЗПЛАТНО',
     'cart.shippingProgress': 'Добавете още {amount} за безплатна доставка',
     'cart.shippingUnlocked': '🎉 Отключихте безплатна доставка!',
+    'cart.cyprusShippingProgress': 'Добавете още {amount} за безплатна доставка до Кипър',
+    'cart.cyprusUnlockedEuRemaining': '✓ Безплатно за Кипър · Още {amount} за ЕС',
+    'cart.cyprusEuUnlocked': '🎉 Безплатна доставка за Кипър и ЕС!',
     'cart.total': 'Общо',
 
     // Cart — delivery details step

@@ -25,6 +25,16 @@ export interface ShippingRates {
   methods: ShippingMethod[]
 }
 
+export interface FreeShippingThresholds {
+  cyprusCents: number
+  euCents: number
+}
+
+export const DEFAULT_FREE_SHIPPING_THRESHOLDS: FreeShippingThresholds = {
+  cyprusCents: 4000,
+  euCents: 7500,
+}
+
 /** Customer-visible rates. These are the same records edited in Admin > Shipping. */
 export async function fetchPublicShippingRates(): Promise<ShippingRates> {
   const [zonesResult, methodsResult] = await Promise.all([
@@ -52,4 +62,30 @@ export async function fetchPublicShippingRates(): Promise<ShippingRates> {
   )
 
   return { zones, methods }
+}
+
+/** Reads the lowest active free-shipping threshold for Cyprus and the EU. */
+export async function fetchFreeShippingThresholds(): Promise<FreeShippingThresholds> {
+  const { zones, methods } = await fetchPublicShippingRates()
+  const cyprusZone = zones.find(
+    (zone) => zone.countries.includes('CY') || zone.name.toLowerCase().includes('cyprus'),
+  )
+  const euZone = zones.find(
+    (zone) =>
+      zone.name.toLowerCase().includes('european union') ||
+      (zone.countries.includes('DE') && zone.countries.includes('FR')),
+  )
+
+  const thresholdFor = (zoneId?: string) => {
+    if (!zoneId) return null
+    const thresholds = methods
+      .filter((method) => method.zone_id === zoneId && method.free_over_cents != null)
+      .map((method) => method.free_over_cents as number)
+    return thresholds.length ? Math.min(...thresholds) : null
+  }
+
+  return {
+    cyprusCents: thresholdFor(cyprusZone?.id) ?? DEFAULT_FREE_SHIPPING_THRESHOLDS.cyprusCents,
+    euCents: thresholdFor(euZone?.id) ?? DEFAULT_FREE_SHIPPING_THRESHOLDS.euCents,
+  }
 }

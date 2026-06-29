@@ -6,9 +6,13 @@ import {
   validateCoupon,
   type CheckoutCustomer,
 } from '../lib/api'
-import { computeBreakdown, FREE_SHIPPING_CENTS } from '../lib/pricing'
+import { computeBreakdown } from '../lib/pricing'
 import { useAuth } from '../auth/AuthContext'
 import { useTranslation } from '../i18n/LanguageContext'
+import {
+  DEFAULT_FREE_SHIPPING_THRESHOLDS,
+  fetchFreeShippingThresholds,
+} from '../lib/shipping'
 
 const ITEM_FALLBACK = '/pictures/discus-closeup.webp'
 
@@ -60,6 +64,27 @@ export function CartDrawer({
   const [step, setStep] = useState<Step>('cart')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [freeThresholds, setFreeThresholds] = useState(DEFAULT_FREE_SHIPPING_THRESHOLDS)
+
+  useEffect(() => {
+    if (!open) return
+    let active = true
+    const refresh = () => {
+      fetchFreeShippingThresholds()
+        .then((thresholds) => {
+          if (active) setFreeThresholds(thresholds)
+        })
+        .catch(() => {
+          /* keep safe defaults while shipping settings are unavailable */
+        })
+    }
+    refresh()
+    const timer = window.setInterval(refresh, 30_000)
+    return () => {
+      active = false
+      window.clearInterval(timer)
+    }
+  }, [open])
 
   // Delivery details form.
   const [form, setForm] = useState(EMPTY_FORM)
@@ -505,35 +530,57 @@ export function CartDrawer({
           <div className="border-t border-white/10 px-5 py-4">
             {/* Shipping progress banner */}
             {(() => {
-              const freeShipping = subtotalCents >= FREE_SHIPPING_CENTS
+              const cyprusThreshold = Math.min(freeThresholds.cyprusCents, freeThresholds.euCents)
+              const euThreshold = Math.max(freeThresholds.cyprusCents, freeThresholds.euCents)
+              const cyprusUnlocked = subtotalCents >= cyprusThreshold
+              const euUnlocked = subtotalCents >= euThreshold
               const progressPct = Math.min(
                 100,
-                Math.round((subtotalCents / FREE_SHIPPING_CENTS) * 100),
+                Math.round((subtotalCents / euThreshold) * 100),
               )
-              const remaining = FREE_SHIPPING_CENTS - subtotalCents
+              const cyprusMarkerPct = Math.min(100, (cyprusThreshold / euThreshold) * 100)
+              const remainingToCyprus = Math.max(0, cyprusThreshold - subtotalCents)
+              const remainingToEu = Math.max(0, euThreshold - subtotalCents)
 
               return (
-                <div className="mb-4 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
-                  {freeShipping ? (
-                    <p className="text-center text-xs font-semibold text-emerald-400">
-                      {t('cart.shippingUnlocked')}
-                    </p>
-                  ) : (
-                    <>
-                      <p className="mb-1.5 text-xs text-slate-300">
-                        {t('cart.shippingProgress').replace(
-                          '{amount}',
-                          formatPrice(remaining, 'eur'),
-                        )}
-                      </p>
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                        <div
-                          className="h-full rounded-full bg-cyan-400 transition-all duration-300"
-                          style={{ width: `${progressPct}%` }}
-                        />
-                      </div>
-                    </>
-                  )}
+                <div className="mb-4 rounded-xl border border-white/10 bg-white/5 px-3 py-3">
+                  <p className={`mb-3 text-center text-xs font-semibold ${cyprusUnlocked ? 'text-emerald-300' : 'text-slate-300'}`}>
+                    {euUnlocked
+                      ? t('cart.cyprusEuUnlocked')
+                      : cyprusUnlocked
+                        ? t('cart.cyprusUnlockedEuRemaining').replace(
+                            '{amount}',
+                            formatPrice(remainingToEu, 'eur'),
+                          )
+                        : t('cart.cyprusShippingProgress').replace(
+                            '{amount}',
+                            formatPrice(remainingToCyprus, 'eur'),
+                          )}
+                  </p>
+
+                  <div className="relative mb-1.5 h-4 text-[0.6rem] font-extrabold uppercase tracking-wide">
+                    <span
+                      className={`absolute -translate-x-1/2 ${cyprusUnlocked ? 'text-emerald-300' : 'text-slate-400'}`}
+                      style={{ left: `${cyprusMarkerPct}%` }}
+                    >
+                      CY {formatPrice(cyprusThreshold, 'eur')}
+                    </span>
+                    <span className={`absolute right-0 ${euUnlocked ? 'text-emerald-300' : 'text-slate-400'}`}>
+                      EU {formatPrice(euThreshold, 'eur')}
+                    </span>
+                  </div>
+                  <div className="relative h-2.5 w-full rounded-full bg-white/10">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400 transition-all duration-500"
+                      style={{ width: `${progressPct}%` }}
+                    />
+                    <span
+                      className={`absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 ${cyprusUnlocked ? 'border-emerald-200 bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.6)]' : 'border-slate-500 bg-slate-800'}`}
+                      style={{ left: `${cyprusMarkerPct}%` }}
+                      aria-hidden="true"
+                    />
+                    <span className={`absolute right-0 top-1/2 h-4 w-4 translate-x-0 -translate-y-1/2 rounded-full border-2 ${euUnlocked ? 'border-emerald-200 bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.6)]' : 'border-slate-500 bg-slate-800'}`} aria-hidden="true" />
+                  </div>
                 </div>
               )
             })()}
