@@ -9,7 +9,12 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6">
         <div className="grid items-start gap-8 lg:grid-cols-[0.75fr_1.4fr_0.8fr] lg:gap-10">
           <div className="max-w-xs">
-            <Link to="/" className="inline-flex items-center" aria-label="DiscusFish home">
+            <Link
+              to="/"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="inline-flex items-center"
+              aria-label="DiscusFish home"
+            >
               <img
                 src="/pictures/Logo/viber_image_2026-06-20_16-16-33-937.jpg"
                 alt="DiscusFish logo"
