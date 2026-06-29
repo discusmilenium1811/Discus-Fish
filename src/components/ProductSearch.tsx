@@ -5,20 +5,10 @@ import { useTranslation } from '../i18n/LanguageContext'
 import { formatPrice } from '../lib/format'
 import { productMatches } from '../lib/productSearch'
 
-type Scope = 'products' | 'coming'
-
-const TAB_PATH: Record<Scope, string> = {
-  products: '/Cataloge/Products',
-  coming: '/Cataloge/NewProductsComingsoon',
-}
-
 const FALLBACK_IMG = '/pictures/discus-closeup.webp'
 
 /**
- * Customer-facing catalogue search for the home page. Two scope filters map to
- * the two catalogue tabs (Products / New Products Coming Soon). Typing shows a
- * live suggestion dropdown; submitting opens the matching catalogue tab with
- * the query applied (`?q=`).
+ * Customer-facing search across both available and upcoming products.
  */
 export function ProductSearch({ products }: { products: Product[] }) {
   const { t } = useTranslation()
@@ -26,7 +16,6 @@ export function ProductSearch({ products }: { products: Product[] }) {
   const wrapRef = useRef<HTMLDivElement>(null)
 
   const [term, setTerm] = useState('')
-  const [scope, setScope] = useState<Scope>('products')
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -46,20 +35,25 @@ export function ProductSearch({ products }: { products: Product[] }) {
     }
   }, [])
 
-  const pool = products.filter((p) =>
-    scope === 'products' ? !p.isComingSoon : !!p.isComingSoon,
-  )
   const q = term.trim()
-  const results = q ? pool.filter((p) => productMatches(p, q)).slice(0, 6) : []
+  const allMatches = q ? products.filter((p) => productMatches(p, q)) : []
+  const results = allMatches.slice(0, 6)
 
   function openAll() {
-    const path = TAB_PATH[scope]
+    const path = allMatches.some((product) => !product.isComingSoon)
+      ? '/Cataloge/Products'
+      : allMatches.some((product) => product.isComingSoon)
+        ? '/Cataloge/NewProductsComingsoon'
+        : '/Cataloge/Products'
     navigate(q ? `${path}?q=${encodeURIComponent(q)}` : path)
     setOpen(false)
   }
 
   function openProduct(p: Product) {
-    navigate(`${TAB_PATH[scope]}?q=${encodeURIComponent(p.name)}`)
+    const path = p.isComingSoon
+      ? '/Cataloge/NewProductsComingsoon'
+      : '/Cataloge/Products'
+    navigate(`${path}?q=${encodeURIComponent(p.name)}`)
     setOpen(false)
   }
 
@@ -68,35 +62,11 @@ export function ProductSearch({ products }: { products: Product[] }) {
     openAll()
   }
 
-  const chip = (s: Scope, label: string) => (
-    <button
-      type="button"
-      onClick={() => setScope(s)}
-      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition sm:text-sm ${
-        scope === s
-          ? 'bg-cyan-400 text-slate-900'
-          : 'border border-white/15 bg-white/5 text-slate-300 hover:bg-white/10'
-      }`}
-    >
-      {label}
-    </button>
-  )
-
   return (
     <section className="relative bg-slate-950/60">
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
-        <h2 className="text-center text-lg font-extrabold text-white sm:text-2xl">
-          {t('search.heading')}
-        </h2>
-
-        {/* Two scope filters */}
-        <div className="mt-4 flex justify-center gap-2.5">
-          {chip('products', t('catalog.tabProducts'))}
-          {chip('coming', t('catalog.tabComing'))}
-        </div>
-
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
         {/* Search field + dropdown */}
-        <div ref={wrapRef} className="relative mx-auto mt-4 max-w-xl">
+        <div ref={wrapRef} className="relative mx-auto max-w-xl">
           <form onSubmit={onSubmit}>
             <div className="relative">
               <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">

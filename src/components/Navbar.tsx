@@ -52,11 +52,11 @@ export function Navbar({
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3.5">
+          <div className="relative flex flex-wrap items-center justify-center gap-2 sm:gap-3.5">
           <Link
             to="/shipping-prices"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="group relative order-first flex h-10 w-full items-center justify-center gap-2.5 overflow-hidden rounded-full border border-cyan-300/30 bg-gradient-to-r from-cyan-400/15 via-white/5 to-emerald-400/15 px-4 text-[0.62rem] font-extrabold uppercase tracking-[0.11em] text-white shadow-[0_8px_25px_rgba(6,182,212,0.1)] transition hover:border-cyan-300/60 hover:bg-white/10 sm:mr-auto sm:h-12 sm:w-auto sm:flex-1 sm:text-xs"
+            className="group relative order-first flex h-10 w-full items-center justify-center gap-2.5 overflow-hidden rounded-full border border-cyan-300/30 bg-gradient-to-r from-cyan-400/15 via-white/5 to-emerald-400/15 px-4 text-[0.62rem] font-extrabold uppercase tracking-[0.11em] text-white shadow-[0_8px_25px_rgba(6,182,212,0.1)] transition hover:border-cyan-300/60 hover:bg-white/10 sm:absolute sm:left-1/2 sm:h-12 sm:w-fit sm:-translate-x-1/2 sm:flex-none sm:justify-start sm:text-xs"
           >
             <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-cyan-300 text-sm shadow-[0_0_15px_rgba(103,232,249,0.4)] transition group-hover:scale-105 sm:h-8 sm:w-8 sm:text-base" aria-hidden="true">
               🚚
@@ -67,7 +67,7 @@ export function Navbar({
           <button
             type="button"
             onClick={onAccountClick}
-            className="inline-flex h-9 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
+            className="inline-flex h-9 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:ml-auto sm:h-12 sm:px-5 sm:text-base"
             aria-label={t('nav.account')}
           >
             <span className="grid h-5 w-5 place-items-center rounded-full bg-cyan-300/15 text-[0.65rem] text-cyan-200" aria-hidden="true">👤</span>
@@ -88,7 +88,7 @@ export function Navbar({
 
       <div className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/80 backdrop-blur-lg">
         <div className="mx-auto flex max-w-7xl items-center px-4 py-2.5 sm:px-6 sm:py-4">
-          <nav className="grid w-full grid-cols-6 items-center gap-1.5 text-center text-[0.65rem] font-semibold text-slate-300 sm:flex sm:justify-center sm:gap-8 sm:text-lg">
+          <nav className="relative grid w-full grid-cols-6 items-center gap-1.5 text-center text-[0.65rem] font-semibold text-slate-300 sm:flex sm:justify-center sm:gap-8 sm:text-lg">
             <Link
               to="/"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -120,9 +120,10 @@ export function Navbar({
             <button
               type="button"
               onClick={onCartClick}
-              className="relative inline-flex h-8 items-center justify-center rounded-full border border-white/15 bg-white/5 px-2 font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-10 sm:px-5 sm:text-base"
+              className="relative inline-flex h-8 items-center justify-center rounded-full border border-white/15 bg-white/5 px-2 font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:absolute sm:right-0 sm:h-10 sm:px-5 sm:text-base"
             >
-              <span>{t('nav.cart')}</span>
+              <span className="text-xl leading-none sm:text-2xl" aria-hidden="true">🛒</span>
+              <span className="sr-only">{t('nav.cart')}</span>
               {cartCount > 0 && (
                 <span className="absolute -right-1.5 -top-1.5 grid h-6 min-w-6 place-items-center rounded-full bg-rose-500 px-1.5 text-xs font-bold text-white">
                   {cartCount}
