@@ -58,7 +58,8 @@ export function Reviews() {
     }
   }
   useEffect(() => {
-    refresh()
+    const timer = window.setTimeout(() => void refresh(), 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   async function setStatus(r: Review, status: Review['status']) {

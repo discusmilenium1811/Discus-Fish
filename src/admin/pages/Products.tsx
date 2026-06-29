@@ -45,7 +45,8 @@ export function Products() {
   }
 
   useEffect(() => {
-    refresh()
+    const timer = window.setTimeout(() => void refresh(), 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   async function handleToggle(p: AdminProduct, field: 'is_active' | 'is_coming_soon') {

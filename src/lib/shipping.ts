@@ -25,16 +25,6 @@ export interface ShippingRates {
   methods: ShippingMethod[]
 }
 
-export interface FreeShippingThresholds {
-  cyprusCents: number
-  euCents: number
-}
-
-export const DEFAULT_FREE_SHIPPING_THRESHOLDS: FreeShippingThresholds = {
-  cyprusCents: 4000,
-  euCents: 7500,
-}
-
 /** Customer-visible rates. These are the same records edited in Admin > Shipping. */
 export async function fetchPublicShippingRates(): Promise<ShippingRates> {
   const [zonesResult, methodsResult] = await Promise.all([
@@ -64,28 +54,74 @@ export async function fetchPublicShippingRates(): Promise<ShippingRates> {
   return { zones, methods }
 }
 
-/** Reads the lowest active free-shipping threshold for Cyprus and the EU. */
-export async function fetchFreeShippingThresholds(): Promise<FreeShippingThresholds> {
-  const { zones, methods } = await fetchPublicShippingRates()
-  const cyprusZone = zones.find(
-    (zone) => zone.countries.includes('CY') || zone.name.toLowerCase().includes('cyprus'),
-  )
-  const euZone = zones.find(
-    (zone) =>
-      zone.name.toLowerCase().includes('european union') ||
-      (zone.countries.includes('DE') && zone.countries.includes('FR')),
-  )
+// ─────────────────────────────────────────────────────────────────────────
+//  Shipping resolution — the single source of truth for which rate applies.
+//  The checkout Edge Function mirrors this exact logic server-side so the
+//  amount charged always equals what the cart shows. Everything is driven by
+//  the admin-managed shipping_zones / shipping_methods tables, so any change
+//  the owner makes in Admin > Shipping flows through to the cart and checkout.
+// ─────────────────────────────────────────────────────────────────────────
 
-  const thresholdFor = (zoneId?: string) => {
-    if (!zoneId) return null
-    const thresholds = methods
-      .filter((method) => method.zone_id === zoneId && method.free_over_cents != null)
-      .map((method) => method.free_over_cents as number)
-    return thresholds.length ? Math.min(...thresholds) : null
-  }
+/** Sentinel country value for the "rest of the world" fallback zone. */
+export const WORLDWIDE = 'WORLDWIDE'
 
-  return {
-    cyprusCents: thresholdFor(cyprusZone?.id) ?? DEFAULT_FREE_SHIPPING_THRESHOLDS.cyprusCents,
-    euCents: thresholdFor(euZone?.id) ?? DEFAULT_FREE_SHIPPING_THRESHOLDS.euCents,
+/**
+ * Find the active zone that serves a country code. A specific zone (one that
+ * lists the country) always wins; otherwise the empty-countries zone acts as
+ * the worldwide fallback. Returns null when nothing serves the country.
+ */
+export function resolveZone(zones: ShippingZone[], country: string): ShippingZone | null {
+  const code = country.trim().toUpperCase()
+  const active = zones.filter((zone) => zone.is_active)
+  if (code && code !== WORLDWIDE) {
+    const specific = active.find((zone) =>
+      zone.countries.some((c) => c.toUpperCase() === code),
+    )
+    if (specific) return specific
   }
+  // Empty-countries zone = "Rest of world" fallback.
+  return active.find((zone) => zone.countries.length === 0) ?? null
+}
+
+/** Active shipping methods for a country's zone, cheapest/first listed first. */
+export function methodsForCountry(rates: ShippingRates, country: string): ShippingMethod[] {
+  const zone = resolveZone(rates.zones, country)
+  if (!zone) return []
+  return rates.methods
+    .filter((method) => method.is_active && method.zone_id === zone.id)
+    .sort((a, b) => a.sort_order - b.sort_order || a.price_cents - b.price_cents)
+}
+
+/** Delivery cost for a chosen method given the goods subtotal (free over threshold). */
+export function shippingCostFor(method: ShippingMethod, subtotalCents: number): number {
+  if (method.free_over_cents != null && subtotalCents >= method.free_over_cents) return 0
+  return method.price_cents
+}
+
+export interface CheckoutCountry {
+  code: string
+  zoneId: string
+}
+
+/**
+ * Countries offered at checkout, derived straight from the admin zones so the
+ * dropdown stays in sync with whatever the owner configures. The worldwide
+ * fallback (empty-countries zone) is surfaced separately via {@link WORLDWIDE}.
+ */
+export function checkoutCountries(zones: ShippingZone[]): CheckoutCountry[] {
+  const seen = new Map<string, string>()
+  zones
+    .filter((zone) => zone.is_active)
+    .forEach((zone) =>
+      zone.countries.forEach((c) => {
+        const code = c.toUpperCase()
+        if (!seen.has(code)) seen.set(code, zone.id)
+      }),
+    )
+  return [...seen.entries()].map(([code, zoneId]) => ({ code, zoneId }))
+}
+
+/** True when an active worldwide (empty-countries) fallback zone exists. */
+export function hasWorldwideZone(zones: ShippingZone[]): boolean {
+  return zones.some((zone) => zone.is_active && zone.countries.length === 0)
 }

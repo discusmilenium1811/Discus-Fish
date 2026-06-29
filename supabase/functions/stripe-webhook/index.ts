@@ -93,7 +93,10 @@ async function recordOrder(session: Stripe.Checkout.Session) {
   // Fetch product snapshots (name + price at time of purchase)
   const ids = cart.map((c) => c.id)
   const { data: products } = ids.length
-    ? await supabase.from('products').select('id, name, price_cents').in('id', ids)
+    ? await supabase
+        .from('products')
+        .select('id, name, price_cents, stock, track_inventory')
+        .in('id', ids)
     : { data: [] }
 
   const byId = new Map((products ?? []).map((p) => [p.id, p]))
@@ -116,6 +119,7 @@ async function recordOrder(session: Stripe.Checkout.Session) {
       shipping_cents: amounts?.shipping ?? null,
       discount_cents: amounts?.discount ?? null,
       tax_cents: amounts?.vat ?? null,
+      shipping_method_id: session.metadata?.shipMethodId ?? null,
       // Delivery address from the pre-checkout form.
       ship_name: contact?.fullName || null,
       ship_address1: shipAddress1,
@@ -185,6 +189,28 @@ async function recordOrder(session: Stripe.Checkout.Session) {
 
   if (lineRows.length) {
     await supabase.from('order_items').insert(lineRows)
+  }
+
+  // Decrement inventory for tracked products and log the sale movement. This
+  // runs only on a fresh order insert (duplicate webhook retries return early
+  // above), so stock is never double-counted. Best-effort: never block the order.
+  for (const c of cart) {
+    const p = byId.get(c.id) as
+      | { id: string; stock: number | null; track_inventory: boolean }
+      | undefined
+    if (!p || !p.track_inventory || p.stock == null) continue
+    const next = Math.max(0, p.stock - c.q)
+    try {
+      await supabase.from('products').update({ stock: next }).eq('id', p.id)
+      await supabase.from('stock_movements').insert({
+        product_id: p.id,
+        change: -c.q,
+        reason: 'sale',
+        created_by: null,
+      })
+    } catch (err) {
+      console.error('[stripe-webhook] stock update failed:', p.id, err)
+    }
   }
 
   // Mirror the paid order into the admin Invoices section. Best-effort: a

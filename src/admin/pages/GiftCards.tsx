@@ -68,7 +68,8 @@ export function GiftCards() {
     }
   }
   useEffect(() => {
-    refresh()
+    const timer = window.setTimeout(() => void refresh(), 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   async function remove(g: GiftCard) {

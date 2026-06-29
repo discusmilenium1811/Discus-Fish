@@ -22,12 +22,17 @@ const EMPTY: Stats = {
   lowStock: 0,
 }
 
+// The PostgREST query builder returned by `.select()` (no generated DB types).
+type CountQuery = ReturnType<ReturnType<typeof supabase.from>['select']>
+
 // Count rows for a table with an optional filter, using a HEAD request.
 async function count(
   table: string,
-  filter?: (q: any) => any,
+  filter?: (q: CountQuery) => CountQuery,
 ): Promise<number> {
-  let query: any = supabase.from(table).select('*', { count: 'exact', head: true })
+  let query: CountQuery = supabase
+    .from(table)
+    .select('*', { count: 'exact', head: true })
   if (filter) query = filter(query)
   const { count: c } = await query
   return c ?? 0

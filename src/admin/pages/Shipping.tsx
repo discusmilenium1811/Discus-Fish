@@ -70,7 +70,8 @@ export function Shipping() {
     }
   }
   useEffect(() => {
-    refresh()
+    const timer = window.setTimeout(() => void refresh(), 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   const zoneName = (id: string | null) => zones.find((z) => z.id === id)?.name ?? '—'

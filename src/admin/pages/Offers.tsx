@@ -79,7 +79,8 @@ export function Offers() {
     }
   }
   useEffect(() => {
-    refresh()
+    const timer = window.setTimeout(() => void refresh(), 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   const scope = (o: Offer) =>

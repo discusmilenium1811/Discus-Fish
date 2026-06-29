@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -52,6 +53,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const applySession = useCallback(async (session: Session | null) => {
+    const nextUser = session?.user ?? null
+    setUser(nextUser)
+    setProfile(nextUser ? await loadProfile(nextUser.id) : null)
+    setLoading(false)
+  }, [])
+
   useEffect(() => {
     // Pick up an existing session on first load.
     supabase.auth.getSession().then(({ data }) => {
@@ -64,15 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     return () => sub.subscription.unsubscribe()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  async function applySession(session: Session | null) {
-    const nextUser = session?.user ?? null
-    setUser(nextUser)
-    setProfile(nextUser ? await loadProfile(nextUser.id) : null)
-    setLoading(false)
-  }
+  }, [applySession])
 
   async function signUp({
     username,

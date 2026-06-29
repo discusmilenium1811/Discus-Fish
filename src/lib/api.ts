@@ -116,6 +116,8 @@ export interface CheckoutCustomer {
   billing?: CheckoutBilling
   contact?: CheckoutContact
   shipping?: CheckoutShipping
+  /** Admin shipping_methods.id the customer picked; server re-validates it. */
+  shippingMethodId?: string
   couponCode?: string
 }
 

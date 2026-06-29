@@ -8,12 +8,68 @@ const CORS = {
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!)
 
-// Shipping policy — keep in sync with the storefront (src/lib/pricing.ts).
-const FREE_SHIPPING_CENTS = 7500 // €75.00
-const SHIPPING_FEE_CENTS = 990 // €9.90
+// ─────────────────────────────────────────────────────────────────────────
+//  Delivery is driven entirely by the admin-managed shipping_zones /
+//  shipping_methods tables — the same records the owner edits in Admin >
+//  Shipping and that the storefront reads (src/lib/shipping.ts). This mirrors
+//  that exact resolution server-side so the charge always matches the cart.
+// ─────────────────────────────────────────────────────────────────────────
 
-function shippingFor(subtotalCents: number) {
-  return subtotalCents >= FREE_SHIPPING_CENTS ? 0 : SHIPPING_FEE_CENTS
+const WORLDWIDE = 'WORLDWIDE'
+
+interface ZoneRow {
+  id: string
+  name: string
+  countries: string[]
+  is_active: boolean
+}
+interface MethodRow {
+  id: string
+  zone_id: string
+  name: string
+  price_cents: number
+  free_over_cents: number | null
+  is_active: boolean
+  sort_order: number
+}
+
+/** Active zone serving a country; empty-countries zone is the worldwide fallback. */
+function resolveZone(zones: ZoneRow[], country: string): ZoneRow | null {
+  const code = (country ?? '').trim().toUpperCase()
+  const active = zones.filter((z) => z.is_active)
+  if (code && code !== WORLDWIDE) {
+    const specific = active.find((z) => z.countries.some((c) => c.toUpperCase() === code))
+    if (specific) return specific
+  }
+  return active.find((z) => z.countries.length === 0) ?? null
+}
+
+/** Recompute the delivery line for a country + chosen method straight from the DB. */
+async function resolveShipping(
+  supabase: ReturnType<typeof createClient>,
+  country: string,
+  methodId: string | undefined,
+  subtotalCents: number,
+): Promise<{ cents: number; name: string; methodId: string } | { error: string }> {
+  const [zonesRes, methodsRes] = await Promise.all([
+    supabase.from('shipping_zones').select('id, name, countries, is_active').eq('is_active', true),
+    supabase
+      .from('shipping_methods')
+      .select('id, zone_id, name, price_cents, free_over_cents, is_active, sort_order')
+      .eq('is_active', true),
+  ])
+  const zone = resolveZone((zonesRes.data ?? []) as unknown as ZoneRow[], country)
+  if (!zone) return { error: 'We do not ship to this destination yet.' }
+  const zoneMethods = ((methodsRes.data ?? []) as unknown as MethodRow[])
+    .filter((m) => m.zone_id === zone.id)
+    .sort((a, b) => a.sort_order - b.sort_order || a.price_cents - b.price_cents)
+  if (zoneMethods.length === 0)
+    return { error: 'No delivery option is available for this destination.' }
+  // Honour the customer's pick, but only if it's a valid method for the zone.
+  const chosen =
+    (methodId ? zoneMethods.find((m) => m.id === methodId) : undefined) ?? zoneMethods[0]
+  const free = chosen.free_over_cents != null && subtotalCents >= chosen.free_over_cents
+  return { cents: free ? 0 : chosen.price_cents, name: chosen.name, methodId: chosen.id }
 }
 
 interface CouponRow {
@@ -96,17 +152,17 @@ Deno.serve(async (req) => {
       return json(result)
     }
 
-    const { items, userId, email, billing, contact, shipping, couponCode } = body
+    const { items, userId, email, billing, contact, shipping, shippingMethodId, couponCode } = body
 
     if (!Array.isArray(items) || items.length === 0) {
       return json({ error: 'No items' }, 400)
     }
 
-    // Fetch prices from DB — never trust client-supplied prices
+    // Fetch prices + availability from DB — never trust client-supplied prices.
     const ids: string[] = items.map((i: { productId: string }) => i.productId)
     const { data: products, error: dbErr } = await supabase
       .from('products')
-      .select('id, name, price_cents, currency, is_active')
+      .select('id, name, price_cents, currency, is_active, is_coming_soon, stock, track_inventory')
       .in('id', ids)
 
     if (dbErr) throw dbErr
@@ -117,30 +173,51 @@ Deno.serve(async (req) => {
     let currency = 'eur'
 
     for (const item of items) {
-      const p = byId.get(item.productId) as { id: string; name: string; price_cents: number; currency: string; is_active: boolean } | undefined
-      if (!p || !p.is_active) {
+      const p = byId.get(item.productId) as
+        | { id: string; name: string; price_cents: number; currency: string; is_active: boolean; is_coming_soon: boolean; stock: number | null; track_inventory: boolean }
+        | undefined
+      // Only sell products that are active and not still "coming soon".
+      if (!p || !p.is_active || p.is_coming_soon) {
         return json({ error: `Product unavailable: ${item.productId}` }, 400)
       }
+      const qty = Number(item.quantity)
+      if (!Number.isInteger(qty) || qty < 1) {
+        return json({ error: `Invalid quantity for ${p.name}` }, 400)
+      }
+      // Block overselling when the product tracks inventory.
+      if (p.track_inventory && p.stock != null && p.stock < qty) {
+        return json({ error: `Not enough stock for ${p.name}` }, 400)
+      }
       currency = p.currency ?? 'eur'
-      subtotalCents += p.price_cents * item.quantity
+      subtotalCents += p.price_cents * qty
       lineItems.push({
         price_data: {
           currency,
           unit_amount: p.price_cents,
           product_data: { name: p.name },
         },
-        quantity: item.quantity,
+        quantity: qty,
       })
     }
 
-    // Delivery — recomputed server-side so it always matches what the cart shows.
-    const shippingCents = shippingFor(subtotalCents)
+    // Delivery — recomputed server-side from the admin rates so it always
+    // matches what the cart shows (and can't be tampered with by the client).
+    const shippingResult = await resolveShipping(
+      supabase,
+      shipping?.country ?? '',
+      shippingMethodId,
+      subtotalCents,
+    )
+    if ('error' in shippingResult) {
+      return json({ error: shippingResult.error }, 400)
+    }
+    const shippingCents = shippingResult.cents
     if (shippingCents > 0) {
       lineItems.push({
         price_data: {
           currency,
           unit_amount: shippingCents,
-          product_data: { name: 'Delivery' },
+          product_data: { name: `Delivery — ${shippingResult.name}` },
         },
         quantity: 1,
       })
@@ -192,6 +269,7 @@ Deno.serve(async (req) => {
     if (billing) metadata.billing = JSON.stringify(billing)
     if (contact) metadata.contact = JSON.stringify(contact)
     if (shipping) metadata.ship = JSON.stringify(shipping)
+    metadata.shipMethodId = shippingResult.methodId
     if (appliedCode) metadata.coupon = appliedCode
 
     const customerEmail: string | undefined =

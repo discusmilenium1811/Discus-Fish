@@ -7,8 +7,13 @@ export function CheckoutSuccess() {
   const { t } = useTranslation()
   const { clear } = useCart()
 
-  // Clear the cart once we land here — payment is confirmed.
-  useEffect(() => { clear() }, [])
+  // Clear the cart once we land here — payment is confirmed. Deferred so the
+  // state update doesn't run synchronously inside the effect body.
+  useEffect(() => {
+    const timer = window.setTimeout(() => clear(), 0)
+    return () => window.clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-20 text-center">

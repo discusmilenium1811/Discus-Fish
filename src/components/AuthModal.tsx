@@ -43,9 +43,11 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
   const [success, setSuccess] = useState('')
   const [busy, setBusy] = useState(false)
 
-  // Reset the form whenever the modal opens or the mode switches.
+  // Reset the form whenever the modal opens or the mode switches. Deferred to a
+  // microtask so the reset doesn't run synchronously inside the effect body.
   useEffect(() => {
-    if (open) {
+    if (!open) return
+    const timer = window.setTimeout(() => {
       setSignupKind('personal')
       setUsername('')
       setEmail('')
@@ -56,7 +58,8 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
       setError('')
       setSuccess('')
       setBusy(false)
-    }
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [open, mode])
 
   if (!open) return null
