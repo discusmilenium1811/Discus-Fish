@@ -22,14 +22,31 @@ Deno.serve(async (req) => {
     return new Response(`Webhook Error: ${message}`, { status: 400 })
   }
 
-  if (event.type === 'checkout.session.completed') {
-    try {
+  try {
+    if (event.type === 'checkout.session.completed') {
       await recordOrder(event.data.object as Stripe.Checkout.Session)
-    } catch (err) {
-      console.error('[stripe-webhook] recordOrder error:', err)
-      // Return 200 to prevent Stripe from retrying a non-recoverable error.
-      // The order can be reconciled manually via the Stripe Dashboard.
+    } else if (
+      event.type === 'payment_intent.succeeded' ||
+      event.type === 'payment_intent.payment_failed' ||
+      event.type === 'payment_intent.processing'
+    ) {
+      await syncExistingPayment((event.data.object as Stripe.PaymentIntent).id)
+    } else if (event.type === 'charge.refunded') {
+      const charge = event.data.object as Stripe.Charge
+      const intentId = typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id
+      if (intentId) await syncExistingPayment(intentId)
+    } else if (
+      event.type === 'refund.created' ||
+      event.type === 'refund.updated' ||
+      event.type === 'refund.failed'
+    ) {
+      const refund = event.data.object as Stripe.Refund
+      const intentId = typeof refund.payment_intent === 'string' ? refund.payment_intent : refund.payment_intent?.id
+      if (intentId) await syncExistingPayment(intentId)
     }
+  } catch (err) {
+    console.error(`[stripe-webhook] ${event.type} error:`, err)
+    // A later event or the admin reconciliation action can safely retry the sync.
   }
 
   return new Response(JSON.stringify({ received: true }), {
@@ -124,9 +141,32 @@ async function recordOrder(session: Stripe.Checkout.Session) {
     .single()
 
   if (error) {
-    // 23505 = unique_violation (duplicate webhook delivery) — safe to ignore
-    if (error.code === '23505') return
+    // Stripe retries webhook events. Reconcile the existing order instead of
+    // inserting duplicate items/invoices when this checkout was already saved.
+    if (error.code === '23505') {
+      const { data: existing } = await supabase
+        .from('orders')
+        .select('id, stripe_payment_intent_id')
+        .eq('stripe_session_id', session.id)
+        .maybeSingle()
+      if (existing?.stripe_payment_intent_id) {
+        await syncPayment(supabase, existing.id, existing.stripe_payment_intent_id)
+      }
+      return
+    }
     throw error
+  }
+
+  const paymentIntentId =
+    typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : (session.payment_intent as Stripe.PaymentIntent | null)?.id ?? null
+  if (paymentIntentId) {
+    try {
+      await syncPayment(supabase, order.id, paymentIntentId)
+    } catch (err) {
+      console.error('[stripe-webhook] payment ledger sync failed:', err)
+    }
   }
 
   const lineRows = cart
@@ -174,6 +214,64 @@ async function recordOrder(session: Stripe.Checkout.Session) {
       console.error('[stripe-webhook] coupon redemption update failed:', err)
     }
   }
+}
+
+async function syncExistingPayment(paymentIntentId: string) {
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+  )
+  const { data: order } = await supabase
+    .from('orders')
+    .select('id')
+    .eq('stripe_payment_intent_id', paymentIntentId)
+    .maybeSingle()
+  if (order) await syncPayment(supabase, order.id, paymentIntentId)
+}
+
+async function syncPayment(
+  supabase: ReturnType<typeof createClient>,
+  orderId: string,
+  paymentIntentId: string,
+) {
+  const intent = await stripe.paymentIntents.retrieve(paymentIntentId, {
+    expand: ['latest_charge'],
+  })
+  const charge =
+    intent.latest_charge && typeof intent.latest_charge !== 'string'
+      ? intent.latest_charge as Stripe.Charge
+      : null
+  const refunded = charge?.amount_refunded ?? 0
+  const received = intent.amount_received || intent.amount
+  const status =
+    refunded >= received && received > 0
+      ? 'refunded'
+      : refunded > 0
+        ? 'partially_refunded'
+        : intent.status === 'succeeded'
+          ? 'succeeded'
+          : intent.status === 'processing'
+            ? 'pending'
+            : 'failed'
+  const details = charge?.payment_method_details
+  const method = details?.card
+    ? `${details.card.brand ?? 'card'} •••• ${details.card.last4 ?? ''}`.trim()
+    : details?.type ?? intent.payment_method_types?.[0] ?? null
+
+  const { error } = await supabase.from('payments').upsert(
+    {
+      order_id: orderId,
+      stripe_payment_intent_id: intent.id,
+      stripe_charge_id: charge?.id ?? null,
+      amount_cents: received,
+      amount_refunded_cents: refunded,
+      currency: intent.currency,
+      status,
+      method,
+    },
+    { onConflict: 'stripe_payment_intent_id' },
+  )
+  if (error) throw error
 }
 
 /**
