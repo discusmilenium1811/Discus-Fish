@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from '../i18n/LanguageContext'
 
-const CERTIFICATES = ['Full-Stack Apps with AI', 'Software Technologies with AI']
-
 export function Footer() {
   const { t } = useTranslation()
 
@@ -21,41 +19,25 @@ export function Footer() {
             <p className="mt-3 text-xs leading-5 text-slate-400">{t('footer.tagline')}</p>
           </div>
 
-          <section className="relative overflow-hidden rounded-2xl border border-cyan-300/15 bg-white/[0.035] p-4">
+          <section className="relative w-fit max-w-full justify-self-center overflow-hidden rounded-2xl border border-cyan-300/15 bg-white/[0.035] p-3">
             <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent" />
-            <div className="grid gap-4 sm:grid-cols-[0.85fr_1.15fr]">
-              <div>
-                <div className="flex items-center gap-3">
-                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-cyan-300 to-blue-500 text-sm font-black text-slate-950">KB</div>
-                  <div>
-                    <p className="text-[0.58rem] font-extrabold uppercase tracking-[0.2em] text-cyan-300">{t('footer.creatorEyebrow')}</p>
-                    <h2 className="text-lg font-black text-white">Kuman Bazitov</h2>
-                    <p className="text-[0.65rem] font-semibold text-emerald-300">{t('footer.creatorRole')}</p>
-                  </div>
-                </div>
-
-                <div className="mt-3 flex flex-col items-start gap-2">
-                  <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kumanbazitov@gmail.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[0.62rem] font-bold text-white transition hover:border-cyan-300/40">
-                    <MailIcon /> kumanbazitov@gmail.com
-                  </a>
-                  <a href="https://github.com/Kuman-Bazitov-BG" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[0.62rem] font-bold text-white transition hover:border-cyan-300/40">
-                    <GitHubIcon /> Kuman-Bazitov-BG
-                  </a>
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-cyan-300 to-blue-500 text-sm font-black text-slate-950">KB</div>
+                <div>
+                  <p className="text-[0.58rem] font-extrabold uppercase tracking-[0.2em] text-cyan-300">{t('footer.creatorEyebrow')}</p>
+                  <h2 className="text-lg font-black text-white">Kuman Bazitov</h2>
+                  <p className="text-[0.65rem] font-semibold text-emerald-300">{t('footer.creatorRole')}</p>
                 </div>
               </div>
 
-              <div className="border-l border-white/10 pl-4">
-                <p className="mb-2 text-[0.58rem] font-extrabold uppercase tracking-[0.18em] text-violet-300">SoftUni AI · {t('footer.certificates')}</p>
-                <ul className="space-y-1.5">
-                  {CERTIFICATES.map((certificate) => (
-                    <li key={certificate} className="rounded-lg bg-white/5 px-3 py-2 text-[0.68rem] font-bold text-white">
-                      {certificate}
-                    </li>
-                  ))}
-                </ul>
-                <span className="mt-2 inline-flex items-center rounded-full border border-dashed border-violet-300/20 px-3 py-1.5 text-[0.62rem] font-bold text-violet-200">
-                  {t('footer.website')} · {t('footer.comingSoon')}
-                </span>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kumanbazitov@gmail.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[0.62rem] font-bold text-white transition hover:border-cyan-300/40">
+                  <MailIcon /> kumanbazitov@gmail.com
+                </a>
+                <a href="https://github.com/Kuman-Bazitov-BG" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[0.62rem] font-bold text-white transition hover:border-cyan-300/40">
+                  <GitHubIcon /> Kuman-Bazitov-BG
+                </a>
               </div>
             </div>
           </section>
