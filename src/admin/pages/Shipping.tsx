@@ -99,15 +99,16 @@ export function Shipping() {
       <PageHeader
         icon="🌍"
         title="Shipping & Free Shipping"
-        description="Internal UPS rate reference, shipped from our Cyprus office. For your own calculations — not shown to customers."
+        description="Manage the live delivery prices shown to customers on the Shipping Prices page."
       />
       <div className="mb-4 rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-3 py-2.5 text-sm text-slate-300">
-        🚚 <span className="font-semibold text-cyan-200">Carrier: UPS · Origin: Cyprus · Admin-only.</span>{' '}
+        🚚 <span className="font-semibold text-cyan-200">Carrier: UPS · Origin: Cyprus · Customer-visible.</span>{' '}
         Use the calculator below to work out the shipping cost for any order: the
         destination country picks the most specific zone (e.g. CY → Cyprus, DE →
         European Union); the <em>Worldwide</em> zone (no countries listed) is the
         fallback for everywhere else. “Free over” is the order total at which a
-        service becomes free.
+        service becomes free. Active changes are published automatically to the
+        storefront Shipping Prices page.
       </div>
       <ErrorNote msg={error} />
 

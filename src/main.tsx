@@ -9,6 +9,7 @@ import { ProductDetail } from './pages/ProductDetail'
 import { WhyUs } from './pages/WhyUs'
 import { ContactPage } from './pages/Contact'
 import { CheckoutSuccess } from './pages/CheckoutSuccess'
+import { ShippingPrices } from './pages/ShippingPrices'
 import { LanguageProvider } from './i18n/LanguageContext'
 import { AuthProvider } from './auth/AuthContext'
 import { CartProvider } from './hooks/useCart'
@@ -41,6 +42,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/checkout/success" element={<CheckoutSuccess />} />
               <Route path="/why-us" element={<WhyUs />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/shipping-prices" element={<ShippingPrices />} />
               <Route path="/Cataloge" element={<Navigate to="/Cataloge/Products" replace />} />
               <Route path="/Cataloge/Products" element={<CatalogPage tab="products" />} />
               <Route path="/Cataloge/Products/:slug" element={<ProductDetail />} />

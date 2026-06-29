@@ -31,7 +31,7 @@ export function Navbar({
           <div className="flex flex-wrap items-center gap-4 sm:gap-8">
             <Link
               to="/"
-              className="flex items-center"
+              className="flex shrink-0 items-center"
               aria-label="Go to main page"
             >
               <img
@@ -55,7 +55,18 @@ export function Navbar({
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap sm:justify-end sm:gap-3.5">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3.5">
+          <Link
+            to="/shipping-prices"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="group relative order-first flex h-10 w-full items-center justify-center gap-2.5 overflow-hidden rounded-full border border-cyan-300/30 bg-gradient-to-r from-cyan-400/15 via-white/5 to-emerald-400/15 px-4 text-[0.62rem] font-extrabold uppercase tracking-[0.11em] text-white shadow-[0_8px_25px_rgba(6,182,212,0.1)] transition hover:border-cyan-300/60 hover:bg-white/10 sm:mr-auto sm:h-12 sm:w-auto sm:min-w-[23rem] sm:flex-1 sm:justify-start sm:text-xs"
+          >
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-cyan-300 text-sm shadow-[0_0_15px_rgba(103,232,249,0.4)] transition group-hover:scale-105 sm:h-8 sm:w-8 sm:text-base" aria-hidden="true">
+              🚚
+            </span>
+            <span className="whitespace-nowrap">{t('nav.freeDelivery')}</span>
+          </Link>
+
           <button
             type="button"
             onClick={onLanguageClick}
@@ -90,6 +101,12 @@ export function Navbar({
                   {t('auth.adminPanel')}
                 </button>
               )}
+              <Link
+                to="/shipping-prices"
+                className="inline-flex h-9 items-center rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
+              >
+                {t('nav.shippingPrices')}
+              </Link>
             </div>
           ) : (
             <div className="flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap sm:gap-4">
@@ -107,6 +124,12 @@ export function Navbar({
               >
                 {t('auth.signup')}
               </button>
+              <Link
+                to="/shipping-prices"
+                className="inline-flex h-9 items-center rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
+              >
+                {t('nav.shippingPrices')}
+              </Link>
             </div>
           )}
           </div>
