@@ -1,5 +1,13 @@
-import { useEffect, useState } from 'react'
-import { fetchAll, insertRow, updateRow, deleteRow, fmtDate, toTs } from '../lib/adminApi'
+import { useCallback, useEffect, useState } from 'react'
+import {
+  fetchAll,
+  insertRow,
+  insertRowReturning,
+  updateRow,
+  deleteRow,
+  fmtDate,
+  toTs,
+} from '../lib/adminApi'
 import {
   PageHeader,
   ErrorNote,
@@ -20,6 +28,16 @@ import {
 } from '../components/ui'
 import { PageSearch } from '../components/PageSearch'
 import { useQuery, matchQuery } from '../lib/pageQuery'
+import { upsTrackingUrl, type DeliveryStatus, type TrackingEvent } from '../../lib/tracking'
+
+const STATUSES: { value: DeliveryStatus; label: string }[] = [
+  { value: 'label_created', label: 'Label Created' },
+  { value: 'on_the_way', label: 'Shipped / On the Way' },
+  { value: 'out_for_delivery', label: 'Out for Delivery' },
+  { value: 'access_point', label: 'At UPS Access Point' },
+  { value: 'delivered', label: 'Delivered' },
+  { value: 'exception', label: 'Exception / Delay' },
+]
 
 interface Shipment {
   id: string
@@ -27,68 +45,84 @@ interface Shipment {
   carrier: string | null
   tracking_number: string | null
   tracking_url: string | null
+  status: DeliveryStatus
+  status_detail: string | null
+  last_location: string | null
+  estimated_delivery_at: string | null
   shipped_at: string | null
   delivered_at: string | null
-  orders: { order_number: string | null } | null
+  updated_at: string
+  orders: {
+    order_number: string | null
+    ship_name: string | null
+    email: string | null
+  } | null
 }
+
 interface OrderOpt {
   id: string
   order_number: string | null
+  ship_name: string | null
+  email: string | null
 }
 
 export function Tracking() {
   const [rows, setRows] = useState<Shipment[]>([])
   const [orders, setOrders] = useState<OrderOpt[]>([])
+  const [events, setEvents] = useState<TrackingEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [adding, setAdding] = useState(false)
-
+  const [editing, setEditing] = useState<Shipment | 'new' | null>(null)
   const [q, setQ] = useQuery()
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     setLoading(true)
     try {
-      const [s, o] = await Promise.all([
-        fetchAll<Shipment>('shipments', '*, orders(order_number)', {
-          col: 'created_at',
-          asc: false,
-        }),
-        fetchAll<OrderOpt>('orders', 'id, order_number', { col: 'created_at', asc: false }),
+      const [shipments, allOrders, trackingEvents] = await Promise.all([
+        fetchAll<Shipment>(
+          'shipments',
+          '*, orders(order_number, ship_name, email)',
+          { col: 'updated_at', asc: false },
+        ),
+        fetchAll<OrderOpt>('orders', 'id, order_number, ship_name, email', { col: 'created_at', asc: false }),
+        fetchAll<TrackingEvent>('tracking_events', '*', { col: 'event_at', asc: false }),
       ])
-      setRows(s)
-      setOrders(o)
+      setRows(shipments)
+      setOrders(allOrders)
+      setEvents(trackingEvents)
       setError('')
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load')
+      setError(e instanceof Error ? e.message : 'Failed to load deliveries')
     } finally {
       setLoading(false)
     }
-  }
-  useEffect(() => {
-    refresh()
   }, [])
 
-  async function markDelivered(s: Shipment) {
+  useEffect(() => {
+    const timer = window.setTimeout(() => void refresh(), 0)
+    return () => window.clearTimeout(timer)
+  }, [refresh])
+
+  async function remove(shipment: Shipment) {
+    if (!confirm('Delete this shipment and its tracking history?')) return
     try {
-      await updateRow('shipments', s.id, { delivered_at: new Date().toISOString() })
-      await updateRow('orders', s.order_id, { fulfillment_status: 'delivered' })
-      refresh()
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Update failed')
-    }
-  }
-  async function remove(s: Shipment) {
-    if (!confirm('Delete this shipment?')) return
-    try {
-      await deleteRow('shipments', s.id)
-      setRows((r) => r.filter((x) => x.id !== s.id))
+      await deleteRow('shipments', shipment.id)
+      setRows((current) => current.filter((item) => item.id !== shipment.id))
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Delete failed')
     }
   }
 
-  const shown = rows.filter((s) =>
-    matchQuery(q, [s.orders?.order_number, s.carrier, s.tracking_number]),
+  const shown = rows.filter((shipment) =>
+    matchQuery(q, [
+      shipment.orders?.order_number,
+      shipment.orders?.ship_name,
+      shipment.orders?.email,
+      shipment.carrier,
+      shipment.tracking_number,
+      shipment.status,
+      shipment.last_location,
+    ]),
   )
 
   return (
@@ -96,121 +130,86 @@ export function Tracking() {
       <PageHeader
         icon="🚚"
         title="Track Orders"
-        description="Add carriers and tracking numbers, and mark orders shipped or delivered."
+        description="Manage every customer delivery, UPS stage, estimated arrival, location and customer-facing update. Changes appear automatically on the customer’s private tracking page."
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <PageSearch q={q} setQ={setQ} placeholder="Search shipments…" />
-            <button className={btnPrimary} onClick={() => setAdding(true)} disabled={orders.length === 0}>
-              + Add shipment
-            </button>
+            <PageSearch q={q} setQ={setQ} placeholder="Search order, customer or tracking…" />
+            <button className={btnPrimary} onClick={() => setEditing('new')} disabled={orders.length === 0}>+ Add delivery</button>
           </div>
         }
       />
-      {orders.length === 0 && !loading && (
-        <p className="mb-4 rounded-lg bg-slate-800/60 px-3 py-2 text-sm text-slate-400">
-          No orders yet — shipments can be created once orders exist.
-        </p>
-      )}
+
+      <div className="mb-5 grid gap-3 sm:grid-cols-3">
+        <Summary label="All deliveries" value={rows.length} tone="cyan" />
+        <Summary label="Out for delivery" value={rows.filter((row) => row.status === 'out_for_delivery').length} tone="amber" />
+        <Summary label="Delivered" value={rows.filter((row) => row.status === 'delivered').length} tone="green" />
+      </div>
+
+      <div className="mb-5 rounded-xl border border-cyan-400/20 bg-cyan-400/5 px-4 py-3 text-sm leading-6 text-slate-300">
+        <strong className="text-cyan-200">UPS customer timeline:</strong> Label Created → On the Way → Out for Delivery → Delivered. Use “Exception” for delays or unexpected events, and include a clear customer update and revised estimate.
+      </div>
       <ErrorNote msg={error} />
       <Card>
         <table className={tableCls}>
-          <thead className={theadCls}>
-            <tr>
-              <th className={thCls}>Order</th>
-              <th className={thCls}>Carrier</th>
-              <th className={thCls}>Tracking</th>
-              <th className={thCls}>Status</th>
-              <th className={`${thCls} text-right`}>Actions</th>
-            </tr>
-          </thead>
+          <thead className={theadCls}><tr><th className={thCls}>Order & customer</th><th className={thCls}>Tracking</th><th className={thCls}>Current progress</th><th className={thCls}>Estimate & location</th><th className={`${thCls} text-right`}>Actions</th></tr></thead>
           <tbody className={tbodyCls}>
-            {loading ? (
-              <TableState colSpan={5} text="Loading…" />
-            ) : shown.length === 0 ? (
-              <TableState colSpan={5} text={q ? 'No matching shipments.' : 'No shipments yet.'} />
-            ) : (
-              shown.map((s) => (
-                <tr key={s.id} className={trCls}>
-                  <td className="px-4 py-3 font-semibold text-white">
-                    {s.orders?.order_number ?? s.order_id.slice(0, 8)}
-                  </td>
-                  <td className="px-4 py-3 text-slate-300">{s.carrier ?? '—'}</td>
-                  <td className="px-4 py-3 text-slate-300">
-                    {s.tracking_url ? (
-                      <a href={s.tracking_url} target="_blank" rel="noreferrer" className="text-cyan-300 hover:underline">
-                        {s.tracking_number ?? 'Track'}
-                      </a>
-                    ) : (
-                      s.tracking_number ?? '—'
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {s.delivered_at ? (
-                      <Pill tone="green">Delivered {fmtDate(s.delivered_at)}</Pill>
-                    ) : (
-                      <Pill tone="cyan">Shipped {fmtDate(s.shipped_at)}</Pill>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {!s.delivered_at && (
-                      <button className={`${btnSmall} text-emerald-300`} onClick={() => markDelivered(s)}>
-                        Mark delivered
-                      </button>
-                    )}
-                    <button className={`${btnSmall} ml-2 text-rose-300`} onClick={() => remove(s)}>
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
+            {loading ? <TableState colSpan={5} text="Loading deliveries…" /> : shown.length === 0 ? <TableState colSpan={5} text={q ? 'No matching deliveries.' : 'No deliveries yet.'} /> : shown.map((shipment) => {
+              const historyCount = events.filter((event) => event.shipment_id === shipment.id).length
+              return <tr key={shipment.id} className={trCls}>
+                <td className="px-4 py-3"><div className="font-semibold text-white">#{shipment.orders?.order_number ?? shipment.order_id.slice(0, 8)}</div><div className="mt-1 text-xs text-slate-400">{shipment.orders?.ship_name || shipment.orders?.email || 'Customer'}</div></td>
+                <td className="px-4 py-3"><div className="text-sm font-semibold text-slate-200">{shipment.carrier || 'UPS'}</div>{shipment.tracking_url || shipment.tracking_number ? <a href={shipment.tracking_url || upsTrackingUrl(shipment.tracking_number!)} target="_blank" rel="noreferrer" className="mt-1 block text-xs text-cyan-300 hover:underline">{shipment.tracking_number || 'Open tracking'} ↗</a> : <div className="text-xs text-slate-500">No number yet</div>}</td>
+                <td className="px-4 py-3"><StatusPill status={shipment.status} /><div className="mt-1 max-w-56 truncate text-xs text-slate-500">{shipment.status_detail || `${historyCount} history updates`}</div></td>
+                <td className="px-4 py-3 text-xs"><div className="font-semibold text-slate-300">{shipment.estimated_delivery_at ? fmtDate(shipment.estimated_delivery_at) : 'Estimate pending'}</div><div className="mt-1 text-slate-500">{shipment.last_location || 'Location pending'}</div></td>
+                <td className="whitespace-nowrap px-4 py-3 text-right"><button className={btnSmall} onClick={() => setEditing(shipment)}>Update</button><button className={`${btnSmall} ml-2 text-rose-300`} onClick={() => remove(shipment)}>Delete</button></td>
+              </tr>
+            })}
           </tbody>
         </table>
       </Card>
 
-      {adding && (
-        <ShipmentForm
-          orders={orders}
-          onClose={() => setAdding(false)}
-          onSaved={() => {
-            setAdding(false)
-            refresh()
-          }}
-        />
-      )}
+      {editing && <ShipmentForm row={editing === 'new' ? null : editing} orders={orders} events={editing === 'new' ? [] : events.filter((event) => event.shipment_id === editing.id)} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); void refresh() }} />}
     </div>
   )
 }
 
-function ShipmentForm({
-  orders,
-  onClose,
-  onSaved,
-}: {
-  orders: OrderOpt[]
-  onClose: () => void
-  onSaved: () => void
-}) {
-  const [orderId, setOrderId] = useState(orders[0]?.id ?? '')
-  const [carrier, setCarrier] = useState('')
-  const [trackingNumber, setTrackingNumber] = useState('')
-  const [trackingUrl, setTrackingUrl] = useState('')
+function ShipmentForm({ row, orders, events, onClose, onSaved }: { row: Shipment | null; orders: OrderOpt[]; events: TrackingEvent[]; onClose: () => void; onSaved: () => void }) {
+  const [orderId, setOrderId] = useState(row?.order_id ?? orders[0]?.id ?? '')
+  const [carrier, setCarrier] = useState(row?.carrier ?? 'UPS')
+  const [trackingNumber, setTrackingNumber] = useState(row?.tracking_number ?? '')
+  const [trackingUrl, setTrackingUrl] = useState(row?.tracking_url ?? '')
+  const [status, setStatus] = useState<DeliveryStatus>(row?.status ?? 'label_created')
+  const [estimate, setEstimate] = useState(row?.estimated_delivery_at ? localDateTime(row.estimated_delivery_at) : '')
+  const [location, setLocation] = useState(row?.last_location ?? '')
+  const [detail, setDetail] = useState(row?.status_detail ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
+  async function submit(event: React.FormEvent) {
+    event.preventDefault()
     if (!orderId) return setError('Choose an order.')
     setSaving(true)
     try {
-      await insertRow('shipments', {
+      const now = new Date().toISOString()
+      const cleanNumber = trackingNumber.trim()
+      const payload = {
         order_id: orderId,
-        carrier: carrier.trim() || null,
-        tracking_number: trackingNumber.trim() || null,
-        tracking_url: trackingUrl.trim() || null,
-        shipped_at: toTs(new Date().toISOString().slice(0, 16)),
-      })
-      await updateRow('orders', orderId, { fulfillment_status: 'shipped' })
+        carrier: carrier.trim() || 'UPS',
+        tracking_number: cleanNumber || null,
+        tracking_url: trackingUrl.trim() || (cleanNumber ? upsTrackingUrl(cleanNumber) : null),
+        status,
+        status_detail: detail.trim() || null,
+        last_location: location.trim() || null,
+        estimated_delivery_at: estimate ? toTs(estimate) : null,
+        shipped_at: row?.shipped_at ?? (status !== 'label_created' ? now : null),
+        delivered_at: status === 'delivered' ? (row?.delivered_at ?? now) : null,
+        updated_at: now,
+      }
+      let shipmentId = row?.id
+      if (row) await updateRow('shipments', row.id, payload)
+      else shipmentId = (await insertRowReturning<{ id: string }>('shipments', payload)).id
+
+      await updateRow('orders', orderId, { fulfillment_status: status === 'delivered' ? 'delivered' : status === 'label_created' ? 'processing' : 'shipped' })
+      await insertRow('tracking_events', { shipment_id: shipmentId, status, description: detail.trim() || statusName(status), location: location.trim() || null, event_at: now })
       onSaved()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed')
@@ -219,44 +218,21 @@ function ShipmentForm({
     }
   }
 
-  return (
-    <Modal
-      title="Add shipment"
-      onClose={onClose}
-      footer={
-        <>
-          <button className={btnGhost} onClick={onClose} type="button">
-            Cancel
-          </button>
-          <button className={btnPrimary} form="ship-form" disabled={saving}>
-            {saving ? 'Saving…' : 'Create'}
-          </button>
-        </>
-      }
-    >
-      <form id="ship-form" onSubmit={submit} className="grid gap-4">
-        <ErrorNote msg={error} />
-        <Field label="Order">
-          <select className={fieldCls} value={orderId} onChange={(e) => setOrderId(e.target.value)}>
-            {orders.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.order_number ?? o.id.slice(0, 8)}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Carrier">
-          <input className={fieldCls} value={carrier} onChange={(e) => setCarrier(e.target.value)} placeholder="DHL, ELTA, Speedy…" />
-        </Field>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Tracking number">
-            <input className={fieldCls} value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} />
-          </Field>
-          <Field label="Tracking URL">
-            <input className={fieldCls} value={trackingUrl} onChange={(e) => setTrackingUrl(e.target.value)} placeholder="https://…" />
-          </Field>
-        </div>
-      </form>
-    </Modal>
-  )
+  return <Modal title={row ? 'Update delivery' : 'Add delivery'} onClose={onClose} footer={<><button className={btnGhost} onClick={onClose} type="button">Cancel</button><button className={btnPrimary} form="delivery-form" disabled={saving}>{saving ? 'Publishing…' : 'Save & publish'}</button></>}>
+    <form id="delivery-form" onSubmit={submit} className="grid gap-4">
+      <ErrorNote msg={error} />
+      <div className="rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-xs leading-5 text-emerald-200">This update will be visible only to the customer who owns the selected order.</div>
+      <Field label="Order & customer"><select className={fieldCls} value={orderId} onChange={(event) => setOrderId(event.target.value)} disabled={Boolean(row)}>{orders.map((order) => <option key={order.id} value={order.id}>#{order.order_number ?? order.id.slice(0, 8)} · {order.ship_name || order.email || 'Customer'}</option>)}</select></Field>
+      <div className="grid gap-4 sm:grid-cols-2"><Field label="Carrier"><input className={fieldCls} value={carrier} onChange={(event) => setCarrier(event.target.value)} placeholder="UPS" /></Field><Field label="UPS stage"><select className={fieldCls} value={status} onChange={(event) => setStatus(event.target.value as DeliveryStatus)}>{STATUSES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></Field></div>
+      <div className="grid gap-4 sm:grid-cols-2"><Field label="Tracking number"><input className={fieldCls} value={trackingNumber} onChange={(event) => setTrackingNumber(event.target.value)} placeholder="1Z…" /></Field><Field label="Tracking URL (auto-created if blank)"><input className={fieldCls} value={trackingUrl} onChange={(event) => setTrackingUrl(event.target.value)} placeholder="https://www.ups.com/track…" /></Field></div>
+      <div className="grid gap-4 sm:grid-cols-2"><Field label="Estimated delivery"><input className={fieldCls} type="datetime-local" value={estimate} onChange={(event) => setEstimate(event.target.value)} /></Field><Field label="Latest location"><input className={fieldCls} value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Sofia, Bulgaria" /></Field></div>
+      <Field label="Customer-facing delivery update"><textarea className={`${fieldCls} min-h-24 resize-y`} value={detail} onChange={(event) => setDetail(event.target.value)} placeholder="Tell the customer what changed and what happens next…" /></Field>
+      {events.length > 0 && <div><div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Previous updates</div><div className="max-h-36 space-y-2 overflow-y-auto rounded-lg border border-white/10 bg-slate-950/40 p-3">{events.map((event) => <div key={event.id} className="text-xs"><span className="font-bold text-slate-200">{statusName(event.status)}</span><span className="ml-2 text-slate-500">{fmtDate(event.event_at)}</span>{(event.description || event.location) && <div className="mt-0.5 text-slate-400">{event.description}{event.description && event.location ? ' · ' : ''}{event.location}</div>}</div>)}</div></div>}
+    </form>
+  </Modal>
 }
+
+function localDateTime(value: string) { const date = new Date(value); return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16) }
+function statusName(status: DeliveryStatus) { return STATUSES.find((item) => item.value === status)?.label ?? status }
+function StatusPill({ status }: { status: DeliveryStatus }) { if (status === 'delivered') return <Pill tone="green">Delivered</Pill>; if (status === 'exception') return <Pill tone="amber">Exception</Pill>; return <Pill tone="cyan">{statusName(status)}</Pill> }
+function Summary({ label, value, tone }: { label: string; value: number; tone: 'cyan' | 'amber' | 'green' }) { const colors = { cyan: 'border-cyan-400/20 bg-cyan-400/5 text-cyan-200', amber: 'border-amber-400/20 bg-amber-400/5 text-amber-200', green: 'border-emerald-400/20 bg-emerald-400/5 text-emerald-200' }; return <div className={`rounded-xl border p-4 ${colors[tone]}`}><div className="text-2xl font-black">{value}</div><div className="mt-1 text-xs font-semibold uppercase tracking-wide opacity-75">{label}</div></div> }

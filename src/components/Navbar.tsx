@@ -138,7 +138,7 @@ export function Navbar({
 
       <div className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/80 backdrop-blur-lg">
         <div className="mx-auto flex max-w-7xl items-center px-4 py-2.5 sm:px-6 sm:py-4">
-          <nav className="grid w-full grid-cols-5 items-center gap-2 text-center text-xs font-semibold text-slate-300 sm:flex sm:justify-center sm:gap-8 sm:text-lg">
+          <nav className="grid w-full grid-cols-6 items-center gap-1.5 text-center text-[0.65rem] font-semibold text-slate-300 sm:flex sm:justify-center sm:gap-8 sm:text-lg">
             <Link
               to="/"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -179,6 +179,13 @@ export function Navbar({
                 </span>
               )}
             </button>
+            <Link
+              to="/tracking-delivery"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="transition hover:text-cyan-300 focus:outline-none"
+            >
+              {t('nav.trackingDelivery')}
+            </Link>
           </nav>
         </div>
       </div>

@@ -18,7 +18,7 @@ export const fmtDate = (v?: string | null): string =>
   v ? new Date(v).toLocaleDateString() : '—'
 
 // ── Generic CRUD over a table (admin RLS applies) ───────────────────
-export async function fetchAll<T = any>(
+export async function fetchAll<T = unknown>(
   table: string,
   columns = '*',
   order?: { col: string; asc?: boolean },
@@ -31,7 +31,7 @@ export async function fetchAll<T = any>(
 }
 
 /** Fetch a single row matching the given equality filters (or null). */
-export async function fetchOne<T = any>(
+export async function fetchOne<T = unknown>(
   table: string,
   columns: string,
   match: Record<string, unknown>,
@@ -46,6 +46,15 @@ export async function fetchOne<T = any>(
 export async function insertRow(table: string, row: Record<string, unknown>): Promise<void> {
   const { error } = await supabase.from(table).insert(row)
   if (error) throw error
+}
+
+export async function insertRowReturning<T>(
+  table: string,
+  row: Record<string, unknown>,
+): Promise<T> {
+  const { data, error } = await supabase.from(table).insert(row).select().single()
+  if (error) throw error
+  return data as T
 }
 
 export async function updateRow(
