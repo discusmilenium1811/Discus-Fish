@@ -1,27 +1,24 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from '../i18n/LanguageContext'
 import { useAuth } from '../auth/AuthContext'
-import type { AuthMode } from './AuthModal'
 
 interface NavbarProps {
   cartCount: number
   onCartClick: () => void
+  onAccountClick: () => void
   onLanguageClick: () => void
   onCatalogClick: () => void
-  onAuthClick: (mode: AuthMode) => void
-  onAdminClick: () => void
 }
 
 export function Navbar({
   cartCount,
   onCartClick,
+  onAccountClick,
   onLanguageClick,
   onCatalogClick,
-  onAuthClick,
-  onAdminClick,
 }: NavbarProps) {
   const { t, lang } = useTranslation()
-  const { user, profile, isAdmin, signOut } = useAuth()
+  const { user, profile } = useAuth()
   const accountName = profile?.username ?? user?.email
 
   return (
@@ -59,7 +56,7 @@ export function Navbar({
           <Link
             to="/shipping-prices"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="group relative order-first flex h-10 w-full items-center justify-center gap-2.5 overflow-hidden rounded-full border border-cyan-300/30 bg-gradient-to-r from-cyan-400/15 via-white/5 to-emerald-400/15 px-4 text-[0.62rem] font-extrabold uppercase tracking-[0.11em] text-white shadow-[0_8px_25px_rgba(6,182,212,0.1)] transition hover:border-cyan-300/60 hover:bg-white/10 sm:mr-auto sm:h-12 sm:w-fit sm:flex-none sm:justify-start sm:text-xs"
+            className="group relative order-first flex h-10 w-full items-center justify-center gap-2.5 overflow-hidden rounded-full border border-cyan-300/30 bg-gradient-to-r from-cyan-400/15 via-white/5 to-emerald-400/15 px-4 text-[0.62rem] font-extrabold uppercase tracking-[0.11em] text-white shadow-[0_8px_25px_rgba(6,182,212,0.1)] transition hover:border-cyan-300/60 hover:bg-white/10 sm:mr-auto sm:h-12 sm:w-auto sm:flex-1 sm:text-xs"
           >
             <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-cyan-300 text-sm shadow-[0_0_15px_rgba(103,232,249,0.4)] transition group-hover:scale-105 sm:h-8 sm:w-8 sm:text-base" aria-hidden="true">
               🚚
@@ -69,69 +66,22 @@ export function Navbar({
 
           <button
             type="button"
+            onClick={onAccountClick}
+            className="inline-flex h-9 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
+            aria-label={t('nav.account')}
+          >
+            <span className="grid h-5 w-5 place-items-center rounded-full bg-cyan-300/15 text-[0.65rem] text-cyan-200" aria-hidden="true">👤</span>
+            <span>{t('nav.account')}</span>
+          </button>
+
+          <button
+            type="button"
             onClick={onLanguageClick}
             className="inline-flex h-9 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
             aria-label={t('nav.language')}
           >
             <span className="uppercase">{lang}</span>
           </button>
-
-          {user ? (
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap sm:gap-3.5">
-              <button
-                type="button"
-                onClick={() => onAuthClick('changePassword')}
-                className="inline-flex h-9 items-center rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
-              >
-                {t('auth.changePassword')}
-              </button>
-              <button
-                type="button"
-                onClick={() => signOut()}
-                className="inline-flex h-9 items-center rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-rose-400/40 hover:text-white sm:h-12 sm:px-5 sm:text-base"
-              >
-                {t('auth.logout')}
-              </button>
-              {isAdmin && (
-                <button
-                  type="button"
-                  onClick={onAdminClick}
-                  className="inline-flex h-9 items-center rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
-                >
-                  {t('auth.adminPanel')}
-                </button>
-              )}
-              <Link
-                to="/shipping-prices"
-                className="inline-flex h-9 items-center rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
-              >
-                {t('nav.shippingPrices')}
-              </Link>
-            </div>
-          ) : (
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap sm:gap-4">
-              <button
-                type="button"
-                onClick={() => onAuthClick('login')}
-                className="inline-flex h-9 items-center rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
-              >
-                {t('auth.login')}
-              </button>
-              <button
-                type="button"
-                onClick={() => onAuthClick('signup')}
-                className="inline-flex h-9 items-center rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
-              >
-                {t('auth.signup')}
-              </button>
-              <Link
-                to="/shipping-prices"
-                className="inline-flex h-9 items-center rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
-              >
-                {t('nav.shippingPrices')}
-              </Link>
-            </div>
-          )}
           </div>
         </div>
       </header>

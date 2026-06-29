@@ -4,6 +4,7 @@ import { Navbar } from '../components/Navbar'
 import { Footer } from '../components/Footer'
 import { CartDrawer } from '../components/CartDrawer'
 import { LanguageDrawer } from '../components/LanguageDrawer'
+import { AccountDrawer } from '../components/AccountDrawer'
 import { AuthModal, type AuthMode } from '../components/AuthModal'
 import { useCart } from '../hooks/useCart'
 import { fetchProducts } from '../lib/api'
@@ -22,6 +23,7 @@ export function StorefrontLayout() {
   const [products, setProducts] = useState<Product[]>(sampleProducts)
   const [cartOpen, setCartOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
   const [authMode, setAuthMode] = useState<AuthMode>('login')
 
@@ -43,13 +45,9 @@ export function StorefrontLayout() {
       <Navbar
         cartCount={cart.count}
         onCartClick={() => setCartOpen(true)}
+        onAccountClick={() => setAccountOpen(true)}
         onLanguageClick={() => setLanguageOpen(true)}
         onCatalogClick={() => navigate('/Cataloge/Products')}
-        onAuthClick={(mode) => {
-          setAuthMode(mode)
-          setAuthOpen(true)
-        }}
-        onAdminClick={() => navigate('/admin')}
       />
       <main>
         <Outlet context={ctx} />
@@ -66,6 +64,15 @@ export function StorefrontLayout() {
         onClear={cart.clear}
       />
       <LanguageDrawer open={languageOpen} onClose={() => setLanguageOpen(false)} />
+      <AccountDrawer
+        open={accountOpen}
+        onClose={() => setAccountOpen(false)}
+        onAuthClick={(mode) => {
+          setAuthMode(mode)
+          setAuthOpen(true)
+        }}
+        onAdminClick={() => navigate('/admin')}
+      />
       <AuthModal
         open={authOpen}
         mode={authMode}

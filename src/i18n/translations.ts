@@ -20,6 +20,7 @@ export const translations = {
     'nav.contact': 'Contact us',
     'nav.cart': 'Cart',
     'nav.language': 'Language',
+    'nav.account': 'Account',
     'nav.home': 'Home',
     'nav.welcome': 'Welcome',
     'nav.tagline': 'Bring nature into your home',
@@ -61,6 +62,14 @@ export const translations = {
     'lang.title': 'Choose language',
     'lang.subtitle': 'Select your preferred language.',
     'lang.close': 'Close language menu',
+
+    // Account drawer
+    'account.title': 'Account',
+    'account.close': 'Close account menu',
+    'account.signedIn': 'Signed in as',
+    'account.welcome': 'Welcome',
+    'account.guest': 'Guest account',
+    'account.footer': 'Manage your account, delivery information and store access securely in one place.',
 
     // Hero
     'hero.badge': 'Vet-formulated nutrition',
@@ -403,6 +412,7 @@ export const translations = {
     'nav.contact': 'Επικοινωνία',
     'nav.cart': 'Καλάθι',
     'nav.language': 'Γλώσσα',
+    'nav.account': 'Λογαριασμός',
     'nav.home': 'Αρχική',
     'nav.welcome': 'Καλώς ήρθατε',
     'nav.tagline': 'Φέρτε τη φύση στο σπίτι σας',
@@ -444,6 +454,14 @@ export const translations = {
     'lang.title': 'Επιλέξτε γλώσσα',
     'lang.subtitle': 'Επιλέξτε την προτιμώμενη γλώσσα σας.',
     'lang.close': 'Κλείσιμο μενού γλώσσας',
+
+    // Account drawer
+    'account.title': 'Λογαριασμός',
+    'account.close': 'Κλείσιμο μενού λογαριασμού',
+    'account.signedIn': 'Συνδεδεμένος ως',
+    'account.welcome': 'Καλώς ήρθατε',
+    'account.guest': 'Επισκέπτης',
+    'account.footer': 'Διαχειριστείτε με ασφάλεια τον λογαριασμό, τις παραδόσεις και την πρόσβασή σας στο κατάστημα.',
 
     // Hero
     'hero.badge': 'Διατροφή με κτηνιατρική σύσταση',
@@ -787,6 +805,7 @@ export const translations = {
     'nav.contact': 'Контакт',
     'nav.cart': 'Количка',
     'nav.language': 'Език',
+    'nav.account': 'Профил',
     'nav.home': 'Начало',
     'nav.welcome': 'Добре дошли',
     'nav.tagline': 'Внесете природата у дома',
@@ -828,6 +847,14 @@ export const translations = {
     'lang.title': 'Изберете език',
     'lang.subtitle': 'Изберете предпочитания от вас език.',
     'lang.close': 'Затваряне на менюто за език',
+
+    // Account drawer
+    'account.title': 'Профил',
+    'account.close': 'Затваряне на менюто на профила',
+    'account.signedIn': 'Влезли сте като',
+    'account.welcome': 'Добре дошли',
+    'account.guest': 'Гост',
+    'account.footer': 'Управлявайте сигурно профила, доставките и достъпа си до магазина от едно място.',
 
     // Hero
     'hero.badge': 'Хранене с ветеринарна формула',
