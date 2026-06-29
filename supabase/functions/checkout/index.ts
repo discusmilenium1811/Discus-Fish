@@ -159,16 +159,36 @@ Deno.serve(async (req) => {
     }
 
     // Fetch prices + availability from DB — never trust client-supplied prices.
-    const ids: string[] = items.map((i: { productId: string }) => i.productId)
-    const { data: products, error: dbErr } = await supabase
-      .from('products')
-      .select('id, name, price_cents, currency, is_active, is_coming_soon, stock, track_inventory')
-      .in('id', ids)
+    const requestedIds: string[] = items.map((i: { productId: string }) => i.productId)
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    const uuidIds = requestedIds.filter((id) => uuidPattern.test(id))
+    // Older Home showcase carts used `home-<slug>` as a temporary identifier.
+    // Resolve those entries by slug so an existing cart remains checkout-safe.
+    const legacySlugs = requestedIds
+      .filter((id) => id.startsWith('home-'))
+      .map((id) => id.slice(5))
+      .filter((slug) => /^[a-z0-9-]+$/.test(slug))
+    const productColumns =
+      'id, slug, name, price_cents, currency, is_active, is_coming_soon, stock, track_inventory'
+    const [uuidProducts, slugProducts] = await Promise.all([
+      uuidIds.length
+        ? supabase.from('products').select(productColumns).in('id', uuidIds)
+        : Promise.resolve({ data: [], error: null }),
+      legacySlugs.length
+        ? supabase.from('products').select(productColumns).in('slug', legacySlugs)
+        : Promise.resolve({ data: [], error: null }),
+    ])
+    if (uuidProducts.error) throw uuidProducts.error
+    if (slugProducts.error) throw slugProducts.error
 
-    if (dbErr) throw dbErr
-
-    const byId = new Map((products ?? []).map((p) => [p.id, p]))
+    const products = [...(uuidProducts.data ?? []), ...(slugProducts.data ?? [])]
+    const byId = new Map<string, (typeof products)[number]>()
+    for (const product of products) {
+      byId.set(product.id, product)
+      byId.set(`home-${product.slug}`, product)
+    }
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
+    const canonicalCart: Array<{ id: string; q: number }> = []
     let subtotalCents = 0
     let currency = 'eur'
 
@@ -190,6 +210,7 @@ Deno.serve(async (req) => {
       }
       currency = p.currency ?? 'eur'
       subtotalCents += p.price_cents * qty
+      canonicalCart.push({ id: p.id, q: qty })
       lineItems.push({
         price_data: {
           currency,
@@ -256,7 +277,7 @@ Deno.serve(async (req) => {
     const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
     const clientUrl = isLocalhost || origin === fallbackUrl ? origin : fallbackUrl
     const metadata: Record<string, string> = {
-      cart: JSON.stringify(items.map((i: { productId: string; quantity: number }) => ({ id: i.productId, q: i.quantity }))),
+      cart: JSON.stringify(canonicalCart),
       amounts: JSON.stringify({
         subtotal: subtotalCents,
         shipping: shippingCents,
@@ -274,6 +295,16 @@ Deno.serve(async (req) => {
 
     const customerEmail: string | undefined =
       email || contact?.email || billing?.email || undefined
+    const invoiceMessage = [
+      'Hello,',
+      'Thank you for your purchase from Discusfood.',
+      '',
+      'Attached to this email you will find your payment invoice.',
+      'If you have any questions about your order, you can contact us.',
+      '',
+      'Regards,',
+      'discusmilenium@outlook.com',
+    ].join('\n')
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -286,11 +317,16 @@ Deno.serve(async (req) => {
       cancel_url: `${clientUrl}/cart`,
       ...(customerEmail ? { customer_email: customerEmail } : {}),
       billing_address_collection: 'required',
-      ...(billing
-        ? {
-            invoice_creation: {
-              enabled: true,
-              invoice_data: {
+      // Generate a paid Stripe Invoice for every successful one-time Checkout
+      // payment. When "Successful payments" is enabled in Stripe's customer
+      // email settings, Stripe emails the customer an invoice summary with the
+      // downloadable invoice PDF. Business details are added when available.
+      invoice_creation: {
+        enabled: true,
+        invoice_data: {
+          description: invoiceMessage,
+          ...(billing
+            ? {
                 custom_fields: [
                   { name: 'Company', value: billing.company.slice(0, 30) },
                   { name: 'VAT / Tax ID', value: billing.vatNumber.slice(0, 30) },
@@ -298,10 +334,10 @@ Deno.serve(async (req) => {
                 ...(billing.registrationNumber
                   ? { footer: `Company registration: ${billing.registrationNumber}` }
                   : {}),
-              },
-            },
-          }
-        : {}),
+              }
+            : {}),
+        },
+      },
       metadata,
     })
 
