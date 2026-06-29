@@ -25,7 +25,7 @@ export const translations = {
     'nav.tagline': 'Bring nature into your home',
     'nav.freeDelivery': 'Free delivery to Cyprus & the European Union',
     'nav.shippingPrices': 'Shipping prices',
-    'nav.trackingDelivery': 'Tracking Delivery',
+    'nav.trackingDelivery': 'Track Orders',
     'home.eyebrow': 'Premium aquarium nutrition',
     'home.heading': 'Food that grows champions.',
     'home.subtitle':
