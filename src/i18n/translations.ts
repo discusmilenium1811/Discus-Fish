@@ -241,6 +241,11 @@ export const translations = {
     'reviews.submit': 'Submit for approval',
     'reviews.submitting': 'Submitting…',
     'reviews.success': 'Thank you! Your review was sent to the admin for approval.',
+    'reviews.yours': 'Your reviews',
+    'reviews.yoursHint': 'Only you and our team can see a review until it is approved.',
+    'reviews.statusPending': 'Awaiting approval',
+    'reviews.statusApproved': 'Published',
+    'reviews.statusRejected': 'Not approved',
     'reviews.submitError': 'Your review could not be submitted. Please try again.',
 
     // Footer
@@ -620,6 +625,11 @@ export const translations = {
     'reviews.submit': 'Υποβολή για έγκριση',
     'reviews.submitting': 'Υποβολή…',
     'reviews.success': 'Ευχαριστούμε! Η κριτική σας στάλθηκε για έγκριση.',
+    'reviews.yours': 'Οι κριτικές σας',
+    'reviews.yoursHint': 'Μόνο εσείς και η ομάδα μας βλέπουμε μια κριτική μέχρι να εγκριθεί.',
+    'reviews.statusPending': 'Σε αναμονή έγκρισης',
+    'reviews.statusApproved': 'Δημοσιευμένη',
+    'reviews.statusRejected': 'Μη εγκεκριμένη',
     'reviews.submitError': 'Δεν ήταν δυνατή η υποβολή της κριτικής. Δοκιμάστε ξανά.',
 
     // Footer
@@ -999,6 +1009,11 @@ export const translations = {
     'reviews.submit': 'Изпрати за одобрение',
     'reviews.submitting': 'Изпращане…',
     'reviews.success': 'Благодарим! Вашият отзив беше изпратен за одобрение.',
+    'reviews.yours': 'Вашите отзиви',
+    'reviews.yoursHint': 'Само вие и нашият екип виждате отзив, докато не бъде одобрен.',
+    'reviews.statusPending': 'Изчаква одобрение',
+    'reviews.statusApproved': 'Публикуван',
+    'reviews.statusRejected': 'Неодобрен',
     'reviews.submitError': 'Отзивът не можа да бъде изпратен. Опитайте отново.',
 
     // Footer

@@ -1,15 +1,18 @@
--- Let signed-in customers submit reviews (Contact-page reviews + product
--- reviews). Submissions are always created as 'pending' so the admin still
--- moderates every review; a user can only write rows tied to their own
--- account and can never self-approve. Public SELECT stays limited to
--- status = 'approved' (unchanged); admin keeps full access via its policy.
+-- Enable the Contact-page "leave a review" feature without weakening product
+-- reviews. Product reviews stay verified-buyer-only (policy reviews_owner_insert
+-- requires a paid order). Contact-page reviews are testimonials about the shop
+-- (no purchase) and are tagged with a '[[contact-review]]' comment prefix by
+-- src/lib/api.ts submitContactReview — this policy admits exactly those:
+-- signed-in author, always created 'pending' for admin moderation, never
+-- self-approved, only the user's own rows.
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 
--- Table-level privilege (RLS still decides which rows): no-op if already granted.
-GRANT INSERT ON TABLE public.reviews TO authenticated;
-
-DROP POLICY IF EXISTS reviews_insert_own ON public.reviews;
-CREATE POLICY reviews_insert_own
+DROP POLICY IF EXISTS reviews_contact_insert ON public.reviews;
+CREATE POLICY reviews_contact_insert
   ON public.reviews FOR INSERT
   TO authenticated
-  WITH CHECK (user_id = auth.uid() AND status = 'pending');
+  WITH CHECK (
+    user_id = auth.uid()
+    AND status = 'pending'
+    AND comment LIKE '[[contact-review]]%'
+  );

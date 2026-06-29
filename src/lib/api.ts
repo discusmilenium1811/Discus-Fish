@@ -175,6 +175,36 @@ export async function fetchApprovedContactReviews(): Promise<PublicReview[]> {
   }))
 }
 
+export interface MyContactReview extends PublicReview {
+  /** Moderation state — only the author and admins can see non-approved rows. */
+  status: 'pending' | 'approved' | 'rejected'
+}
+
+/**
+ * Load the signed-in user's OWN Contact-page reviews, any status. RLS
+ * (reviews_owner_read) restricts this to the caller's own rows, so a pending
+ * review is visible to its author here while staying hidden from the public.
+ */
+export async function fetchMyContactReviews(userId: string): Promise<MyContactReview[]> {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('id, author_name, rating, comment, status, created_at')
+    .eq('user_id', userId)
+    .like('comment', `${CONTACT_REVIEW_PREFIX}%`)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+
+  return (data ?? []).map((review) => ({
+    id: review.id,
+    authorName: review.author_name ?? 'Anonymous',
+    rating: review.rating,
+    comment: review.comment.slice(CONTACT_REVIEW_PREFIX.length),
+    status: review.status,
+    createdAt: review.created_at,
+  }))
+}
+
 /** Submit a general review to the admin moderation queue. */
 export async function submitContactReview(input: {
   userId: string

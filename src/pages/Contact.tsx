@@ -3,7 +3,9 @@ import { useAuth } from '../auth/AuthContext'
 import { useTranslation } from '../i18n/LanguageContext'
 import {
   fetchApprovedContactReviews,
+  fetchMyContactReviews,
   submitContactReview,
+  type MyContactReview,
   type PublicReview,
 } from '../lib/api'
 
@@ -77,6 +79,7 @@ export function ContactPage() {
   const { user, profile } = useAuth()
   const [reviewsOpen, setReviewsOpen] = useState(false)
   const [reviews, setReviews] = useState<PublicReview[]>([])
+  const [myReviews, setMyReviews] = useState<MyContactReview[]>([])
   const [loadingReviews, setLoadingReviews] = useState(false)
   const [loadError, setLoadError] = useState('')
   const [authorName, setAuthorName] = useState('')
@@ -87,20 +90,30 @@ export function ContactPage() {
   const [submitted, setSubmitted] = useState(false)
   const suggestedAuthorName = profile?.username ?? user?.user_metadata?.username ?? ''
 
-  async function toggleReviews() {
-    const willOpen = !reviewsOpen
-    setReviewsOpen(willOpen)
-    if (!willOpen) return
-
+  async function loadReviews() {
     setLoadingReviews(true)
     setLoadError('')
     try {
-      setReviews(await fetchApprovedContactReviews())
+      const [approved, mine] = await Promise.all([
+        fetchApprovedContactReviews(),
+        user ? fetchMyContactReviews(user.id) : Promise.resolve([]),
+      ])
+      setMyReviews(mine)
+      // Don't show the author's own approved review twice (it's already listed
+      // under "Your reviews"); the public list shows everyone else's.
+      const mineIds = new Set(mine.map((r) => r.id))
+      setReviews(approved.filter((r) => !mineIds.has(r.id)))
     } catch {
       setLoadError(t('reviews.loadError'))
     } finally {
       setLoadingReviews(false)
     }
+  }
+
+  async function toggleReviews() {
+    const willOpen = !reviewsOpen
+    setReviewsOpen(willOpen)
+    if (willOpen) await loadReviews()
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -129,6 +142,8 @@ export function ContactPage() {
       setComment('')
       setRating(5)
       setSubmitted(true)
+      // Show the author their freshly submitted (pending) review right away.
+      await loadReviews()
     } catch {
       setSubmitError(t('reviews.submitError'))
     } finally {
@@ -214,6 +229,34 @@ export function ContactPage() {
               <h2 className="text-2xl font-extrabold text-white sm:text-3xl">{t('reviews.title')}</h2>
               <p className="mt-2 text-sm text-slate-400">{t('reviews.subtitle')}</p>
             </div>
+
+            {user && myReviews.length > 0 && (
+              <div className="mb-6 rounded-2xl border border-cyan-400/20 bg-cyan-500/5 p-5 backdrop-blur-md">
+                <h3 className="text-sm font-bold uppercase tracking-wide text-cyan-200">{t('reviews.yours')}</h3>
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">{t('reviews.yoursHint')}</p>
+                <div className="mt-4 space-y-3">
+                  {myReviews.map((review) => (
+                    <article key={review.id} className="rounded-xl border border-white/10 bg-slate-900/70 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white">{review.authorName}</span>
+                          <StatusBadge status={review.status} t={t} />
+                        </div>
+                        <time className="text-xs text-slate-500" dateTime={review.createdAt}>
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </time>
+                      </div>
+                      <div className="mt-2 text-amber-300" aria-label={`${review.rating} / 5`}>
+                        {'★'.repeat(review.rating)}<span className="text-slate-600">{'★'.repeat(5 - review.rating)}</span>
+                      </div>
+                      <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-300">
+                        {review.comment}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="space-y-4">
@@ -313,5 +356,26 @@ export function ContactPage() {
         )}
       </div>
     </section>
+  )
+}
+
+/** Moderation-state chip shown next to the author's own reviews. */
+function StatusBadge({
+  status,
+  t,
+}: {
+  status: MyContactReview['status']
+  t: ReturnType<typeof useTranslation>['t']
+}) {
+  const styles: Record<MyContactReview['status'], { key: 'reviews.statusPending' | 'reviews.statusApproved' | 'reviews.statusRejected'; cls: string }> = {
+    pending: { key: 'reviews.statusPending', cls: 'border-amber-300/30 bg-amber-300/10 text-amber-200' },
+    approved: { key: 'reviews.statusApproved', cls: 'border-emerald-300/30 bg-emerald-300/10 text-emerald-200' },
+    rejected: { key: 'reviews.statusRejected', cls: 'border-rose-300/30 bg-rose-300/10 text-rose-200' },
+  }
+  const s = styles[status]
+  return (
+    <span className={`rounded-full border px-2 py-0.5 text-[0.65rem] font-bold ${s.cls}`}>
+      {t(s.key)}
+    </span>
   )
 }
