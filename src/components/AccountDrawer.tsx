@@ -12,7 +12,7 @@ interface AccountDrawerProps {
 
 export function AccountDrawer({ open, onClose, onAuthClick, onAdminClick }: AccountDrawerProps) {
   const { t } = useTranslation()
-  const { user, profile, isAdmin, signOut } = useAuth()
+  const { user, profile, isAdmin } = useAuth()
   const name = profile?.username ?? user?.email ?? t('account.guest')
 
   const authAction = (mode: AuthMode) => {
@@ -54,10 +54,7 @@ export function AccountDrawer({ open, onClose, onAuthClick, onAdminClick }: Acco
 
           <nav className="mt-5 space-y-2" aria-label={t('account.title')}>
             {!user ? (
-              <>
-                <DrawerButton icon="→" label={t('auth.login')} onClick={() => authAction('login')} />
-                <DrawerButton icon="＋" label={t('auth.signup')} onClick={() => authAction('signup')} />
-              </>
+              <DrawerButton icon="＋" label={t('auth.signup')} onClick={() => authAction('signup')} />
             ) : (
               <>
                 <DrawerButton icon="🔑" label={t('auth.changePassword')} onClick={() => authAction('changePassword')} />
@@ -70,8 +67,6 @@ export function AccountDrawer({ open, onClose, onAuthClick, onAdminClick }: Acco
               <span className="flex-1 text-sm font-bold text-white">{t('nav.shippingPrices')}</span>
               <span className="text-slate-500 transition group-hover:translate-x-0.5 group-hover:text-cyan-300">›</span>
             </Link>
-
-            {user && <DrawerButton icon="⏻" label={t('auth.logout')} onClick={() => { onClose(); void signOut() }} danger />}
           </nav>
         </div>
 

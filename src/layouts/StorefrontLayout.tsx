@@ -45,6 +45,10 @@ export function StorefrontLayout() {
       <Navbar
         cartCount={cart.count}
         onCartClick={() => setCartOpen(true)}
+        onLoginClick={() => {
+          setAuthMode('login')
+          setAuthOpen(true)
+        }}
         onAccountClick={() => setAccountOpen(true)}
         onLanguageClick={() => setLanguageOpen(true)}
         onCatalogClick={() => navigate('/Cataloge/Products')}

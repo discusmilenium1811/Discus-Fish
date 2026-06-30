@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext'
 interface NavbarProps {
   cartCount: number
   onCartClick: () => void
+  onLoginClick: () => void
   onAccountClick: () => void
   onLanguageClick: () => void
   onCatalogClick: () => void
@@ -13,12 +14,13 @@ interface NavbarProps {
 export function Navbar({
   cartCount,
   onCartClick,
+  onLoginClick,
   onAccountClick,
   onLanguageClick,
   onCatalogClick,
 }: NavbarProps) {
   const { t, lang } = useTranslation()
-  const { user, profile } = useAuth()
+  const { user, profile, signOut } = useAuth()
   const accountName = profile?.username ?? user?.email
 
   return (
@@ -66,13 +68,27 @@ export function Navbar({
 
           <button
             type="button"
-            onClick={onAccountClick}
-            className="inline-flex h-9 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:ml-auto sm:h-12 sm:px-5 sm:text-base"
-            aria-label={t('nav.account')}
+            onClick={() => user ? void signOut() : onLoginClick()}
+            className={`inline-flex h-9 items-center gap-2 rounded-full border px-3 text-xs font-bold transition sm:ml-auto sm:h-12 sm:px-5 sm:text-base ${
+              user
+                ? 'border-rose-400/20 bg-rose-400/5 text-rose-200 hover:border-rose-300/40 hover:bg-rose-400/10'
+                : 'border-cyan-300/25 bg-cyan-300/10 text-cyan-100 hover:border-cyan-300/50 hover:bg-cyan-300/15'
+            }`}
           >
-            <span className="grid h-5 w-5 place-items-center rounded-full bg-cyan-300/15 text-[0.65rem] text-cyan-200" aria-hidden="true">👤</span>
-            <span>{t('nav.account')}</span>
+            <span>{user ? t('auth.logout') : t('auth.login')}</span>
           </button>
+
+          {user && (
+            <button
+              type="button"
+              onClick={onAccountClick}
+              className="inline-flex h-9 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-200 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white sm:h-12 sm:px-5 sm:text-base"
+              aria-label={t('nav.account')}
+            >
+              <span className="grid h-5 w-5 place-items-center rounded-full bg-cyan-300/15 text-[0.65rem] text-cyan-200" aria-hidden="true">👤</span>
+              <span>{t('nav.account')}</span>
+            </button>
+          )}
 
           <button
             type="button"
