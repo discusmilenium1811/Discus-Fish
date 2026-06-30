@@ -7,28 +7,33 @@ interface Category {
   image: string
   titleKey: TranslationKey
   textKey: TranslationKey
+  /** Deep-links straight into that catalogue category view. */
+  to: string
   /** Bottom-up colour wash, one per card, to keep the trio lively. */
   wash: string
 }
 
-// The three catalogue worlds. Each whole card is a link into the catalogue.
+// The three catalogue worlds. Each whole card links into its catalogue category.
 const CATEGORIES: Category[] = [
   {
     image: 'discus-portrait.jpg',
     titleKey: 'catalog.group.food',
     textKey: 'catalog.group.foodText',
+    to: '/Cataloge/Products?group=fish-food',
     wash: 'from-rose-500/45',
   },
   {
     image: 'planted-tank.jpg',
     titleKey: 'catalog.group.water',
     textKey: 'catalog.group.waterText',
+    to: '/Cataloge/Products?group=water-conditioners',
     wash: 'from-cyan-500/45',
   },
   {
     image: 'aquascape.jpg',
     titleKey: 'catalog.group.equipment',
     textKey: 'catalog.group.equipmentText',
+    to: '/Cataloge/Products?group=equipment',
     wash: 'from-emerald-500/45',
   },
 ]
@@ -54,7 +59,7 @@ export function HomeCategories() {
           {CATEGORIES.map((c) => (
             <Link
               key={c.titleKey}
-              to="/Cataloge/Products"
+              to={c.to}
               className="group relative block overflow-hidden rounded-3xl shadow-2xl shadow-black/40 ring-1 ring-white/10 transition duration-300 hover:ring-cyan-300/40"
             >
               <div className="aspect-[4/5] w-full overflow-hidden">

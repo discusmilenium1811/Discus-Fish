@@ -4,6 +4,7 @@ import { ProductCard } from '../components/ProductCard'
 import { CatalogDownloadDrawer } from '../components/CatalogDownloadDrawer'
 import { useTranslation } from '../i18n/LanguageContext'
 import { productMatches } from '../lib/productSearch'
+import { HOME_IMG } from '../lib/homeImages'
 import type { StorefrontContext } from '../layouts/StorefrontLayout'
 import type { Product } from '../types'
 import type { TranslationKey } from '../i18n/translations'
@@ -14,10 +15,38 @@ interface CatalogPageProps {
 
 type GroupId = 'fish-food' | 'water-conditioners' | 'equipment'
 
-const GROUPS: { id: GroupId; icon: string; title: TranslationKey; description: TranslationKey; accent: string }[] = [
-  { id: 'fish-food', icon: '🐟', title: 'catalog.group.food', description: 'catalog.group.foodText', accent: 'from-orange-400/15 to-amber-300/5 border-orange-300/20' },
-  { id: 'water-conditioners', icon: '💧', title: 'catalog.group.water', description: 'catalog.group.waterText', accent: 'from-cyan-400/15 to-blue-400/5 border-cyan-300/20' },
-  { id: 'equipment', icon: '⚙️', title: 'catalog.group.equipment', description: 'catalog.group.equipmentText', accent: 'from-violet-400/15 to-slate-400/5 border-violet-300/20' },
+interface Group {
+  id: GroupId
+  icon: string
+  title: TranslationKey
+  description: TranslationKey
+  image: string
+}
+
+// Each catalogue category is its own view (own URL via ?group=…) with a real
+// banner photo, instead of three stacked sections on one long page.
+const GROUPS: Group[] = [
+  {
+    id: 'fish-food',
+    icon: '🐟',
+    title: 'catalog.group.food',
+    description: 'catalog.group.foodText',
+    image: 'discus-portrait.jpg',
+  },
+  {
+    id: 'water-conditioners',
+    icon: '💧',
+    title: 'catalog.group.water',
+    description: 'catalog.group.waterText',
+    image: 'planted-tank.jpg',
+  },
+  {
+    id: 'equipment',
+    icon: '⚙️',
+    title: 'catalog.group.equipment',
+    description: 'catalog.group.equipmentText',
+    image: 'aquascape.jpg',
+  },
 ]
 
 function productGroup(product: Product): GroupId {
@@ -40,23 +69,57 @@ export function CatalogPage({ tab }: CatalogPageProps) {
     else p.delete('q')
     setParams(p, { replace: true })
   }
-  // Preserve the active query when switching between tabs.
-  const tabQuery = q ? `?q=${encodeURIComponent(q)}` : ''
 
   const available = products.filter((p) => !p.isComingSoon)
   const coming = products.filter((p) => p.isComingSoon)
-  const list = (tab === 'products' ? available : coming).filter((p) =>
-    productMatches(p, q),
-  )
-  const grouped = GROUPS.map((group) => ({
-    ...group,
-    products: list.filter((product) => productGroup(product) === group.id),
-  }))
+  const groupCount = (id: GroupId) =>
+    available.filter((p) => productGroup(p) === id).length
 
-  const tabBase =
-    'rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:py-2 sm:text-sm'
-  const active = 'bg-cyan-400 text-slate-900'
-  const idle = 'border border-white/15 text-slate-300 hover:bg-white/10'
+  // The active category comes from the URL on the Products tab; the Coming tab
+  // is its own single view.
+  const groupParam = params.get('group')
+  const activeGroup: GroupId =
+    GROUPS.some((g) => g.id === groupParam) ? (groupParam as GroupId) : 'fish-food'
+  const activeMeta = GROUPS.find((g) => g.id === activeGroup) as Group
+
+  const baseList =
+    tab === 'coming'
+      ? coming
+      : available.filter((p) => productGroup(p) === activeGroup)
+  const list = baseList.filter((p) => productMatches(p, q))
+
+  // Links preserve the active search query.
+  const qSuffix = q ? `&q=${encodeURIComponent(q)}` : ''
+  const tabQuery = q ? `?q=${encodeURIComponent(q)}` : ''
+  const catLink = (id: GroupId) => `/Cataloge/Products?group=${id}${qSuffix}`
+
+  const banner =
+    tab === 'coming'
+      ? {
+          icon: '✨',
+          image: 'discus-school.jpg',
+          title: t('catalog.tabComing'),
+          desc: t('catalog.comingIntro'),
+          count: coming.length,
+        }
+      : {
+          icon: activeMeta.icon,
+          image: activeMeta.image,
+          title: t(activeMeta.title),
+          desc: t(activeMeta.description),
+          count: groupCount(activeGroup),
+        }
+
+  const pill = (isActive: boolean) =>
+    `inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition sm:text-sm ${
+      isActive
+        ? 'bg-cyan-400 text-slate-900 shadow-lg shadow-cyan-500/25'
+        : 'border border-white/15 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
+    }`
+  const badge = (isActive: boolean) =>
+    `rounded-full px-1.5 py-0.5 text-[0.65rem] font-bold ${
+      isActive ? 'bg-slate-900/20 text-slate-900' : 'bg-white/10 text-slate-300'
+    }`
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10 sm:px-5 sm:py-12">
@@ -64,34 +127,67 @@ export function CatalogPage({ tab }: CatalogPageProps) {
         {t('catalog.title')}
       </h1>
 
-      {/* Section switcher (each links to its own URL; keeps the search query) */}
-      <div className="mt-5 flex flex-wrap gap-2.5 sm:mt-6 sm:gap-3">
-        <Link
-          to={`/Cataloge/Products${tabQuery}`}
-          className={`${tabBase} ${tab === 'products' ? active : idle}`}
-        >
-          {t('catalog.tabProducts')} ({available.length})
-        </Link>
+      {/* Category navigation — each is its own view */}
+      <div className="mt-5 flex flex-wrap items-center gap-2 sm:mt-6">
+        {GROUPS.map((g) => {
+          const isActive = tab === 'products' && activeGroup === g.id
+          return (
+            <Link key={g.id} to={catLink(g.id)} className={pill(isActive)}>
+              <span aria-hidden="true">{g.icon}</span>
+              {t(g.title)}
+              <span className={badge(isActive)}>{groupCount(g.id)}</span>
+            </Link>
+          )
+        })}
+
+        <span className="mx-1 hidden h-5 w-px bg-white/10 sm:block" aria-hidden="true" />
+
         <Link
           to={`/Cataloge/NewProductsComingsoon${tabQuery}`}
-          className={`${tabBase} ${tab === 'coming' ? active : idle}`}
+          className={pill(tab === 'coming')}
         >
-          {t('catalog.tabComing')} ({coming.length})
+          <span aria-hidden="true">✨</span>
+          {t('catalog.tabComing')}
+          <span className={badge(tab === 'coming')}>{coming.length}</span>
         </Link>
 
-        <button
-          type="button"
-          onClick={() => setDownloadOpen(true)}
-          className={`${tabBase} ${idle}`}
-        >
+        <button type="button" onClick={() => setDownloadOpen(true)} className={pill(false)}>
+          <span aria-hidden="true">⬇</span>
           {t('catalog.download')}
         </button>
       </div>
 
       <CatalogDownloadDrawer open={downloadOpen} onClose={() => setDownloadOpen(false)} />
 
-      {/* Search / refine within the catalogue */}
-      <div className="relative mt-5 max-w-md">
+      {/* Beautiful category banner with a real photo */}
+      <div className="relative mt-6 overflow-hidden rounded-3xl shadow-2xl shadow-black/40 ring-1 ring-white/10">
+        <img
+          src={`${HOME_IMG}/${banner.image}`}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/70 to-slate-950/25" />
+        <div className="relative flex items-center gap-4 px-6 py-7 sm:px-8 sm:py-9">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/10 text-2xl ring-1 ring-white/15 sm:h-14 sm:w-14">
+            {banner.icon}
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">
+              {banner.title}
+            </h2>
+            <p className="mt-1 max-w-xl text-xs leading-5 text-slate-300 sm:text-sm">
+              {banner.desc}
+            </p>
+          </div>
+          <span className="ml-auto hidden shrink-0 rounded-full bg-white/10 px-3 py-1.5 text-sm font-bold text-white ring-1 ring-white/10 sm:block">
+            {banner.count} {t('catalog.group.items')}
+          </span>
+        </div>
+      </div>
+
+      {/* Search / refine within the active category */}
+      <div className="relative mt-6 max-w-md">
         <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
           🔎
         </span>
@@ -124,44 +220,15 @@ export function CatalogPage({ tab }: CatalogPageProps) {
               : t('catalog.emptyComing')}
         </p>
       ) : (
-        <div className="mt-8">
-          <div className="grid gap-3 sm:grid-cols-3">
-            {grouped.map((group) => (
-              <a
-                key={group.id}
-                href={`#${group.id}`}
-                className={`flex items-center gap-3 rounded-2xl border bg-gradient-to-br p-4 transition hover:-translate-y-0.5 hover:border-cyan-300/40 ${group.accent}`}
-              >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 text-xl ring-1 ring-white/10" aria-hidden="true">{group.icon}</span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-extrabold text-white">{t(group.title)}</span>
-                  <span className="mt-0.5 block text-xs text-slate-400">{group.products.length} {t('catalog.group.items')}</span>
-                </span>
-              </a>
-            ))}
-          </div>
-
-          <div className="mt-10 space-y-14">
-            {grouped.filter((group) => group.products.length > 0).map((group) => (
-              <section key={group.id} id={group.id} className="scroll-mt-28">
-                <div className={`rounded-2xl border bg-gradient-to-r px-5 py-4 ${group.accent}`}>
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl" aria-hidden="true">{group.icon}</span>
-                    <div>
-                      <h2 className="text-xl font-black text-white sm:text-2xl">{t(group.title)}</h2>
-                      <p className="mt-1 text-xs leading-5 text-slate-400 sm:text-sm">{t(group.description)}</p>
-                    </div>
-                    <span className="ml-auto rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-slate-300">{group.products.length}</span>
-                  </div>
-                </div>
-                <div className="mt-5 grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-                  {group.products.map((product, index) => (
-                    <ProductCard key={product.id} product={product} index={index} onAdd={addToCart} />
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+          {list.map((product, index) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              index={index}
+              onAdd={addToCart}
+            />
+          ))}
         </div>
       )}
     </section>
