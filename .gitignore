@@ -35,3 +35,10 @@ next-env.d.ts
 
 # Local Netlify folder
 .netlify
+
+# Private business documents / source price files — kept locally only,
+# never deployed (not under public/) and never pushed to GitHub.
+storage/
+
+# Office temp lock files (e.g. ~$Price List.odt)
+~$*

@@ -37,6 +37,7 @@ export const CATALOG_PAGES: Record<string, number[]> = {
   'best-heart-flakes-blue-dream': [30, 31, 35],
   'best-heart-flakes-red-dream': [32, 33, 35],
   'best-heart-flakes-pro-breed': [34, 35],
+  'best-heart-flakes-golden-dream': [35],
 
   // Daily / heart granulates
   'for-discus-daily-granulate': [37, 38],
@@ -89,4 +90,5 @@ export const CATALOG_PAGES: Record<string, number[]> = {
 
   // Discus Protector (quarantine)
   'discus-protector': [103, 104, 105, 106, 107, 108, 109],
+  'discus-protector-480g': [103, 104, 105, 106, 107, 108, 109],
 }
