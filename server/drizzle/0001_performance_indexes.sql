@@ -32,8 +32,7 @@ CREATE INDEX IF NOT EXISTS "returns_status_idx" ON "returns" ("status");--> stat
 CREATE INDEX IF NOT EXISTS "return_items_return_idx" ON "return_items" ("return_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "return_items_order_item_idx" ON "return_items" ("order_item_id");--> statement-breakpoint
 
--- invoices, gift-card ledger, offers, shipping, tracking, stock
-CREATE INDEX IF NOT EXISTS "invoices_order_idx" ON "invoices" ("order_id");--> statement-breakpoint
+-- gift-card ledger, offers, shipping, tracking, stock
 CREATE INDEX IF NOT EXISTS "gift_card_tx_card_idx" ON "gift_card_transactions" ("gift_card_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "gift_card_tx_order_idx" ON "gift_card_transactions" ("order_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "offers_category_idx" ON "offers" ("category_id");--> statement-breakpoint

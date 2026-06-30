@@ -28,9 +28,7 @@ export const adminNav: AdminNavGroup[] = [
     title: 'Sales',
     items: [
       { to: '/admin/orders', label: 'Manage Orders', icon: '🧾' },
-      { to: '/admin/payments', label: 'Order Payments', icon: '💳' },
       { to: '/admin/tracking', label: 'Track Orders', icon: '🚚' },
-      { to: '/admin/invoices', label: 'Invoices', icon: '📄' },
       { to: '/admin/returns', label: 'Returns', icon: '↩️' },
     ],
   },

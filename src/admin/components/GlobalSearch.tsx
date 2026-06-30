@@ -112,7 +112,7 @@ export function GlobalSearch() {
               setRecent(getRecentSearches())
               setOpen(true)
             }}
-            placeholder="Search orders, invoices, payments, comments…"
+            placeholder="Search orders, shipments, returns, comments…"
             className="w-full rounded-xl border border-white/15 bg-slate-800/80 py-2.5 pl-10 pr-3 text-sm text-white placeholder-slate-500 outline-none transition focus:border-cyan-400"
             aria-label="Global admin search"
           />
@@ -175,8 +175,8 @@ export function GlobalSearch() {
                 </div>
                 {recent.length === 0 ? (
                   <p className="px-2 py-3 text-sm text-slate-500">
-                    Start typing to search across orders, payments, shipments,
-                    invoices, returns and comments.
+                    Start typing to search across orders, shipments, returns,
+                    products and comments.
                   </p>
                 ) : (
                   recent.map((r) => (

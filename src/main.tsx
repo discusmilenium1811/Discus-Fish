@@ -21,9 +21,7 @@ import { Categories } from './admin/pages/Categories'
 import { Inventory } from './admin/pages/Inventory'
 import { Reviews } from './admin/pages/Reviews'
 import { Orders } from './admin/pages/Orders'
-import { Payments } from './admin/pages/Payments'
 import { Tracking } from './admin/pages/Tracking'
-import { Invoices } from './admin/pages/Invoices'
 import { Returns } from './admin/pages/Returns'
 import { Coupons } from './admin/pages/Coupons'
 import { Offers } from './admin/pages/Offers'
@@ -61,9 +59,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="inventory" element={<Inventory />} />
               <Route path="reviews" element={<Reviews />} />
               <Route path="orders" element={<Orders />} />
-              <Route path="payments" element={<Payments />} />
               <Route path="tracking" element={<Tracking />} />
-              <Route path="invoices" element={<Invoices />} />
               <Route path="returns" element={<Returns />} />
               <Route path="coupons" element={<Coupons />} />
               <Route path="offers" element={<Offers />} />

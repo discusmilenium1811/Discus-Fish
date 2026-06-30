@@ -4,9 +4,7 @@ import { supabase } from '../../lib/supabase'
 export type AdminCat =
   | 'reviews'
   | 'orders'
-  | 'payments'
   | 'shipments'
-  | 'invoices'
   | 'returns'
   | 'products'
   | 'inventory'
@@ -27,9 +25,7 @@ export const SEARCH_CATS: CatMeta[] = [
   { key: 'inventory', label: 'Stock & Inventory', icon: '📦', to: '/admin/inventory' },
   { key: 'reviews', label: 'Comments & Reviews', icon: '💬', to: '/admin/reviews' },
   { key: 'orders', label: 'Manage Orders', icon: '🧾', to: '/admin/orders' },
-  { key: 'payments', label: 'Order Payments', icon: '💳', to: '/admin/payments' },
   { key: 'shipments', label: 'Track Orders', icon: '🚚', to: '/admin/tracking' },
-  { key: 'invoices', label: 'Invoices', icon: '📄', to: '/admin/invoices' },
   { key: 'returns', label: 'Returns', icon: '↩️', to: '/admin/returns' },
   { key: 'coupons', label: 'Coupons', icon: '🏷️', to: '/admin/coupons' },
   { key: 'offers', label: 'Offers', icon: '✨', to: '/admin/offers' },
@@ -85,7 +81,6 @@ type ShipmentRow = AttachedRow & {
   carrier: string | null
   tracking_number: string | null
 }
-type InvoiceRow = AttachedRow & { invoice_number: string }
 type ReturnRow = AttachedRow & { reason: string | null }
 
 type ProductRow = {
@@ -124,10 +119,10 @@ const linkTo = (cat: AdminCat, q: string) =>
  * Cross-entity admin search.
  *
  * Strategy: first find the orders whose customer/company/number matches the
- * term, then surface those orders plus everything attached to them (payments,
- * shipments, invoices, returns) — as well as direct field matches on each
- * entity (e.g. a carrier called "ABC Transport", an invoice number, a review
- * comment). Returns at most `perCat` hits per category.
+ * term, then surface those orders plus everything attached to them (shipments,
+ * returns) — as well as direct field matches on each entity (e.g. a carrier
+ * called "ABC Transport", a review comment). Returns at most `perCat` hits per
+ * category.
  */
 export async function searchAdmin(
   rawTerm: string,
@@ -150,9 +145,7 @@ export async function searchAdmin(
   // Orders are the hub: needed directly and as parents of the other entities.
   const needOrders =
     active.has('orders') ||
-    active.has('payments') ||
     active.has('shipments') ||
-    active.has('invoices') ||
     active.has('returns')
 
   let matchedOrders: OrderLite[] = []
@@ -218,55 +211,6 @@ export async function searchAdmin(
     groups.set('orders', hits)
   }
 
-  // Helper for the order-attached entities.
-  const attached = (
-    cat: AdminCat,
-    table: string,
-    ownFilters: string[],
-    build: (row: AttachedRow) => { title: string; subtitle: string },
-  ) => {
-    tasks.push(
-      (async () => {
-        const filters = [...ownFilters]
-        if (inOrders) filters.push(inOrders)
-        if (!filters.length) {
-          groups.set(cat, [])
-          return
-        }
-        const { data } = await supabase
-          .from(table)
-          .select(
-            'id, order_id, orders(order_number, ship_name, billing_company)',
-          )
-          .or(filters.join(','))
-          .limit(perCat)
-        const hits = ((data ?? []) as unknown as AttachedRow[]).map((row): SearchHit => {
-          const built = build(row)
-          return {
-            cat,
-            id: row.id,
-            title: built.title,
-            subtitle: built.subtitle,
-            to: linkTo(cat, term),
-          }
-        })
-        groups.set(cat, hits)
-      })(),
-    )
-  }
-
-  if (active.has('payments')) {
-    attached(
-      'payments',
-      'payments',
-      [`stripe_payment_intent_id.ilike.${like}`, `method.ilike.${like}`],
-      (row) => ({
-        title: `Payment · ${orderTitle(row.orders)}`,
-        subtitle: orderName(row.orders),
-      }),
-    )
-  }
-
   if (active.has('shipments')) {
     // Re-select to include carrier/tracking for display.
     tasks.push(
@@ -288,30 +232,6 @@ export async function searchAdmin(
           to: linkTo('shipments', term),
         }))
         groups.set('shipments', hits)
-      })(),
-    )
-  }
-
-  if (active.has('invoices')) {
-    tasks.push(
-      (async () => {
-        const filters = [`invoice_number.ilike.${like}`]
-        if (inOrders) filters.push(inOrders)
-        const { data } = await supabase
-          .from('invoices')
-          .select(
-            'id, invoice_number, order_id, orders(order_number, ship_name, billing_company)',
-          )
-          .or(filters.join(','))
-          .limit(perCat)
-        const hits = ((data ?? []) as unknown as InvoiceRow[]).map((row): SearchHit => ({
-          cat: 'invoices',
-          id: row.id,
-          title: `Invoice #${row.invoice_number}`,
-          subtitle: orderName(row.orders),
-          to: linkTo('invoices', term),
-        }))
-        groups.set('invoices', hits)
       })(),
     )
   }

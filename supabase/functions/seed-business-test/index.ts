@@ -181,9 +181,6 @@ Deno.serve(async (req) => {
           ? await stripe.paymentIntents.retrieve(invoiceWithPayment.payment_intent, { expand: ['latest_charge'] })
           : null
     if (!intent) throw new Error('Stripe did not return the invoice PaymentIntent.')
-    const charge = intent.latest_charge && typeof intent.latest_charge !== 'string'
-      ? intent.latest_charge as Stripe.Charge
-      : null
 
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -232,32 +229,6 @@ Deno.serve(async (req) => {
       quantity: 1,
     })
     if (itemError) throw itemError
-
-    const method = charge?.payment_method_details?.card
-      ? `${charge.payment_method_details.card.brand} •••• ${charge.payment_method_details.card.last4}`
-      : 'card'
-    const { error: paymentError } = await supabase.from('payments').upsert(
-      {
-        order_id: order.id,
-        stripe_payment_intent_id: intent.id,
-        stripe_charge_id: charge?.id ?? null,
-        amount_cents: invoice.amount_paid,
-        amount_refunded_cents: 0,
-        currency: invoice.currency,
-        status: 'succeeded',
-        method,
-      },
-      { onConflict: 'stripe_payment_intent_id' },
-    )
-    if (paymentError) throw paymentError
-
-    const { error: invoiceError } = await supabase.from('invoices').insert({
-      order_id: order.id,
-      total_cents: invoice.amount_paid,
-      currency: invoice.currency,
-      pdf_url: invoice.invoice_pdf ?? invoice.hosted_invoice_url ?? null,
-    })
-    if (invoiceError) throw invoiceError
 
     return json({
       created: true,
