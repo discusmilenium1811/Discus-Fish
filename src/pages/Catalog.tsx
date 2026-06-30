@@ -17,9 +17,7 @@ type GroupId = 'fish-food' | 'water-conditioners' | 'equipment'
 
 interface Group {
   id: GroupId
-  icon: string
   title: TranslationKey
-  description: TranslationKey
   image: string
 }
 
@@ -28,23 +26,17 @@ interface Group {
 const GROUPS: Group[] = [
   {
     id: 'fish-food',
-    icon: '🐟',
     title: 'catalog.group.food',
-    description: 'catalog.group.foodText',
     image: 'discus-portrait.jpg',
   },
   {
     id: 'water-conditioners',
-    icon: '💧',
     title: 'catalog.group.water',
-    description: 'catalog.group.waterText',
     image: 'planted-tank.jpg',
   },
   {
     id: 'equipment',
-    icon: '⚙️',
     title: 'catalog.group.equipment',
-    description: 'catalog.group.equipmentText',
     image: 'aquascape.jpg',
   },
 ]
@@ -72,43 +64,23 @@ export function CatalogPage({ tab }: CatalogPageProps) {
 
   const available = products.filter((p) => !p.isComingSoon)
   const coming = products.filter((p) => p.isComingSoon)
+  const pageProducts = tab === 'coming' ? coming : available
   const groupCount = (id: GroupId) =>
-    available.filter((p) => productGroup(p) === id).length
+    pageProducts.filter((p) => productGroup(p) === id).length
 
-  // The active category comes from the URL on the Products tab; the Coming tab
-  // is its own single view.
+  // Both catalogue pages have their own category-filtered views.
   const groupParam = params.get('group')
   const activeGroup: GroupId =
     GROUPS.some((g) => g.id === groupParam) ? (groupParam as GroupId) : 'fish-food'
-  const activeMeta = GROUPS.find((g) => g.id === activeGroup) as Group
 
-  const baseList =
-    tab === 'coming'
-      ? coming
-      : available.filter((p) => productGroup(p) === activeGroup)
+  const baseList = pageProducts.filter((p) => productGroup(p) === activeGroup)
   const list = baseList.filter((p) => productMatches(p, q))
 
   // Links preserve the active search query.
   const qSuffix = q ? `&q=${encodeURIComponent(q)}` : ''
-  const tabQuery = q ? `?q=${encodeURIComponent(q)}` : ''
-  const catLink = (id: GroupId) => `/Cataloge/Products?group=${id}${qSuffix}`
-
-  const banner =
-    tab === 'coming'
-      ? {
-          icon: '✨',
-          image: 'discus-school.jpg',
-          title: t('catalog.tabComing'),
-          desc: t('catalog.comingIntro'),
-          count: coming.length,
-        }
-      : {
-          icon: activeMeta.icon,
-          image: activeMeta.image,
-          title: t(activeMeta.title),
-          desc: t(activeMeta.description),
-          count: groupCount(activeGroup),
-        }
+  const pagePath =
+    tab === 'coming' ? '/Cataloge/NewProductsComingsoon' : '/Cataloge/Products'
+  const catLink = (id: GroupId) => `${pagePath}?group=${id}${qSuffix}`
 
   const pill = (isActive: boolean) =>
     `inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition sm:text-sm ${
@@ -116,100 +88,111 @@ export function CatalogPage({ tab }: CatalogPageProps) {
         ? 'bg-cyan-400 text-slate-900 shadow-lg shadow-cyan-500/25'
         : 'border border-white/15 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
     }`
-  const badge = (isActive: boolean) =>
-    `rounded-full px-1.5 py-0.5 text-[0.65rem] font-bold ${
-      isActive ? 'bg-slate-900/20 text-slate-900' : 'bg-white/10 text-slate-300'
-    }`
-
   return (
     <section className="mx-auto max-w-6xl px-4 py-10 sm:px-5 sm:py-12">
-      <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-        {t('catalog.title')}
-      </h1>
-
-      {/* Category navigation — each is its own view */}
-      <div className="mt-5 flex flex-wrap items-center gap-2 sm:mt-6">
-        {GROUPS.map((g) => {
-          const isActive = tab === 'products' && activeGroup === g.id
-          return (
-            <Link key={g.id} to={catLink(g.id)} className={pill(isActive)}>
-              <span aria-hidden="true">{g.icon}</span>
-              {t(g.title)}
-              <span className={badge(isActive)}>{groupCount(g.id)}</span>
-            </Link>
-          )
-        })}
-
-        <span className="mx-1 hidden h-5 w-px bg-white/10 sm:block" aria-hidden="true" />
-
+      <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
         <Link
-          to={`/Cataloge/NewProductsComingsoon${tabQuery}`}
-          className={pill(tab === 'coming')}
+          to={`/Cataloge/Products?group=${activeGroup}${qSuffix}`}
+          aria-current={tab === 'products' ? 'page' : undefined}
+          className={`flex h-16 w-56 shrink-0 items-center justify-between rounded-2xl px-5 shadow-xl shadow-black/25 ring-1 transition sm:w-64 ${
+            tab === 'products'
+              ? 'bg-cyan-400 text-slate-950 ring-2 ring-cyan-200'
+              : 'bg-slate-900/85 text-white ring-white/15 hover:bg-slate-800 hover:ring-cyan-300/60'
+          }`}
         >
-          <span aria-hidden="true">✨</span>
-          {t('catalog.tabComing')}
-          <span className={badge(tab === 'coming')}>{coming.length}</span>
+          <span className="text-base font-extrabold sm:text-lg">{t('catalog.tabProducts')}</span>
+          <span className="rounded-full bg-black/15 px-2 py-1 text-xs font-bold">{available.length}</span>
         </Link>
 
-        <button type="button" onClick={() => setDownloadOpen(true)} className={pill(false)}>
+        <Link
+          to={`/Cataloge/NewProductsComingsoon?group=${activeGroup}${qSuffix}`}
+          aria-current={tab === 'coming' ? 'page' : undefined}
+          className={`flex h-16 w-56 shrink-0 items-center justify-between rounded-2xl px-5 shadow-xl shadow-black/25 ring-1 transition sm:w-64 ${
+            tab === 'coming'
+              ? 'bg-cyan-400 text-slate-950 ring-2 ring-cyan-200'
+              : 'bg-slate-900/85 text-white ring-white/15 hover:bg-slate-800 hover:ring-cyan-300/60'
+          }`}
+        >
+          <span className="text-base font-extrabold sm:text-lg">{t('catalog.tabComing')}</span>
+          <span className="rounded-full bg-black/15 px-2 py-1 text-xs font-bold">{coming.length}</span>
+        </Link>
+      </div>
+
+      <div className="mt-7 flex flex-wrap items-center gap-3 sm:mt-8">
+        <h1 className="shrink-0 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+          {t('catalog.title')}
+        </h1>
+
+        <div className="relative min-w-48 flex-1 sm:max-w-xs">
+          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+            🔎
+          </span>
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={t('search.placeholder')}
+            aria-label={t('search.placeholder')}
+            className="w-full rounded-full border border-white/15 bg-slate-900/70 py-2 pl-10 pr-9 text-sm text-white placeholder-slate-400 outline-none transition focus:border-cyan-400"
+          />
+          {q && (
+            <button
+              type="button"
+              onClick={() => setQ('')}
+              aria-label={t('catalog.close')}
+              className="absolute right-3 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full text-slate-400 hover:bg-white/10 hover:text-white"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setDownloadOpen(true)}
+          className={pill(false)}
+        >
           <span aria-hidden="true">⬇</span>
           {t('catalog.download')}
         </button>
       </div>
 
+      {/* Category navigation — the same photo-led cards used on the home page */}
+      <div className="mt-5 grid gap-3 sm:mt-6 sm:grid-cols-3 sm:gap-4">
+        {GROUPS.map((g) => {
+          const isActive = activeGroup === g.id
+          return (
+            <Link
+              key={g.id}
+              to={catLink(g.id)}
+              aria-current={isActive ? 'page' : undefined}
+              className={`group relative block min-h-36 overflow-hidden rounded-2xl shadow-xl shadow-black/30 ring-1 transition duration-300 sm:aspect-[5/3] sm:min-h-0 ${
+                isActive
+                  ? 'ring-2 ring-cyan-300 shadow-cyan-500/15'
+                  : 'ring-white/10 hover:ring-cyan-300/50'
+              }`}
+            >
+              <img
+                src={`${HOME_IMG}/${g.image}`}
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105"
+              />
+              <span className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/55 to-slate-950/10" />
+              <span className="absolute inset-x-0 bottom-0 flex items-end gap-3 p-4 sm:p-5">
+                <span className="min-w-0 text-sm font-extrabold leading-tight text-white sm:text-base">
+                  {t(g.title)}
+                </span>
+                <span className="ml-auto shrink-0 rounded-full bg-white/15 px-2 py-1 text-[0.65rem] font-bold text-white backdrop-blur-sm ring-1 ring-white/15">
+                  {groupCount(g.id)}
+                </span>
+              </span>
+            </Link>
+          )
+        })}
+      </div>
+
       <CatalogDownloadDrawer open={downloadOpen} onClose={() => setDownloadOpen(false)} />
-
-      {/* Beautiful category banner with a real photo */}
-      <div className="relative mt-6 overflow-hidden rounded-3xl shadow-2xl shadow-black/40 ring-1 ring-white/10">
-        <img
-          src={`${HOME_IMG}/${banner.image}`}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/70 to-slate-950/25" />
-        <div className="relative flex items-center gap-4 px-6 py-7 sm:px-8 sm:py-9">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/10 text-2xl ring-1 ring-white/15 sm:h-14 sm:w-14">
-            {banner.icon}
-          </span>
-          <div className="min-w-0">
-            <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">
-              {banner.title}
-            </h2>
-            <p className="mt-1 max-w-xl text-xs leading-5 text-slate-300 sm:text-sm">
-              {banner.desc}
-            </p>
-          </div>
-          <span className="ml-auto hidden shrink-0 rounded-full bg-white/10 px-3 py-1.5 text-sm font-bold text-white ring-1 ring-white/10 sm:block">
-            {banner.count} {t('catalog.group.items')}
-          </span>
-        </div>
-      </div>
-
-      {/* Search / refine within the active category */}
-      <div className="relative mt-6 max-w-md">
-        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-          🔎
-        </span>
-        <input
-          type="search"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder={t('search.placeholder')}
-          aria-label={t('search.placeholder')}
-          className="w-full rounded-full border border-white/15 bg-slate-900/70 py-2.5 pl-11 pr-9 text-sm text-white placeholder-slate-400 outline-none transition focus:border-cyan-400"
-        />
-        {q && (
-          <button
-            type="button"
-            onClick={() => setQ('')}
-            aria-label={t('catalog.close')}
-            className="absolute right-3 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full text-slate-400 hover:bg-white/10 hover:text-white"
-          >
-            ✕
-          </button>
-        )}
-      </div>
 
       {list.length === 0 ? (
         <p className="mt-10 rounded-2xl border border-white/10 bg-white/5 px-4 py-12 text-center text-sm text-slate-400 sm:mt-12 sm:px-6 sm:py-16 sm:text-base">
