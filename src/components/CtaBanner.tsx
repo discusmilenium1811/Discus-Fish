@@ -1,13 +1,14 @@
 import { useTranslation } from '../i18n/LanguageContext'
+import { HOME_IMG } from '../lib/homeImages'
 
 export function CtaBanner() {
   const { t } = useTranslation()
   return (
     <section className="relative overflow-hidden">
-      {/* Parallax photo background (discus row on black) */}
+      {/* Parallax photo background (school of discus) */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-fixed"
-        style={{ backgroundImage: "url('/pictures/discus-row.webp')" }}
+        style={{ backgroundImage: `url('${HOME_IMG}/discus-school.jpg')` }}
         aria-hidden="true"
       />
       <div className="absolute inset-0 bg-slate-950/70" />

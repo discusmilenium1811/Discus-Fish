@@ -34,6 +34,21 @@ export const translations = {
     'home.featured': 'Featured',
     'home.viewDetails': 'View details',
     'home.browseAll': 'Browse the full catalogue',
+    'home.cats.eyebrow': 'Explore the shop',
+    'home.cats.heading': 'Find the right food, fast',
+    'home.cats.subtitle':
+      'Step into our world of aquarium nutrition — tap any collection to dive straight into the catalogue.',
+    'home.cats.explore': 'Explore',
+    'home.story.1.title': 'Granulates that grow champions',
+    'home.story.1.text':
+      'Balanced staple granulates built around what discus truly need — carefully selected proteins, vitamins and trace elements that fuel strong growth and deep, glowing colour.',
+    'home.story.2.title': 'Soft & specialty foods',
+    'home.story.2.text':
+      'Gentle soft granulates for bettas and delicate mouths, plus targeted blends for cichlids and large fish — real animal protein, without the mess and water load of frozen food.',
+    'home.story.3.title': 'Nutrition for crystal-clear water',
+    'home.story.3.text':
+      'Highly digestible recipes that hold their shape and leave far less waste, so your tank stays clear and your water parameters stay calm and stable.',
+    'home.story.cta': 'Explore the range',
 
     // Catalog drawer
     'catalog.title': 'Catalog',
@@ -433,6 +448,21 @@ export const translations = {
     'home.featured': 'Προτεινόμενο',
     'home.viewDetails': 'Δείτε λεπτομέρειες',
     'home.browseAll': 'Δείτε όλον τον κατάλογο',
+    'home.cats.eyebrow': 'Εξερευνήστε το κατάστημα',
+    'home.cats.heading': 'Βρείτε γρήγορα τη σωστή τροφή',
+    'home.cats.subtitle':
+      'Μπείτε στον κόσμο της διατροφής ενυδρείου — πατήστε οποιαδήποτε συλλογή για να μεταβείτε κατευθείαν στον κατάλογο.',
+    'home.cats.explore': 'Εξερεύνηση',
+    'home.story.1.title': 'Κόκκοι που μεγαλώνουν πρωταθλητές',
+    'home.story.1.text':
+      'Ισορροπημένοι βασικοί κόκκοι σχεδιασμένοι γύρω από αυτό που πραγματικά χρειάζονται τα δίσκους — προσεκτικά επιλεγμένες πρωτεΐνες, βιταμίνες και ιχνοστοιχεία που τροφοδοτούν δυνατή ανάπτυξη και βαθύ, λαμπερό χρώμα.',
+    'home.story.2.title': 'Μαλακές & ειδικές τροφές',
+    'home.story.2.text':
+      'Απαλοί μαλακοί κόκκοι για betta και ευαίσθητα στόματα, καθώς και στοχευμένα μείγματα για κιχλίδες και μεγάλα ψάρια — πραγματική ζωική πρωτεΐνη, χωρίς το μπέρδεμα και το φορτίο νερού των κατεψυγμένων τροφών.',
+    'home.story.3.title': 'Διατροφή για κρυστάλλινο νερό',
+    'home.story.3.text':
+      'Εξαιρετικά εύπεπτες συνταγές που διατηρούν το σχήμα τους και αφήνουν πολύ λιγότερα κατάλοιπα, ώστε το ενυδρείο σας να μένει καθαρό και οι παράμετροι του νερού σταθερές.',
+    'home.story.cta': 'Εξερευνήστε τη γκάμα',
 
     // Catalog drawer
     'catalog.title': 'Κατάλογος',
@@ -833,6 +863,21 @@ export const translations = {
     'home.featured': 'Препоръчано',
     'home.viewDetails': 'Вижте детайли',
     'home.browseAll': 'Разгледайте целия каталог',
+    'home.cats.eyebrow': 'Разгледайте магазина',
+    'home.cats.heading': 'Намерете точната храна бързо',
+    'home.cats.subtitle':
+      'Влезте в нашия свят на аквариумна храна — докоснете коя да е колекция, за да преминете директно към каталога.',
+    'home.cats.explore': 'Разгледай',
+    'home.story.1.title': 'Гранулат, който отглежда шампиони',
+    'home.story.1.text':
+      'Балансиран основен гранулат, създаден според това, от което дискусите наистина се нуждаят — внимателно подбрани протеини, витамини и микроелементи за силен растеж и наситен, сияен цвят.',
+    'home.story.2.title': 'Меки и специални храни',
+    'home.story.2.text':
+      'Нежен мек гранулат за бети и деликатни устица, плюс целеви смеси за цихлиди и едри риби — истински животински протеин, без бъркотията и водното натоварване на замразената храна.',
+    'home.story.3.title': 'Храна за кристално чиста вода',
+    'home.story.3.text':
+      'Лесно смилаеми рецепти, които запазват формата си и оставят далеч по-малко отпадък, така че аквариумът ви остава бистър, а параметрите на водата — стабилни.',
+    'home.story.cta': 'Разгледайте гамата',
 
     // Catalog drawer
     'catalog.title': 'Каталог',
