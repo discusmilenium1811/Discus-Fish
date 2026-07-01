@@ -5,30 +5,11 @@ const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/checkout
 // Product imagery lives in the public Supabase Storage `product-images` bucket.
 const STORAGE = 'https://vumjslsogdnexehutibj.supabase.co/storage/v1/object/public/product-images'
 const COMING_SOON_IMAGE = `${STORAGE}/New%20products%20Coming%20Soon/yearbook-2026-cover.png`
-const PRODUCT_IMAGE_OVERRIDES: Record<string, string> = {
-  'additive-1-probiotics': `${STORAGE}/products/Probio/additive-1-probiotics.png`,
-  'additive-d7-pro-breeding': `${STORAGE}/products/Probio/additive-d7-pro-breeding.png`,
-  'golden-color-booster': `${STORAGE}/products/Probio/golden-color-booster.png`,
-  'blue-color-booster': `${STORAGE}/products/Probio/blue-color-booster.png`,
-  'red-color-booster': `${STORAGE}/products/Probio/red-color-booster.png`,
-}
 
-function productImageUrl(
-  slug: string,
-  isComingSoon: boolean,
-  imageUrl?: string | null,
-) {
-  const normalizedSlug = slug.toLowerCase()
-
-  if (isComingSoon) {
-    return COMING_SOON_IMAGE
-  }
-
-  if (PRODUCT_IMAGE_OVERRIDES[normalizedSlug]) {
-    return PRODUCT_IMAGE_OVERRIDES[normalizedSlug]
-  }
-
-  return imageUrl
+/** Storefront image for a product: the shared "coming soon" placeholder while
+ *  it's still upcoming, otherwise the image stored on the product itself. */
+function productImageUrl(isComingSoon: boolean, imageUrl?: string | null) {
+  return isComingSoon ? COMING_SOON_IMAGE : imageUrl
 }
 
 /** Fetch the active product catalog from Supabase (public, RLS-protected). */
@@ -57,7 +38,7 @@ export async function fetchProducts(): Promise<Product[]> {
       details: p.details,
       priceCents: p.price_cents,
       currency: p.currency,
-      imageUrl: productImageUrl(p.slug, p.is_coming_soon, p.image_url),
+      imageUrl: productImageUrl(p.is_coming_soon, p.image_url),
       weightGrams: p.weight_grams,
       stock: p.stock,
       isActive: p.is_active,
