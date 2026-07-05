@@ -2,8 +2,27 @@ import { useEffect } from 'react'
 import { Link, useOutletContext, useParams } from 'react-router-dom'
 import { useTranslation } from '../i18n/LanguageContext'
 import { formatPrice } from '../lib/format'
-import { catalogPagesForSlug, catalogPageImage } from '../data/catalogPages'
 import type { StorefrontContext } from '../layouts/StorefrontLayout'
+
+/**
+ * The `details` column stores the manufacturer's composition block as one
+ * "Label: value" per line (Ingredients / Analytical components / Additives per
+ * kg / Feeding recommendation / Storage / Product Nr.). Split it back into rows
+ * so the detail page can render each as its own labelled section, the way it
+ * appears on discusfood.com. The label is everything up to the first colon; the
+ * value keeps any further colons (e.g. "Additives per kg: Vitamins: A …").
+ */
+function parseDetailSections(details: string): { label: string; value: string }[] {
+  return details
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const i = line.indexOf(':')
+      if (i === -1) return { label: '', value: line }
+      return { label: line.slice(0, i).trim(), value: line.slice(i + 1).trim() }
+    })
+}
 
 export function ProductDetail() {
   const { slug = '' } = useParams()
@@ -40,7 +59,7 @@ export function ProductDetail() {
 
   const comingSoon = product.isComingSoon
   const soldOut = product.stock <= 0
-  const pages = catalogPagesForSlug(product.slug)
+  const sections = product.details ? parseDetailSections(product.details) : []
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10 sm:px-5 sm:py-12">
@@ -79,12 +98,9 @@ export function ProductDetail() {
           ) : null}
 
           {product.description && (
-            <p className="mt-4 text-sm leading-relaxed text-slate-300 sm:text-base">
+            <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-slate-300 sm:text-base">
               {product.description}
             </p>
-          )}
-          {product.details && (
-            <p className="mt-3 text-sm leading-relaxed text-slate-400">{product.details}</p>
           )}
 
           <div className="mt-6 flex flex-wrap items-center gap-4">
@@ -113,38 +129,25 @@ export function ProductDetail() {
         </div>
       </div>
 
-      {/* Full catalog pages for this product */}
-      <div className="mt-12 sm:mt-16">
-        <h2 className="text-xl font-extrabold tracking-tight text-white sm:text-2xl">
-          {t('product.fromCatalog')}
-        </h2>
-        <p className="mt-2 text-sm text-slate-400">{t('product.fromCatalogSub')}</p>
-
-        {pages.length === 0 ? (
-          <p className="mt-6 rounded-2xl border border-white/10 bg-white/5 px-4 py-12 text-center text-sm text-slate-400">
-            {t('product.noCatalog')}
-          </p>
-        ) : (
-          <div className="mt-6 space-y-5 sm:space-y-7">
-            {pages.map((page) => (
-              <a
-                key={page}
-                href={catalogPageImage(page)}
-                target="_blank"
-                rel="noreferrer"
-                className="block overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-xl shadow-black/30 transition hover:border-cyan-400/40"
-              >
-                <img
-                  src={catalogPageImage(page)}
-                  alt={`${product.name} — ${t('product.details')} (${page})`}
-                  loading="lazy"
-                  className="w-full"
-                />
-              </a>
+      {/* Full product details (composition, analytical values, feeding, …),
+          sourced from the manufacturer and rendered as labelled sections. */}
+      {sections.length > 0 && (
+        <div className="mt-10 border-t border-white/10 pt-8 sm:mt-12">
+          <h2 className="text-xl font-extrabold tracking-tight text-white sm:text-2xl">
+            {t('product.details')}
+          </h2>
+          <dl className="mt-5 max-w-3xl space-y-4">
+            {sections.map(({ label, value }, idx) => (
+              <div key={idx}>
+                {label && (
+                  <dt className="text-sm font-bold text-white sm:text-base">{label}</dt>
+                )}
+                <dd className="mt-0.5 text-sm leading-relaxed text-slate-300">{value}</dd>
+              </div>
             ))}
-          </div>
-        )}
-      </div>
+          </dl>
+        </div>
+      )}
     </section>
   )
 }
