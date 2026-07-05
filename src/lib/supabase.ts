@@ -24,12 +24,17 @@ export type UserRole = 'user' | 'admin'
 
 export type AccountType = 'personal' | 'business'
 
+/** Approval state for business accounts (wholesale pricing gate). */
+export type BusinessStatus = 'pending' | 'approved' | 'rejected'
+
 export interface Profile {
   id: string
   username: string | null
   email: string | null
   role: UserRole
   account_type: AccountType
+  // Wholesale pricing only applies to approved business accounts.
+  business_status: BusinessStatus
   // Business / invoicing details (null for personal accounts)
   company_name: string | null
   vat_number: string | null

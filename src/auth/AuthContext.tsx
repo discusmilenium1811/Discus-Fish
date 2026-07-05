@@ -18,6 +18,8 @@ interface AuthContextValue {
   profile: Profile | null
   loading: boolean
   isAdmin: boolean
+  /** True only for an approved business account — the wholesale pricing gate. */
+  isBusinessApproved: boolean
   signUp: (args: {
     username: string
     email: string
@@ -36,11 +38,35 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+const VERIFY_BUSINESS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-business`
+// Only attempt VIES verification once per user per app load to avoid re-hitting
+// the service on every auth-state change while an account is still pending.
+const verifyAttempted = new Set<string>()
+
+/** Ask the edge function to VIES-verify the caller's VAT. Returns the resulting
+ *  status ('approved' when auto-verified), or null on any failure. */
+async function verifyBusiness(accessToken: string): Promise<string | null> {
+  try {
+    const res = await fetch(VERIFY_BUSINESS_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!res.ok) return null
+    const body = await res.json().catch(() => null)
+    return body?.status ?? null
+  } catch {
+    return null
+  }
+}
+
 async function loadProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from('profiles')
     .select(
-      'id, username, email, role, account_type, company_name, vat_number, registration_number, contact_name, phone, billing_email, address_line1, address_line2, city, state, postal_code, country',
+      'id, username, email, role, account_type, business_status, company_name, vat_number, registration_number, contact_name, phone, billing_email, address_line1, address_line2, city, state, postal_code, country',
     )
     .eq('id', userId)
     .single()
@@ -56,7 +82,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const applySession = useCallback(async (session: Session | null) => {
     const nextUser = session?.user ?? null
     setUser(nextUser)
-    setProfile(nextUser ? await loadProfile(nextUser.id) : null)
+
+    let nextProfile = nextUser ? await loadProfile(nextUser.id) : null
+
+    // A pending business account gets auto-verified against VIES. If the VAT
+    // checks out the edge function flips it to 'approved'; we then reload the
+    // profile so wholesale prices unlock immediately. Otherwise it stays pending
+    // for the owner to approve manually.
+    if (
+      nextUser &&
+      session &&
+      nextProfile?.account_type === 'business' &&
+      nextProfile.business_status === 'pending' &&
+      !verifyAttempted.has(nextUser.id)
+    ) {
+      verifyAttempted.add(nextUser.id)
+      const status = await verifyBusiness(session.access_token)
+      if (status === 'approved') {
+        nextProfile = await loadProfile(nextUser.id)
+      }
+    }
+
+    setProfile(nextProfile)
     setLoading(false)
   }, [])
 
@@ -165,6 +212,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     loading,
     isAdmin: profile?.role === 'admin',
+    isBusinessApproved:
+      profile?.account_type === 'business' && profile?.business_status === 'approved',
     signUp,
     signIn,
     resetPassword,

@@ -27,6 +27,7 @@ import { Coupons } from './admin/pages/Coupons'
 import { Offers } from './admin/pages/Offers'
 import { GiftCards } from './admin/pages/GiftCards'
 import { Shipping } from './admin/pages/Shipping'
+import { BusinessAccounts } from './admin/pages/BusinessAccounts'
 import { SearchResults } from './admin/pages/SearchResults'
 
 createRoot(document.getElementById('root')!).render(
@@ -65,6 +66,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="offers" element={<Offers />} />
               <Route path="gift-cards" element={<GiftCards />} />
               <Route path="shipping" element={<Shipping />} />
+              <Route path="business-accounts" element={<BusinessAccounts />} />
             </Route>
           </Routes>
         </BrowserRouter>

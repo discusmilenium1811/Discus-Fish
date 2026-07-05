@@ -93,6 +93,11 @@ export const translations = {
     'account.welcome': 'Welcome',
     'account.guest': 'Guest account',
     'account.footer': 'Manage your account, delivery information and store access securely in one place.',
+    'account.businessApproved': 'Business · approved',
+    'account.businessPendingTitle': 'Business account under review',
+    'account.businessPendingText': 'We are verifying your company details — this is usually resolved within 24 hours. Until it is approved you will see the regular prices.',
+    'account.businessRejectedTitle': 'Business account not approved',
+    'account.businessRejectedText': 'We could not verify your company details. Please contact us to resolve this. You will see the regular prices in the meantime.',
 
     // Hero
     'hero.badge': 'Vet-formulated nutrition',
@@ -508,6 +513,11 @@ export const translations = {
     'account.welcome': 'Καλώς ήρθατε',
     'account.guest': 'Επισκέπτης',
     'account.footer': 'Διαχειριστείτε με ασφάλεια τον λογαριασμό, τις παραδόσεις και την πρόσβασή σας στο κατάστημα.',
+    'account.businessApproved': 'Επιχείρηση · εγκεκριμένη',
+    'account.businessPendingTitle': 'Ο επαγγελματικός λογαριασμός ελέγχεται',
+    'account.businessPendingText': 'Επαληθεύουμε τα στοιχεία της εταιρείας σας — συνήθως ολοκληρώνεται εντός 24 ωρών. Μέχρι να εγκριθεί, θα βλέπετε τις κανονικές τιμές.',
+    'account.businessRejectedTitle': 'Ο επαγγελματικός λογαριασμός δεν εγκρίθηκε',
+    'account.businessRejectedText': 'Δεν μπορέσαμε να επαληθεύσουμε τα στοιχεία της εταιρείας σας. Επικοινωνήστε μαζί μας για να το διορθώσουμε. Στο μεταξύ θα βλέπετε τις κανονικές τιμές.',
 
     // Hero
     'hero.badge': 'Διατροφή με κτηνιατρική σύσταση',
@@ -924,6 +934,11 @@ export const translations = {
     'account.welcome': 'Добре дошли',
     'account.guest': 'Гост',
     'account.footer': 'Управлявайте сигурно профила, доставките и достъпа си до магазина от едно място.',
+    'account.businessApproved': 'Бизнес · одобрен',
+    'account.businessPendingTitle': 'Бизнес акаунтът се проверява',
+    'account.businessPendingText': 'Проверяваме данните на вашата фирма — обикновено се решава до 24 часа. Докато бъде одобрен, ще виждате нормалните цени.',
+    'account.businessRejectedTitle': 'Бизнес акаунтът не е одобрен',
+    'account.businessRejectedText': 'Не успяхме да потвърдим данните на вашата фирма. Моля, свържете се с нас за да решим това. Междувременно ще виждате нормалните цени.',
 
     // Hero
     'hero.badge': 'Хранене с ветеринарна формула',

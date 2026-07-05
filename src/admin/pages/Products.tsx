@@ -256,6 +256,9 @@ function ProductForm({ product, categories, onClose, onSaved }: ProductFormProps
   const [description, setDescription] = useState(product?.description ?? '')
   const [details, setDetails] = useState(product?.details ?? '')
   const [price, setPrice] = useState(centsToEuros(product?.price_cents))
+  const [businessPrice, setBusinessPrice] = useState(
+    centsToEuros(product?.business_price_cents),
+  )
   const [compareAt, setCompareAt] = useState(
     centsToEuros(product?.compare_at_price_cents),
   )
@@ -310,6 +313,7 @@ function ProductForm({ product, categories, onClose, onSaved }: ProductFormProps
       description: description.trim(),
       details: details.trim() || null,
       price_cents: eurosToCents(price),
+      business_price_cents: businessPrice ? eurosToCents(businessPrice) : null,
       compare_at_price_cents: compareAt ? eurosToCents(compareAt) : null,
       image_url: imageUrl || null,
       weight_grams: weight ? parseInt(weight, 10) : null,
@@ -454,7 +458,7 @@ function ProductForm({ product, categories, onClose, onSaved }: ProductFormProps
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <label className={label}>Price (€)</label>
+              <label className={label}>Retail price (€)</label>
               <input
                 className={field}
                 type="number"
@@ -463,6 +467,20 @@ function ProductForm({ product, categories, onClose, onSaved }: ProductFormProps
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
               />
+              <p className="mt-1 text-[11px] text-slate-500">Shown to normal &amp; guest customers</p>
+            </div>
+            <div>
+              <label className={label}>Business price (€)</label>
+              <input
+                className={field}
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="wholesale"
+                value={businessPrice}
+                onChange={(e) => setBusinessPrice(e.target.value)}
+              />
+              <p className="mt-1 text-[11px] text-slate-500">Shown to approved business accounts</p>
             </div>
             <div>
               <label className={label}>Compare-at (€)</label>

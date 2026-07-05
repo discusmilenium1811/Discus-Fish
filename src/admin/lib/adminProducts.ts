@@ -7,6 +7,7 @@ export interface AdminProduct {
   description: string
   details: string | null
   price_cents: number
+  business_price_cents: number | null
   compare_at_price_cents: number | null
   currency: string
   sku: string | null
@@ -34,6 +35,7 @@ export interface ProductInput {
   description: string
   details: string | null
   price_cents: number
+  business_price_cents: number | null
   compare_at_price_cents: number | null
   image_url: string | null
   weight_grams: number | null
@@ -44,7 +46,7 @@ export interface ProductInput {
 }
 
 const PRODUCT_COLUMNS =
-  'id, slug, name, description, details, price_cents, compare_at_price_cents, currency, sku, image_url, weight_grams, stock, low_stock_threshold, is_active, is_coming_soon, category_id'
+  'id, slug, name, description, details, price_cents, business_price_cents, compare_at_price_cents, currency, sku, image_url, weight_grams, stock, low_stock_threshold, is_active, is_coming_soon, category_id'
 
 export async function listProducts(): Promise<AdminProduct[]> {
   const { data, error } = await supabase

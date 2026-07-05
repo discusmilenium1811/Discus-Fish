@@ -158,6 +158,25 @@ Deno.serve(async (req) => {
       return json({ error: 'No items' }, 400)
     }
 
+    // Decide the price tier from the AUTHENTICATED caller, never the body userId
+    // (wholesale prices are lower, so a spoofed id must not underprice the cart).
+    // Only an approved business account gets wholesale prices.
+    let approvedBusiness = false
+    const authHeader = req.headers.get('Authorization') ?? ''
+    const token = authHeader.replace(/^Bearer\s+/i, '')
+    if (token) {
+      const { data: userData } = await supabase.auth.getUser(token)
+      if (userData?.user) {
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('account_type, business_status')
+          .eq('id', userData.user.id)
+          .maybeSingle()
+        approvedBusiness =
+          prof?.account_type === 'business' && prof?.business_status === 'approved'
+      }
+    }
+
     // Fetch prices + availability from DB — never trust client-supplied prices.
     const requestedIds: string[] = items.map((i: { productId: string }) => i.productId)
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -169,7 +188,7 @@ Deno.serve(async (req) => {
       .map((id) => id.slice(5))
       .filter((slug) => /^[a-z0-9-]+$/.test(slug))
     const productColumns =
-      'id, slug, name, price_cents, currency, is_active, is_coming_soon, stock, track_inventory'
+      'id, slug, name, price_cents, business_price_cents, currency, is_active, is_coming_soon, stock, track_inventory'
     const [uuidProducts, slugProducts] = await Promise.all([
       uuidIds.length
         ? supabase.from('products').select(productColumns).in('id', uuidIds)
@@ -194,7 +213,7 @@ Deno.serve(async (req) => {
 
     for (const item of items) {
       const p = byId.get(item.productId) as
-        | { id: string; name: string; price_cents: number; currency: string; is_active: boolean; is_coming_soon: boolean; stock: number | null; track_inventory: boolean }
+        | { id: string; name: string; price_cents: number; business_price_cents: number | null; currency: string; is_active: boolean; is_coming_soon: boolean; stock: number | null; track_inventory: boolean }
         | undefined
       // Only sell products that are active and not still "coming soon".
       if (!p || !p.is_active || p.is_coming_soon) {
@@ -208,13 +227,18 @@ Deno.serve(async (req) => {
       if (p.track_inventory && p.stock != null && p.stock < qty) {
         return json({ error: `Not enough stock for ${p.name}` }, 400)
       }
+      // Approved business accounts pay wholesale; everyone else pays retail.
+      const unitPrice =
+        approvedBusiness && p.business_price_cents != null
+          ? p.business_price_cents
+          : p.price_cents
       currency = p.currency ?? 'eur'
-      subtotalCents += p.price_cents * qty
+      subtotalCents += unitPrice * qty
       canonicalCart.push({ id: p.id, q: qty })
       lineItems.push({
         price_data: {
           currency,
-          unit_amount: p.price_cents,
+          unit_amount: unitPrice,
           product_data: { name: p.name },
         },
         quantity: qty,

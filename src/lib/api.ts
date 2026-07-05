@@ -12,8 +12,17 @@ function productImageUrl(isComingSoon: boolean, imageUrl?: string | null) {
   return isComingSoon ? COMING_SOON_IMAGE : imageUrl
 }
 
-/** Fetch the active product catalog from Supabase (public, RLS-protected). */
-export async function fetchProducts(): Promise<Product[]> {
+/**
+ * Fetch the active product catalog from Supabase (public, RLS-protected).
+ *
+ * `price_cents` is the RETAIL price everyone sees by default. When
+ * `businessApproved` is true, the effective wholesale price for each product is
+ * fetched through the `business_prices()` RPC (which only returns rows for an
+ * approved business caller) and overlaid, so every downstream consumer
+ * (cards, detail, cart) shows the business price. Anonymous / personal callers
+ * never receive wholesale prices.
+ */
+export async function fetchProducts(businessApproved = false): Promise<Product[]> {
   const { data, error } = await supabase
     .from('products')
     .select(
@@ -25,7 +34,7 @@ export async function fetchProducts(): Promise<Product[]> {
   if (error) throw error
 
   // Map Postgres snake_case columns to the front-end Product shape.
-  return (data ?? []).map((p) => {
+  const products = (data ?? []).map((p) => {
     const category = (Array.isArray(p.categories) ? p.categories[0] : p.categories) as
       | { name: string; slug: string }
       | null
@@ -47,6 +56,21 @@ export async function fetchProducts(): Promise<Product[]> {
       categorySlug: category?.slug ?? null,
     }
   })
+
+  if (businessApproved) {
+    const { data: overrides } = await supabase.rpc('business_prices')
+    if (Array.isArray(overrides) && overrides.length > 0) {
+      const byId = new Map(
+        (overrides as { id: string; price_cents: number }[]).map((r) => [r.id, r.price_cents]),
+      )
+      for (const product of products) {
+        const wholesale = byId.get(product.id)
+        if (wholesale != null) product.priceCents = wholesale
+      }
+    }
+  }
+
+  return products
 }
 
 export interface CheckoutItem {
@@ -104,9 +128,17 @@ export async function createCheckout(
   items: CheckoutItem[],
   customer?: CheckoutCustomer,
 ): Promise<{ id: string; url: string }> {
+  // Pass the signed-in user's token so the server can price the cart for the
+  // authenticated account (approved business = wholesale). Anonymous carts send
+  // no token and are priced at retail.
+  const { data } = await supabase.auth.getSession()
+  const accessToken = data.session?.access_token
   const res = await fetch(CHECKOUT_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
     body: JSON.stringify({ items, ...customer }),
   })
   if (!res.ok) throw new Error(`Checkout failed (${res.status})`)

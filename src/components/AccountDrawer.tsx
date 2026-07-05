@@ -48,9 +48,25 @@ export function AccountDrawer({ open, onClose, onAuthClick, onAdminClick }: Acco
                 <p className="text-xs font-semibold text-slate-400">{user ? t('account.signedIn') : t('account.welcome')}</p>
                 <p className="mt-0.5 truncate font-extrabold text-white">{name}</p>
                 {isAdmin && <span className="mt-1 inline-flex rounded-full bg-violet-400/15 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-violet-200">Administrator</span>}
+                {profile?.account_type === 'business' && profile.business_status === 'approved' && (
+                  <span className="mt-1 inline-flex rounded-full bg-emerald-400/15 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-emerald-200">{t('account.businessApproved')}</span>
+                )}
               </div>
             </div>
           </div>
+
+          {profile?.account_type === 'business' && profile.business_status === 'pending' && (
+            <div className="mt-4 rounded-2xl border border-amber-300/25 bg-amber-300/10 p-4">
+              <p className="text-sm font-bold text-amber-100">{t('account.businessPendingTitle')}</p>
+              <p className="mt-1 text-xs leading-5 text-amber-100/80">{t('account.businessPendingText')}</p>
+            </div>
+          )}
+          {profile?.account_type === 'business' && profile.business_status === 'rejected' && (
+            <div className="mt-4 rounded-2xl border border-rose-300/25 bg-rose-300/10 p-4">
+              <p className="text-sm font-bold text-rose-100">{t('account.businessRejectedTitle')}</p>
+              <p className="mt-1 text-xs leading-5 text-rose-100/80">{t('account.businessRejectedText')}</p>
+            </div>
+          )}
 
           <nav className="mt-5 space-y-2" aria-label={t('account.title')}>
             {!user ? (

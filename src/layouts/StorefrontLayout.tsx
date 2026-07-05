@@ -7,6 +7,7 @@ import { LanguageDrawer } from '../components/LanguageDrawer'
 import { AccountDrawer } from '../components/AccountDrawer'
 import { AuthModal, type AuthMode } from '../components/AuthModal'
 import { useCart } from '../hooks/useCart'
+import { useAuth } from '../auth/AuthContext'
 import { fetchProducts } from '../lib/api'
 import { sampleProducts } from '../data/sampleProducts'
 import type { Product } from '../types'
@@ -20,6 +21,7 @@ export interface StorefrontContext {
 export function StorefrontLayout() {
   const cart = useCart()
   const navigate = useNavigate()
+  const { isBusinessApproved } = useAuth()
   const [products, setProducts] = useState<Product[]>(sampleProducts)
   const [cartOpen, setCartOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
@@ -28,15 +30,17 @@ export function StorefrontLayout() {
   const [authMode, setAuthMode] = useState<AuthMode>('login')
 
   // Load the live catalog; fall back to sample data if the API isn't up yet.
+  // Re-runs when the account's approved-business status changes so prices swap
+  // between retail and wholesale on login / logout / approval.
   useEffect(() => {
-    fetchProducts()
+    fetchProducts(isBusinessApproved)
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) setProducts(data)
       })
       .catch(() => {
         /* keep sample data */
       })
-  }, [])
+  }, [isBusinessApproved])
 
   const ctx: StorefrontContext = { products, addToCart: cart.add }
 

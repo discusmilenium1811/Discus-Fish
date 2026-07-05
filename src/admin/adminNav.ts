@@ -41,6 +41,12 @@ export const adminNav: AdminNavGroup[] = [
     ],
   },
   {
+    title: 'Customers',
+    items: [
+      { to: '/admin/business-accounts', label: 'Business accounts', icon: '🏢' },
+    ],
+  },
+  {
     title: 'Settings',
     items: [
       { to: '/admin/shipping', label: 'Shipping & Free Shipping', icon: '🌍' },
