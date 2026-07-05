@@ -170,6 +170,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }) {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
+    // Hard-reload to the home page so the whole app re-initialises with the new
+    // session and no stale in-memory state (cart, catalog prices, etc.) survives.
+    window.location.assign('/')
   }
 
   async function resetPassword({ email }: { email: string }) {
@@ -205,6 +208,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut()
     setUser(null)
     setProfile(null)
+    // Hard-reload to the home page so nothing from the signed-in session lingers.
+    window.location.assign('/')
   }
 
   const value: AuthContextValue = {
