@@ -8,6 +8,12 @@ import {
   centsToEuros,
 } from '../lib/adminApi'
 import {
+  resolveZone,
+  weightBasedCost,
+  type ShippingRateTier,
+  type ShippingZone,
+} from '../../lib/shipping'
+import {
   PageHeader,
   ErrorNote,
   Card,
@@ -31,6 +37,9 @@ interface Zone {
   name: string
   countries: string[]
   is_active: boolean
+  zone_code: string | null
+  is_domestic: boolean
+  over_kg_cents: number | null
 }
 interface Method {
   id: string
@@ -48,6 +57,7 @@ interface Method {
 export function Shipping() {
   const [zones, setZones] = useState<Zone[]>([])
   const [methods, setMethods] = useState<Method[]>([])
+  const [tiers, setTiers] = useState<ShippingRateTier[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [zoneEdit, setZoneEdit] = useState<Zone | 'new' | null>(null)
@@ -56,12 +66,16 @@ export function Shipping() {
   async function refresh() {
     setLoading(true)
     try {
-      const [z, m] = await Promise.all([
+      const [z, m, r] = await Promise.all([
         fetchAll<Zone>('shipping_zones', '*', { col: 'name' }),
         fetchAll<Method>('shipping_methods', '*', { col: 'sort_order' }),
+        fetchAll<ShippingRateTier>('shipping_rate_tiers', 'id, zone_id, max_weight_grams, price_cents', {
+          col: 'max_weight_grams',
+        }),
       ])
       setZones(z)
       setMethods(m)
+      setTiers(r)
       setError('')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load')
@@ -103,17 +117,17 @@ export function Shipping() {
         description="Manage the live delivery prices shown to customers on the Shipping Prices page."
       />
       <div className="mb-4 rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-3 py-2.5 text-sm text-slate-300">
-        🚚 <span className="font-semibold text-cyan-200">Carrier: UPS · Origin: Cyprus · Customer-visible.</span>{' '}
-        Use the calculator below to work out the shipping cost for any order: the
-        destination country picks the most specific zone (e.g. CY → Cyprus, DE →
-        European Union); the <em>Worldwide</em> zone (no countries listed) is the
-        fallback for everywhere else. “Free over” is the order total at which a
-        service becomes free. Active changes are published automatically to the
-        storefront Shipping Prices page.
+        🚚 <span className="font-semibold text-cyan-200">Carrier: UPS Express Saver · Origin: Cyprus · Customer-visible.</span>{' '}
+        International delivery is priced <span className="font-semibold">by parcel weight</span> using the UPS
+        rate table below: the destination country picks its UPS zone (e.g. DE → Zone 1, RS → Zone 5); any country
+        not listed in a zone falls into <em>Zone 7</em> (Rest of world). <span className="font-semibold">Cyprus</span>{' '}
+        stays a flat domestic rate (AKIS). Use the calculator to check any order.
       </div>
       <ErrorNote msg={error} />
 
-      <ShippingCalculator zones={zones} methods={methods} />
+      <ShippingCalculator zones={zones} methods={methods} tiers={tiers} />
+
+      <RateMatrix zones={zones} tiers={tiers} />
 
 
       {/* Zones */}
@@ -141,9 +155,21 @@ export function Shipping() {
             ) : (
               zones.map((z) => (
                 <tr key={z.id} className={trCls}>
-                  <td className="px-4 py-3 font-semibold text-white">{z.name}</td>
+                  <td className="px-4 py-3 font-semibold text-white">
+                    {z.name}
+                    <div className="mt-1">
+                      {z.is_domestic ? (
+                        <Pill tone="green">Domestic · flat</Pill>
+                      ) : (
+                        <Pill tone="slate">
+                          UPS {z.zone_code ? `Zone ${z.zone_code}` : '—'} · by weight
+                          {z.over_kg_cents != null ? ` · +€${centsToEuros(z.over_kg_cents)}/kg` : ''}
+                        </Pill>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-slate-300">
-                    {z.countries.length ? z.countries.join(', ') : 'Everywhere'}
+                    {z.countries.length ? z.countries.join(', ') : 'Everywhere (Zone 7 fallback)'}
                   </td>
                   <td className="px-4 py-3">
                     {z.is_active ? <Pill tone="green">Active</Pill> : <Pill tone="slate">Off</Pill>}
@@ -198,9 +224,13 @@ export function Shipping() {
                     <div className="text-xs text-slate-500">{m.description}</div>
                   </td>
                   <td className="px-4 py-3 text-slate-300">{zoneName(m.zone_id)}</td>
-                  <td className="px-4 py-3 text-slate-200">€{centsToEuros(m.price_cents)}</td>
+                  <td className="px-4 py-3 text-slate-200">
+                    {zones.find((z) => z.id === m.zone_id)?.is_domestic
+                      ? `€${centsToEuros(m.price_cents)}`
+                      : <Pill tone="slate">By weight</Pill>}
+                  </td>
                   <td className="px-4 py-3">
-                    {m.free_over_cents != null ? (
+                    {zones.find((z) => z.id === m.zone_id)?.is_domestic && m.free_over_cents != null ? (
                       <Pill tone="cyan">€{centsToEuros(m.free_over_cents)}</Pill>
                     ) : (
                       <span className="text-slate-500">—</span>
@@ -254,27 +284,46 @@ export function Shipping() {
   )
 }
 
-function ShippingCalculator({ zones, methods }: { zones: Zone[]; methods: Method[] }) {
-  const [country, setCountry] = useState('CY')
+function ShippingCalculator({
+  zones,
+  methods,
+  tiers,
+}: {
+  zones: Zone[]
+  methods: Method[]
+  tiers: ShippingRateTier[]
+}) {
+  const [country, setCountry] = useState('DE')
+  const [weightKg, setWeightKg] = useState('2')
   const [subtotal, setSubtotal] = useState('40.00')
 
   const code = country.trim().toUpperCase()
+  const grams = Math.max(0, Math.round(Number(weightKg || 0) * 1000))
   const subtotalCents = Math.round(Number(subtotal || 0) * 100)
 
-  const zone =
-    zones.find((z) => z.is_active && z.countries.includes(code)) ??
-    zones.find((z) => z.is_active && z.countries.length === 0) ??
-    null
-
-  const options = zone
+  const zone = resolveZone(zones as ShippingZone[], code)
+  const method = zone
     ? methods
         .filter((m) => m.zone_id === zone.id && m.is_active)
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .map((m) => {
-          const free = m.free_over_cents != null && subtotalCents >= m.free_over_cents
-          return { m, costCents: free ? 0 : m.price_cents, free }
-        })
-    : []
+        .sort((a, b) => a.sort_order - b.sort_order)[0] ?? null
+    : null
+
+  const isDomestic = zone?.is_domestic ?? false
+  const costCents = !zone
+    ? null
+    : isDomestic
+      ? method
+        ? method.free_over_cents != null && subtotalCents >= method.free_over_cents
+          ? 0
+          : method.price_cents
+        : null
+      : weightBasedCost(zone as ShippingZone, tiers, grams)
+  const matchedTier = zone && !isDomestic
+    ? tiers
+        .filter((t) => t.zone_id === zone.id)
+        .sort((a, b) => a.max_weight_grams - b.max_weight_grams)
+        .find((t) => grams <= t.max_weight_grams) ?? null
+    : null
 
   return (
     <Card>
@@ -283,7 +332,7 @@ function ShippingCalculator({ zones, methods }: { zones: Zone[]; methods: Method
           🧮 Shipping cost calculator
         </h2>
       </div>
-      <div className="grid gap-4 p-4 sm:grid-cols-2">
+      <div className="grid gap-4 p-4 sm:grid-cols-3">
         <Field label="Destination country code">
           <input
             className={fieldCls}
@@ -292,7 +341,17 @@ function ShippingCalculator({ zones, methods }: { zones: Zone[]; methods: Method
             placeholder="CY, DE, GB, US…"
           />
         </Field>
-        <Field label="Order subtotal (€)">
+        <Field label="Parcel weight (kg)">
+          <input
+            className={fieldCls}
+            type="number"
+            step="0.1"
+            min="0"
+            value={weightKg}
+            onChange={(e) => setWeightKg(e.target.value)}
+          />
+        </Field>
+        <Field label="Order subtotal (€) — for Cyprus free-shipping">
           <input
             className={fieldCls}
             type="number"
@@ -307,80 +366,94 @@ function ShippingCalculator({ zones, methods }: { zones: Zone[]; methods: Method
           <p className="text-sm text-slate-500">Enter a destination country code.</p>
         ) : !zone ? (
           <p className="text-sm text-amber-300">
-            No active zone matches “{code}”. Add a Worldwide zone (no countries) as a fallback.
+            No active zone matches “{code}” and there is no Zone 7 (empty-countries) fallback.
           </p>
         ) : (
-          <>
-            <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-              <span className="text-slate-400">
-                Matched zone: <span className="font-semibold text-white">{zone.name}</span>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+            <span className="text-slate-400">
+              Zone:{' '}
+              <span className="font-semibold text-white">
+                {zone.name}
+                {zone.is_domestic ? ' (flat)' : ` · by weight`}
               </span>
+            </span>
+            {!isDomestic && (
               <span className="text-slate-400">
-                Products (price as set): <span className="font-semibold text-white">€{centsToEuros(subtotalCents)}</span>
+                Weight bracket:{' '}
+                <span className="font-semibold text-white">
+                  {matchedTier ? `≤ ${matchedTier.max_weight_grams / 1000} kg` : `> top tier (+ per-kg)`}
+                </span>
               </span>
-              {options.some((o) => o.free) ? (
-                <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-300">
-                  ✓ Within free-shipping range — customer pays product price only
-                </span>
-              ) : (
-                <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-300">
-                  Shipping fee applies for this destination
-                </span>
-              )}
-            </div>
-            <div className="overflow-hidden rounded-lg border border-white/10">
-              <table className={tableCls}>
-                <thead className={theadCls}>
-                  <tr>
-                    <th className={thCls}>UPS service</th>
-                    <th className={thCls}>Delivery</th>
-                    <th className={thCls}>Shipping fee</th>
-                    <th className={`${thCls} text-right`}>Order total</th>
-                  </tr>
-                </thead>
-                <tbody className={tbodyCls}>
-                  {options.length === 0 ? (
-                    <TableState colSpan={4} text="No active methods for this zone." />
-                  ) : (
-                    options.map(({ m, costCents, free }) => (
-                      <tr key={m.id} className={trCls}>
-                        <td className="px-4 py-2.5 font-semibold text-white">{m.name}</td>
-                        <td className="px-4 py-2.5 text-slate-400">
-                          {m.estimated_days_min != null
-                            ? `${m.estimated_days_min}–${m.estimated_days_max ?? m.estimated_days_min} days`
-                            : '—'}
-                        </td>
-                        <td className="px-4 py-2.5">
-                          {free ? (
-                            <span className="font-semibold text-emerald-300">FREE</span>
-                          ) : (
-                            <>
-                              <span className="font-semibold text-white">€{centsToEuros(costCents)}</span>
-                              {m.free_over_cents != null && (
-                                <div className="text-xs text-slate-500">
-                                  free over €{centsToEuros(m.free_over_cents)}
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </td>
-                        <td className="px-4 py-2.5 text-right font-bold text-white">
-                          €{centsToEuros(subtotalCents + costCents)}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-2 text-xs text-slate-500">
-              Rates are fully editable below — update any UPS fee or free-shipping
-              threshold whenever UPS changes their offers.
-            </p>
-          </>
+            )}
+            <span className="rounded-full bg-cyan-500/15 px-3 py-1 text-sm font-bold text-cyan-200">
+              Shipping: {costCents == null ? 'n/a' : costCents === 0 ? 'FREE' : `€${centsToEuros(costCents)}`}
+            </span>
+          </div>
         )}
       </div>
     </Card>
+  )
+}
+
+/** Read-only UPS rate matrix: weight brackets (rows) × UPS zones (columns). */
+function RateMatrix({ zones, tiers }: { zones: Zone[]; tiers: ShippingRateTier[] }) {
+  const upsZones = zones
+    .filter((z) => !z.is_domestic)
+    .sort((a, b) => Number(a.zone_code) - Number(b.zone_code))
+  const weights = [...new Set(tiers.map((t) => t.max_weight_grams))].sort((a, b) => a - b)
+  const priceOf = (zoneId: string, grams: number) =>
+    tiers.find((t) => t.zone_id === zoneId && t.max_weight_grams === grams)?.price_cents ?? null
+
+  if (upsZones.length === 0 || weights.length === 0) return null
+
+  return (
+    <div className="mt-6">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          UPS Express Saver rate table (€ by parcel weight)
+        </h2>
+        <span className="text-xs text-slate-500">Managed from the UPS contract rate sheet</span>
+      </div>
+      <Card>
+        <div className="overflow-x-auto">
+          <table className={tableCls}>
+            <thead className={theadCls}>
+              <tr>
+                <th className={thCls}>Up to (kg)</th>
+                {upsZones.map((z) => (
+                  <th key={z.id} className={`${thCls} text-right`}>
+                    {z.zone_code ? `Zone ${z.zone_code}` : z.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className={tbodyCls}>
+              {weights.map((grams) => (
+                <tr key={grams} className={trCls}>
+                  <td className="px-4 py-2 font-semibold text-white">{grams / 1000}</td>
+                  {upsZones.map((z) => {
+                    const cents = priceOf(z.id, grams)
+                    return (
+                      <td key={z.id} className="px-4 py-2 text-right text-slate-200">
+                        {cents == null ? '—' : centsToEuros(cents)}
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))}
+              <tr className={trCls}>
+                <td className="px-4 py-2 font-semibold text-cyan-200">+ per extra kg</td>
+                {upsZones.map((z) => (
+                  <td key={z.id} className="px-4 py-2 text-right text-cyan-200">
+                    {z.over_kg_cents == null ? '—' : centsToEuros(z.over_kg_cents)}
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
   )
 }
 
@@ -395,6 +468,9 @@ function ZoneForm({
 }) {
   const [name, setName] = useState(row?.name ?? '')
   const [countries, setCountries] = useState((row?.countries ?? []).join(', '))
+  const [zoneCode, setZoneCode] = useState(row?.zone_code ?? '')
+  const [isDomestic, setIsDomestic] = useState(row?.is_domestic ?? false)
+  const [overKg, setOverKg] = useState(centsToEuros(row?.over_kg_cents))
   const [isActive, setIsActive] = useState(row?.is_active ?? true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -408,6 +484,9 @@ function ZoneForm({
         .split(',')
         .map((c) => c.trim().toUpperCase())
         .filter(Boolean),
+      zone_code: zoneCode.trim() || null,
+      is_domestic: isDomestic,
+      over_kg_cents: !isDomestic && overKg ? eurosToCents(overKg) : null,
       is_active: isActive,
     }
     setSaving(true)
@@ -442,9 +521,21 @@ function ZoneForm({
         <Field label="Zone name">
           <input className={fieldCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Europe" />
         </Field>
-        <Field label="Country codes (comma-separated, blank = everywhere)">
+        <Field label="Country codes (comma-separated, blank = everywhere / Zone 7 fallback)">
           <input className={fieldCls} value={countries} onChange={(e) => setCountries(e.target.value)} placeholder="GR, BG, CY, DE" />
         </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="UPS zone code (1–7, 701) or CY">
+            <input className={fieldCls} value={zoneCode} onChange={(e) => setZoneCode(e.target.value)} placeholder="1" />
+          </Field>
+          <Field label="Per extra kg (€) — above top weight tier">
+            <input className={fieldCls} type="number" step="0.01" value={overKg} disabled={isDomestic} onChange={(e) => setOverKg(e.target.value)} placeholder="3.20" />
+          </Field>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-slate-200">
+          <input type="checkbox" checked={isDomestic} onChange={(e) => setIsDomestic(e.target.checked)} className="h-4 w-4 accent-cyan-400" />
+          Domestic (flat method price — not weight-based; e.g. Cyprus)
+        </label>
         <label className="flex items-center gap-2 text-sm text-slate-200">
           <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="h-4 w-4 accent-cyan-400" />
           Active

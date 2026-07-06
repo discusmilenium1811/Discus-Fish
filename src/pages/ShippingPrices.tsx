@@ -4,12 +4,14 @@ import { useTranslation } from '../i18n/LanguageContext'
 import { supabase } from '../lib/supabase'
 import {
   fetchPublicShippingRates,
+  weightBasedCost,
   type ShippingMethod,
   type ShippingRates,
+  type ShippingRateTier,
   type ShippingZone,
 } from '../lib/shipping'
 
-const EMPTY_RATES: ShippingRates = { zones: [], methods: [] }
+const EMPTY_RATES: ShippingRates = { zones: [], methods: [], tiers: [] }
 
 function money(cents: number, language: string) {
   return new Intl.NumberFormat(language, { style: 'currency', currency: 'EUR' }).format(cents / 100)
@@ -95,6 +97,7 @@ export function ShippingPrices() {
                   key={zone.id}
                   zone={zone}
                   methods={rates.methods.filter((method) => method.zone_id === zone.id)}
+                  tiers={rates.tiers}
                   locale={locale}
                   labels={{
                     everywhere: t('shipping.everywhere'),
@@ -103,6 +106,10 @@ export function ShippingPrices() {
                     delivery: t('shipping.delivery'),
                     days: t('shipping.days'),
                     noMethods: t('shipping.noMethods'),
+                    byWeight: t('shipping.byWeight'),
+                    weightCol: t('shipping.weightCol'),
+                    priceCol: t('shipping.priceCol'),
+                    weightNote: t('shipping.weightNote'),
                   }}
                 />
               ))}
@@ -125,11 +132,29 @@ export function ShippingPrices() {
   )
 }
 
-function ZoneCard({ zone, methods, locale, labels }: { zone: ShippingZone; methods: ShippingMethod[]; locale: string; labels: Record<string, string> }) {
+/** Representative parcel weights shown on the public rate table (grams). */
+const REP_WEIGHTS = [500, 1000, 2000, 5000, 10000]
+
+function ZoneCard({
+  zone,
+  methods,
+  tiers,
+  locale,
+  labels,
+}: {
+  zone: ShippingZone
+  methods: ShippingMethod[]
+  tiers: ShippingRateTier[]
+  locale: string
+  labels: Record<string, string>
+}) {
   const displayNames = new Intl.DisplayNames([locale], { type: 'region' })
   const countries = zone.countries.length
     ? zone.countries.map((code) => displayNames.of(code.toUpperCase()) ?? code).join(' · ')
     : labels.everywhere
+
+  const method = methods[0]
+  const hasTiers = tiers.some((tier) => tier.zone_id === zone.id)
 
   return (
     <article className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/75 shadow-xl shadow-slate-950/20 backdrop-blur-md transition hover:border-cyan-300/25">
@@ -142,26 +167,63 @@ function ZoneCard({ zone, methods, locale, labels }: { zone: ShippingZone; metho
           </div>
         </div>
       </div>
-      <div className="divide-y divide-white/10 px-5">
-        {methods.length === 0 ? (
-          <p className="py-6 text-sm text-slate-500">{labels.noMethods}</p>
-        ) : methods.map((method) => (
-          <div key={method.id} className="grid gap-3 py-5 sm:grid-cols-[1fr_auto] sm:items-center">
-            <div>
-              <h4 className="font-bold text-white">{method.name}</h4>
-              {method.description && <p className="mt-1 text-xs leading-5 text-slate-400">{method.description}</p>}
-              {method.estimated_days_min != null && (
-                <p className="mt-2 text-xs font-semibold text-cyan-200">⏱ {labels.delivery}: {method.estimated_days_min}–{method.estimated_days_max ?? method.estimated_days_min} {labels.days}</p>
-              )}
-            </div>
-            <div className="sm:text-right">
-              <div className="text-xl font-black text-white">{method.price_cents === 0 ? labels.free : money(method.price_cents, locale)}</div>
-              {method.free_over_cents != null && (
-                <div className="mt-1 text-xs font-bold text-emerald-300">{labels.freeOver} {money(method.free_over_cents, locale)}</div>
-              )}
-            </div>
-          </div>
-        ))}
+      <div className="px-5 py-5">
+        {!method ? (
+          <p className="py-1 text-sm text-slate-500">{labels.noMethods}</p>
+        ) : (
+          <>
+            <h4 className="font-bold text-white">{method.name}</h4>
+            {method.estimated_days_min != null && (
+              <p className="mt-1 text-xs font-semibold text-cyan-200">
+                ⏱ {labels.delivery}: {method.estimated_days_min}–
+                {method.estimated_days_max ?? method.estimated_days_min} {labels.days}
+              </p>
+            )}
+
+            {zone.is_domestic || !hasTiers ? (
+              /* Domestic (or un-tiered) zone: single flat price. */
+              <div className="mt-3">
+                <div className="text-2xl font-black text-white">
+                  {method.price_cents === 0 ? labels.free : money(method.price_cents, locale)}
+                </div>
+                {method.free_over_cents != null && (
+                  <div className="mt-1 text-xs font-bold text-emerald-300">
+                    {labels.freeOver} {money(method.free_over_cents, locale)}
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* UPS zone: price by parcel weight. */
+              <div className="mt-3">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-cyan-300">{labels.byWeight}</p>
+                <div className="overflow-hidden rounded-lg border border-white/10">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-white/5 text-left text-xs text-slate-400">
+                        <th className="px-3 py-2 font-semibold">{labels.weightCol}</th>
+                        <th className="px-3 py-2 text-right font-semibold">{labels.priceCol}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/10">
+                      {REP_WEIGHTS.map((grams) => {
+                        const cents = weightBasedCost(zone, tiers, grams)
+                        return (
+                          <tr key={grams}>
+                            <td className="px-3 py-2 text-slate-300">≤ {grams / 1000} kg</td>
+                            <td className="px-3 py-2 text-right font-bold text-white">
+                              {cents == null ? '—' : money(cents, locale)}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="mt-2 text-xs leading-5 text-slate-500">{labels.weightNote}</p>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </article>
   )

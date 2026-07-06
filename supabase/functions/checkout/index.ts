@@ -16,12 +16,17 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!)
 // ─────────────────────────────────────────────────────────────────────────
 
 const WORLDWIDE = 'WORLDWIDE'
+// Packaging weight added to the net product weight for the billable UPS weight.
+// Must match PACKAGING_TARE_GRAMS in src/lib/shipping.ts so the charge equals the cart.
+const PACKAGING_TARE_GRAMS = 250
 
 interface ZoneRow {
   id: string
   name: string
   countries: string[]
   is_active: boolean
+  is_domestic: boolean
+  over_kg_cents: number | null
 }
 interface MethodRow {
   id: string
@@ -31,6 +36,11 @@ interface MethodRow {
   free_over_cents: number | null
   is_active: boolean
   sort_order: number
+}
+interface TierRow {
+  zone_id: string
+  max_weight_grams: number
+  price_cents: number
 }
 
 /** Active zone serving a country; empty-countries zone is the worldwide fallback. */
@@ -44,19 +54,37 @@ function resolveZone(zones: ZoneRow[], country: string): ZoneRow | null {
   return active.find((z) => z.countries.length === 0) ?? null
 }
 
+/** Weight-based price for a non-domestic zone from its rate tiers (mirrors the cart). */
+function weightBasedCost(zone: ZoneRow, tiers: TierRow[], grams: number): number | null {
+  const zoneTiers = tiers
+    .filter((t) => t.zone_id === zone.id)
+    .sort((a, b) => a.max_weight_grams - b.max_weight_grams)
+  if (zoneTiers.length === 0) return null
+  const covering = zoneTiers.find((t) => grams <= t.max_weight_grams)
+  if (covering) return covering.price_cents
+  const top = zoneTiers[zoneTiers.length - 1]
+  const overKg = Math.ceil((grams - top.max_weight_grams) / 1000)
+  return top.price_cents + overKg * (zone.over_kg_cents ?? 0)
+}
+
 /** Recompute the delivery line for a country + chosen method straight from the DB. */
 async function resolveShipping(
   supabase: ReturnType<typeof createClient>,
   country: string,
   methodId: string | undefined,
   subtotalCents: number,
+  shipmentGrams: number,
 ): Promise<{ cents: number; name: string; methodId: string } | { error: string }> {
-  const [zonesRes, methodsRes] = await Promise.all([
-    supabase.from('shipping_zones').select('id, name, countries, is_active').eq('is_active', true),
+  const [zonesRes, methodsRes, tiersRes] = await Promise.all([
+    supabase
+      .from('shipping_zones')
+      .select('id, name, countries, is_active, is_domestic, over_kg_cents')
+      .eq('is_active', true),
     supabase
       .from('shipping_methods')
       .select('id, zone_id, name, price_cents, free_over_cents, is_active, sort_order')
       .eq('is_active', true),
+    supabase.from('shipping_rate_tiers').select('zone_id, max_weight_grams, price_cents'),
   ])
   const zone = resolveZone((zonesRes.data ?? []) as unknown as ZoneRow[], country)
   if (!zone) return { error: 'We do not ship to this destination yet.' }
@@ -68,8 +96,20 @@ async function resolveShipping(
   // Honour the customer's pick, but only if it's a valid method for the zone.
   const chosen =
     (methodId ? zoneMethods.find((m) => m.id === methodId) : undefined) ?? zoneMethods[0]
-  const free = chosen.free_over_cents != null && subtotalCents >= chosen.free_over_cents
-  return { cents: free ? 0 : chosen.price_cents, name: chosen.name, methodId: chosen.id }
+
+  // Domestic (Cyprus) bills a flat method price + free-over; UPS zones bill by weight.
+  let cents: number
+  if (zone.is_domestic) {
+    const free = chosen.free_over_cents != null && subtotalCents >= chosen.free_over_cents
+    cents = free ? 0 : chosen.price_cents
+  } else {
+    const tiers = (tiersRes.data ?? []) as unknown as TierRow[]
+    const cost = weightBasedCost(zone, tiers, shipmentGrams)
+    if (cost == null)
+      return { error: 'No delivery rate is available for this destination.' }
+    cents = cost
+  }
+  return { cents, name: chosen.name, methodId: chosen.id }
 }
 
 interface CouponRow {
@@ -188,7 +228,7 @@ Deno.serve(async (req) => {
       .map((id) => id.slice(5))
       .filter((slug) => /^[a-z0-9-]+$/.test(slug))
     const productColumns =
-      'id, slug, name, price_cents, business_price_cents, currency, is_active, is_coming_soon, stock, track_inventory'
+      'id, slug, name, price_cents, business_price_cents, currency, is_active, is_coming_soon, stock, track_inventory, weight_grams'
     const [uuidProducts, slugProducts] = await Promise.all([
       uuidIds.length
         ? supabase.from('products').select(productColumns).in('id', uuidIds)
@@ -209,11 +249,12 @@ Deno.serve(async (req) => {
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
     const canonicalCart: Array<{ id: string; q: number }> = []
     let subtotalCents = 0
+    let shipmentGrams = PACKAGING_TARE_GRAMS
     let currency = 'eur'
 
     for (const item of items) {
       const p = byId.get(item.productId) as
-        | { id: string; name: string; price_cents: number; business_price_cents: number | null; currency: string; is_active: boolean; is_coming_soon: boolean; stock: number | null; track_inventory: boolean }
+        | { id: string; name: string; price_cents: number; business_price_cents: number | null; currency: string; is_active: boolean; is_coming_soon: boolean; stock: number | null; track_inventory: boolean; weight_grams: number | null }
         | undefined
       // Only sell products that are active and not still "coming soon".
       if (!p || !p.is_active || p.is_coming_soon) {
@@ -234,6 +275,7 @@ Deno.serve(async (req) => {
           : p.price_cents
       currency = p.currency ?? 'eur'
       subtotalCents += unitPrice * qty
+      shipmentGrams += (p.weight_grams ?? 0) * qty
       canonicalCart.push({ id: p.id, q: qty })
       lineItems.push({
         price_data: {
@@ -252,6 +294,7 @@ Deno.serve(async (req) => {
       shipping?.country ?? '',
       shippingMethodId,
       subtotalCents,
+      shipmentGrams,
     )
     if ('error' in shippingResult) {
       return json({ error: shippingResult.error }, 400)

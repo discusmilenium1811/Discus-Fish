@@ -10,12 +10,15 @@ import { computeBreakdown } from '../lib/pricing'
 import { useAuth } from '../auth/AuthContext'
 import { useTranslation } from '../i18n/LanguageContext'
 import {
+  billableWeightGrams,
   checkoutCountries,
   fetchPublicShippingRates,
   hasWorldwideZone,
+  methodCost,
   methodsForCountry,
-  shippingCostFor,
+  resolveZone,
   WORLDWIDE,
+  type ShippingMethod,
   type ShippingRates,
 } from '../lib/shipping'
 
@@ -140,17 +143,36 @@ export function CartDrawer({
     onClose()
   }
 
+  // Billable UPS weight for this cart (net product weights + packaging tare).
+  const shipmentGrams = useMemo(
+    () =>
+      billableWeightGrams(
+        items.map((item) => ({
+          weightGrams: item.product.weightGrams,
+          quantity: item.quantity,
+        })),
+      ),
+    [items],
+  )
+  // The zone serving the chosen country (drives domestic-vs-weight pricing).
+  const zone = useMemo(
+    () => (rates ? resolveZone(rates.zones, form.country) : null),
+    [rates, form.country],
+  )
   // Delivery options for the chosen country, straight from the admin rates.
   const methods = useMemo(
     () => (rates ? methodsForCountry(rates, form.country) : []),
     [rates, form.country],
   )
+  /** Delivery price for a method: domestic flat, or weight-based for UPS zones. */
+  const costFor = (method: ShippingMethod): number =>
+    (rates && zone
+      ? methodCost(zone, method, rates, shipmentGrams, subtotalCents)
+      : null) ?? 0
   // The picked method (falls back to the cheapest/first available one).
   const selectedMethod =
     methods.find((method) => method.id === methodId) ?? methods[0] ?? null
-  const shippingCents = selectedMethod
-    ? shippingCostFor(selectedMethod, subtotalCents)
-    : 0
+  const shippingCents = selectedMethod ? costFor(selectedMethod) : 0
 
   const breakdown = computeBreakdown(
     subtotalCents,
@@ -519,7 +541,7 @@ export function CartDrawer({
               ) : (
                 <div className="space-y-2">
                   {methods.map((method) => {
-                    const cost = shippingCostFor(method, subtotalCents)
+                    const cost = costFor(method)
                     const checked = selectedMethod?.id === method.id
                     return (
                       <label
