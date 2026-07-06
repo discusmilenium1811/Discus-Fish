@@ -63,8 +63,6 @@ export function ShippingPrices() {
 
       <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-18">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl border border-cyan-300/30 bg-cyan-300/10 text-3xl shadow-[0_0_35px_rgba(34,211,238,0.15)]">🚚</div>
-          <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-cyan-300">{t('shipping.eyebrow')}</p>
           <h1 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-5xl">{t('shipping.heading')}</h1>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">{t('shipping.intro')}</p>
           <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-emerald-400/10 px-4 py-2 text-xs font-bold text-emerald-200 sm:text-sm">

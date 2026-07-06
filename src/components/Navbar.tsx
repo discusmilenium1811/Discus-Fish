@@ -58,12 +58,15 @@ export function Navbar({
           <Link
             to="/shipping-prices"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="group relative order-first flex h-10 w-full items-center justify-center gap-2.5 overflow-hidden rounded-full border border-cyan-300/30 bg-gradient-to-r from-cyan-400/15 via-white/5 to-emerald-400/15 px-4 text-[0.62rem] font-extrabold uppercase tracking-[0.11em] text-white shadow-[0_8px_25px_rgba(6,182,212,0.1)] transition hover:border-cyan-300/60 hover:bg-white/10 sm:absolute sm:left-1/2 sm:h-12 sm:w-fit sm:-translate-x-1/2 sm:flex-none sm:justify-start sm:text-xs"
+            className="group relative order-first flex h-12 w-full items-center justify-center gap-3 overflow-hidden rounded-full border border-cyan-300/30 bg-gradient-to-r from-cyan-400/15 via-white/5 to-emerald-400/15 px-4 text-[0.65rem] font-extrabold uppercase tracking-[0.1em] text-white shadow-[0_8px_25px_rgba(6,182,212,0.1)] transition hover:border-cyan-300/60 hover:bg-white/10 sm:absolute sm:left-1/2 sm:h-14 sm:w-fit sm:-translate-x-1/2 sm:flex-none sm:justify-start sm:px-5 sm:text-xs"
+            aria-label="Shipping & Delivery — UPS and GAP AKIS Express"
           >
-            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-cyan-300 text-sm shadow-[0_0_15px_rgba(103,232,249,0.4)] transition group-hover:scale-105 sm:h-8 sm:w-8 sm:text-base" aria-hidden="true">
-              🚚
-            </span>
-            <span className="whitespace-nowrap">{t('nav.freeDelivery')}</span>
+            <span className="whitespace-nowrap">Shipping &amp; Delivery</span>
+            <img
+              src="/pictures/shipping/ups-akis.png"
+              alt="UPS and GAP AKIS Express"
+              className="h-9 w-auto shrink-0 object-contain transition group-hover:scale-[1.03] sm:h-11"
+            />
           </Link>
 
           <button
@@ -115,7 +118,7 @@ export function Navbar({
             <button
               type="button"
               onClick={onCatalogClick}
-              className="transition hover:text-cyan-300"
+              className="cursor-pointer transition hover:text-cyan-300"
             >
               {t('nav.catalog')}
             </button>
