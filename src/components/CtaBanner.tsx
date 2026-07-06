@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useTranslation } from '../i18n/LanguageContext'
 import { HOME_IMG } from '../lib/homeImages'
 
@@ -20,12 +21,12 @@ export function CtaBanner() {
         <p className="mx-auto mt-3 max-w-xl text-sm text-slate-200 sm:mt-4 sm:text-base">
           {t('cta.subtitle')}
         </p>
-        <a
-          href="#products"
+        <Link
+          to="/Cataloge/Products"
           className="mt-6 inline-block rounded-full bg-cyan-400 px-5 py-2.5 text-xs font-bold text-slate-900 shadow-lg shadow-cyan-500/30 transition hover:bg-cyan-300 sm:mt-8 sm:px-7 sm:py-3 sm:text-sm"
         >
           {t('cta.shopNow')}
-        </a>
+        </Link>
       </div>
     </section>
   )

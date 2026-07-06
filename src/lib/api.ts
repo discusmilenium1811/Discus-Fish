@@ -2,9 +2,10 @@ import type { Product } from '../types'
 import { supabase } from './supabase'
 
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/checkout`
-// Product imagery lives in the public Supabase Storage `product-images` bucket.
-const STORAGE = 'https://vumjslsogdnexehutibj.supabase.co/storage/v1/object/public/product-images'
-const COMING_SOON_IMAGE = `${STORAGE}/New%20products%20Coming%20Soon/yearbook-2026-cover.png`
+// Keep the shared upcoming-product artwork with the storefront build so every
+// card can display it even when remote product storage is unavailable.
+const COMING_SOON_IMAGE =
+  '/pictures/New%20products%20Coming%20Soon/yearbook-2026-cover.png'
 
 /** Storefront image for a product: the shared "coming soon" placeholder while
  *  it's still upcoming, otherwise the image stored on the product itself. */

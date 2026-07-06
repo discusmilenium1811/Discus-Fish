@@ -118,12 +118,12 @@ export function CatalogPage({ tab }: CatalogPageProps) {
         </Link>
       </div>
 
-      <div className="mt-7 flex flex-wrap items-center gap-3 sm:mt-8">
+      <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:mt-8">
         <h1 className="shrink-0 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
           {t('catalog.title')}
         </h1>
 
-        <div className="relative min-w-48 flex-1 sm:max-w-xs">
+        <div className="relative w-full min-w-48 sm:w-80">
           <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
             🔎
           </span>
@@ -158,7 +158,7 @@ export function CatalogPage({ tab }: CatalogPageProps) {
       </div>
 
       {/* Category navigation — the same photo-led cards used on the home page */}
-      <div className="mt-5 grid gap-3 sm:mt-6 sm:grid-cols-3 sm:gap-4">
+      <div className="mt-16 grid gap-3 sm:mt-20 sm:grid-cols-3 sm:gap-4">
         {GROUPS.map((g) => {
           const isActive = activeGroup === g.id
           return (
@@ -195,7 +195,7 @@ export function CatalogPage({ tab }: CatalogPageProps) {
       <CatalogDownloadDrawer open={downloadOpen} onClose={() => setDownloadOpen(false)} />
 
       {list.length === 0 ? (
-        <p className="mt-10 rounded-2xl border border-white/10 bg-white/5 px-4 py-12 text-center text-sm text-slate-400 sm:mt-12 sm:px-6 sm:py-16 sm:text-base">
+        <p className="mt-32 rounded-2xl border border-white/10 bg-white/5 px-4 py-12 text-center text-sm text-slate-400 sm:mt-48 sm:px-6 sm:py-16 sm:text-base">
           {q
             ? t('search.noResults')
             : tab === 'products'
@@ -203,7 +203,7 @@ export function CatalogPage({ tab }: CatalogPageProps) {
               : t('catalog.emptyComing')}
         </p>
       ) : (
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+        <div className="mt-32 grid gap-4 sm:mt-48 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {list.map((product, index) => (
             <ProductCard
               key={product.id}
