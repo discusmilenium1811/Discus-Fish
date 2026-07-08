@@ -34,6 +34,8 @@ interface MethodRow {
   name: string
   price_cents: number
   free_over_cents: number | null
+  free_under_grams: number | null
+  over_weight_price_cents: number | null
   is_active: boolean
   sort_order: number
 }
@@ -72,7 +74,7 @@ async function resolveShipping(
   supabase: ReturnType<typeof createClient>,
   country: string,
   methodId: string | undefined,
-  subtotalCents: number,
+  netGrams: number,
   shipmentGrams: number,
 ): Promise<{ cents: number; name: string; methodId: string } | { error: string }> {
   const [zonesRes, methodsRes, tiersRes] = await Promise.all([
@@ -82,7 +84,7 @@ async function resolveShipping(
       .eq('is_active', true),
     supabase
       .from('shipping_methods')
-      .select('id, zone_id, name, price_cents, free_over_cents, is_active, sort_order')
+      .select('id, zone_id, name, price_cents, free_over_cents, free_under_grams, over_weight_price_cents, is_active, sort_order')
       .eq('is_active', true),
     supabase.from('shipping_rate_tiers').select('zone_id, max_weight_grams, price_cents'),
   ])
@@ -97,11 +99,19 @@ async function resolveShipping(
   const chosen =
     (methodId ? zoneMethods.find((m) => m.id === methodId) : undefined) ?? zoneMethods[0]
 
-  // Domestic (Cyprus) bills a flat method price + free-over; UPS zones bill by weight.
+  // Domestic (Cyprus / AKIS) prices by net product weight: free under the method's
+  // threshold (office-to-office), a flat over-weight fee, or a plain flat price
+  // (home delivery). UPS zones bill by billable weight. No amount-based free shipping.
   let cents: number
   if (zone.is_domestic) {
-    const free = chosen.free_over_cents != null && subtotalCents >= chosen.free_over_cents
-    cents = free ? 0 : chosen.price_cents
+    if (chosen.free_under_grams != null) {
+      cents =
+        netGrams <= chosen.free_under_grams
+          ? 0
+          : chosen.over_weight_price_cents ?? chosen.price_cents
+    } else {
+      cents = chosen.price_cents
+    }
   } else {
     const tiers = (tiersRes.data ?? []) as unknown as TierRow[]
     const cost = weightBasedCost(zone, tiers, shipmentGrams)
@@ -249,7 +259,7 @@ Deno.serve(async (req) => {
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
     const canonicalCart: Array<{ id: string; q: number }> = []
     let subtotalCents = 0
-    let shipmentGrams = PACKAGING_TARE_GRAMS
+    let netGrams = 0
     let currency = 'eur'
 
     for (const item of items) {
@@ -275,7 +285,7 @@ Deno.serve(async (req) => {
           : p.price_cents
       currency = p.currency ?? 'eur'
       subtotalCents += unitPrice * qty
-      shipmentGrams += (p.weight_grams ?? 0) * qty
+      netGrams += (p.weight_grams ?? 0) * qty
       canonicalCart.push({ id: p.id, q: qty })
       lineItems.push({
         price_data: {
@@ -293,8 +303,8 @@ Deno.serve(async (req) => {
       supabase,
       shipping?.country ?? '',
       shippingMethodId,
-      subtotalCents,
-      shipmentGrams,
+      netGrams,
+      netGrams + PACKAGING_TARE_GRAMS,
     )
     if ('error' in shippingResult) {
       return json({ error: shippingResult.error }, 400)

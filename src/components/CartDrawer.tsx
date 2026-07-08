@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CartItem } from '../hooks/useCart'
-import { formatPrice } from '../lib/format'
+import { formatPrice, formatWeight } from '../lib/format'
 import {
   createCheckout,
   validateCoupon,
@@ -26,6 +26,11 @@ const ITEM_FALLBACK = '/pictures/discus-closeup.webp'
 
 const inputCls =
   'w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-cyan-400/60 focus:bg-white/10'
+
+// The native dropdown list renders on a light system background, so the white
+// input text would be invisible there. Force a dark option background + light
+// text so the country list is readable whether hovered or not.
+const optionCls = 'bg-slate-900 text-white'
 
 interface CartDrawerProps {
   open: boolean
@@ -143,7 +148,16 @@ export function CartDrawer({
     onClose()
   }
 
-  // Billable UPS weight for this cart (net product weights + packaging tare).
+  // Net product weight (drives the Cyprus/AKIS free-under-5 kg threshold) and the
+  // billable UPS weight (net + packaging tare, used for the weight-based UPS zones).
+  const netGrams = useMemo(
+    () =>
+      items.reduce(
+        (sum, item) => sum + (item.product.weightGrams ?? 0) * Math.max(0, item.quantity),
+        0,
+      ),
+    [items],
+  )
   const shipmentGrams = useMemo(
     () =>
       billableWeightGrams(
@@ -164,10 +178,10 @@ export function CartDrawer({
     () => (rates ? methodsForCountry(rates, form.country) : []),
     [rates, form.country],
   )
-  /** Delivery price for a method: domestic flat, or weight-based for UPS zones. */
+  /** Delivery price for a method: domestic by net weight, or weight-based for UPS zones. */
   const costFor = (method: ShippingMethod): number =>
     (rates && zone
-      ? methodCost(zone, method, rates, shipmentGrams, subtotalCents)
+      ? methodCost(zone, method, rates, netGrams, shipmentGrams)
       : null) ?? 0
   // The picked method (falls back to the cheapest/first available one).
   const selectedMethod =
@@ -388,6 +402,17 @@ export function CartDrawer({
                   <p className="text-sm text-slate-400">
                     {formatPrice(item.product.priceCents, item.product.currency)}
                   </p>
+                  {item.product.weightGrams != null && item.product.weightGrams > 0 && (
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      ⚖ {formatWeight(item.product.weightGrams)} {t('cart.each')}
+                      {item.quantity > 1 && (
+                        <span className="text-slate-400">
+                          {' · '}
+                          {formatWeight(item.product.weightGrams * item.quantity)}
+                        </span>
+                      )}
+                    </p>
+                  )}
                   <div className="mt-2 flex items-center gap-2">
                     <button
                       type="button"
@@ -465,21 +490,21 @@ export function CartDrawer({
                     {`${t('cart.country')} *`}
                   </span>
                   <select
-                    className={inputCls}
+                    className={`${inputCls} [color-scheme:dark]`}
                     value={form.country}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, country: e.target.value }))
                     }
                     autoComplete="country-name"
                   >
-                    <option value="">{t('cart.selectCountry')}</option>
+                    <option className={optionCls} value="">{t('cart.selectCountry')}</option>
                     {countryOptions.map((c) => (
-                      <option key={c.code} value={c.code}>
+                      <option className={optionCls} key={c.code} value={c.code}>
                         {c.name}
                       </option>
                     ))}
                     {showWorldwide && (
-                      <option value={WORLDWIDE}>{t('cart.restOfWorld')}</option>
+                      <option className={optionCls} value={WORLDWIDE}>{t('cart.restOfWorld')}</option>
                     )}
                   </select>
                 </label>
@@ -638,6 +663,9 @@ export function CartDrawer({
                   label={t('cart.subtotal')}
                   value={formatPrice(breakdown.subtotalCents, 'eur')}
                 />
+                {netGrams > 0 && (
+                  <Row label={`⚖ ${t('cart.totalWeight')}`} value={formatWeight(netGrams)} />
+                )}
                 <Row
                   label={t('cart.vatIncluded')}
                   value={formatPrice(breakdown.vatCents, 'eur')}
@@ -680,6 +708,12 @@ export function CartDrawer({
                 {formatPrice(breakdown.subtotalCents, 'eur')}
               </span>
             </div>
+            {netGrams > 0 && (
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-sm text-slate-400">⚖ {t('cart.totalWeight')}</span>
+                <span className="text-sm font-semibold text-white">{formatWeight(netGrams)}</span>
+              </div>
+            )}
             <div className="mb-4 flex items-center justify-between">
               <span className="text-sm text-slate-400">{t('cart.shipping')}</span>
               <span className="text-xs text-slate-400">{t('cart.shippingAtCheckout')}</span>

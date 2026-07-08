@@ -8,8 +8,10 @@ import {
   centsToEuros,
 } from '../lib/adminApi'
 import {
+  domesticCost,
   resolveZone,
   weightBasedCost,
+  type ShippingMethod,
   type ShippingRateTier,
   type ShippingZone,
 } from '../../lib/shipping'
@@ -48,6 +50,8 @@ interface Method {
   description: string
   price_cents: number
   free_over_cents: number | null
+  free_under_grams: number | null
+  over_weight_price_cents: number | null
   estimated_days_min: number | null
   estimated_days_max: number | null
   is_active: boolean
@@ -121,7 +125,8 @@ export function Shipping() {
         International delivery is priced <span className="font-semibold">by parcel weight</span> using the UPS
         rate table below: the destination country picks its UPS zone (e.g. DE → Zone 1, RS → Zone 5); any country
         not listed in a zone falls into <em>Zone 7</em> (Rest of world). <span className="font-semibold">Cyprus</span>{' '}
-        stays a flat domestic rate (AKIS). Use the calculator to check any order.
+        is domestic AKIS Express: office-to-office is free up to 5&nbsp;kg (net product weight) then €5 over,
+        and home delivery is a flat €7.50. There is no amount-based free shipping. Use the calculator to check any order.
       </div>
       <ErrorNote msg={error} />
 
@@ -205,7 +210,7 @@ export function Shipping() {
               <th className={thCls}>Method</th>
               <th className={thCls}>Zone</th>
               <th className={thCls}>Price</th>
-              <th className={thCls}>Free over</th>
+              <th className={thCls}>Free / over weight</th>
               <th className={thCls}>Delivery</th>
               <th className={thCls}>Status</th>
               <th className={`${thCls} text-right`}>Actions</th>
@@ -226,12 +231,17 @@ export function Shipping() {
                   <td className="px-4 py-3 text-slate-300">{zoneName(m.zone_id)}</td>
                   <td className="px-4 py-3 text-slate-200">
                     {zones.find((z) => z.id === m.zone_id)?.is_domestic
-                      ? `€${centsToEuros(m.price_cents)}`
+                      ? m.free_under_grams != null
+                        ? `Free ≤ ${m.free_under_grams / 1000} kg`
+                        : `€${centsToEuros(m.price_cents)}`
                       : <Pill tone="slate">By weight</Pill>}
                   </td>
                   <td className="px-4 py-3">
-                    {zones.find((z) => z.id === m.zone_id)?.is_domestic && m.free_over_cents != null ? (
-                      <Pill tone="cyan">€{centsToEuros(m.free_over_cents)}</Pill>
+                    {zones.find((z) => z.id === m.zone_id)?.is_domestic && m.free_under_grams != null ? (
+                      <Pill tone="cyan">
+                        €{centsToEuros(m.over_weight_price_cents ?? m.price_cents)} over{' '}
+                        {m.free_under_grams / 1000} kg
+                      </Pill>
                     ) : (
                       <span className="text-slate-500">—</span>
                     )}
@@ -295,11 +305,9 @@ function ShippingCalculator({
 }) {
   const [country, setCountry] = useState('DE')
   const [weightKg, setWeightKg] = useState('2')
-  const [subtotal, setSubtotal] = useState('40.00')
 
   const code = country.trim().toUpperCase()
   const grams = Math.max(0, Math.round(Number(weightKg || 0) * 1000))
-  const subtotalCents = Math.round(Number(subtotal || 0) * 100)
 
   const zone = resolveZone(zones as ShippingZone[], code)
   const method = zone
@@ -313,9 +321,7 @@ function ShippingCalculator({
     ? null
     : isDomestic
       ? method
-        ? method.free_over_cents != null && subtotalCents >= method.free_over_cents
-          ? 0
-          : method.price_cents
+        ? domesticCost(method as ShippingMethod, grams)
         : null
       : weightBasedCost(zone as ShippingZone, tiers, grams)
   const matchedTier = zone && !isDomestic
@@ -332,7 +338,7 @@ function ShippingCalculator({
           🧮 Shipping cost calculator
         </h2>
       </div>
-      <div className="grid gap-4 p-4 sm:grid-cols-3">
+      <div className="grid gap-4 p-4 sm:grid-cols-2">
         <Field label="Destination country code">
           <input
             className={fieldCls}
@@ -341,7 +347,7 @@ function ShippingCalculator({
             placeholder="CY, DE, GB, US…"
           />
         </Field>
-        <Field label="Parcel weight (kg)">
+        <Field label="Weight (kg) — net products for Cyprus, parcel for UPS">
           <input
             className={fieldCls}
             type="number"
@@ -349,15 +355,6 @@ function ShippingCalculator({
             min="0"
             value={weightKg}
             onChange={(e) => setWeightKg(e.target.value)}
-          />
-        </Field>
-        <Field label="Order subtotal (€) — for Cyprus free-shipping">
-          <input
-            className={fieldCls}
-            type="number"
-            step="0.01"
-            value={subtotal}
-            onChange={(e) => setSubtotal(e.target.value)}
           />
         </Field>
       </div>
@@ -560,13 +557,18 @@ function MethodForm({
   const [name, setName] = useState(row?.name ?? '')
   const [description, setDescription] = useState(row?.description ?? '')
   const [price, setPrice] = useState(centsToEuros(row?.price_cents ?? 0))
-  const [freeOver, setFreeOver] = useState(centsToEuros(row?.free_over_cents))
+  const [freeUnderKg, setFreeUnderKg] = useState(
+    row?.free_under_grams != null ? String(row.free_under_grams / 1000) : '',
+  )
+  const [overWeightPrice, setOverWeightPrice] = useState(centsToEuros(row?.over_weight_price_cents))
   const [daysMin, setDaysMin] = useState(row?.estimated_days_min != null ? String(row.estimated_days_min) : '')
   const [daysMax, setDaysMax] = useState(row?.estimated_days_max != null ? String(row.estimated_days_max) : '')
   const [sortOrder, setSortOrder] = useState(String(row?.sort_order ?? 0))
   const [isActive, setIsActive] = useState(row?.is_active ?? true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  // Free-under / over-weight pricing applies only to domestic (AKIS) zones.
+  const isDomestic = zones.find((z) => z.id === zoneId)?.is_domestic ?? false
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -576,7 +578,9 @@ function MethodForm({
       name: name.trim(),
       description: description.trim(),
       price_cents: eurosToCents(price || 0),
-      free_over_cents: freeOver ? eurosToCents(freeOver) : null,
+      free_over_cents: null,
+      free_under_grams: freeUnderKg ? Math.round(Number(freeUnderKg) * 1000) : null,
+      over_weight_price_cents: overWeightPrice ? eurosToCents(overWeightPrice) : null,
       estimated_days_min: daysMin ? parseInt(daysMin, 10) : null,
       estimated_days_max: daysMax ? parseInt(daysMax, 10) : null,
       sort_order: parseInt(sortOrder, 10) || 0,
@@ -628,12 +632,15 @@ function MethodForm({
         <Field label="Description">
           <input className={fieldCls} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Tracked delivery" />
         </Field>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Price (€)">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Flat price (€) — UPS zones price by weight instead">
             <input className={fieldCls} type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
           </Field>
-          <Field label="Free over (€) — leave blank for never">
-            <input className={fieldCls} type="number" step="0.01" placeholder="e.g. 35.00" value={freeOver} onChange={(e) => setFreeOver(e.target.value)} />
+          <Field label="Free under (kg) — domestic, blank = never free">
+            <input className={fieldCls} type="number" step="0.1" placeholder="e.g. 5" value={freeUnderKg} disabled={!isDomestic} onChange={(e) => setFreeUnderKg(e.target.value)} />
+          </Field>
+          <Field label="Over-weight price (€) — domestic, above the free weight">
+            <input className={fieldCls} type="number" step="0.01" placeholder="e.g. 5.00" value={overWeightPrice} disabled={!isDomestic} onChange={(e) => setOverWeightPrice(e.target.value)} />
           </Field>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">

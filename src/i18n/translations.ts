@@ -319,6 +319,8 @@ export const translations = {
     'cart.remove': 'Remove',
     'cart.clear': 'Clear cart',
     'cart.subtotal': 'Subtotal',
+    'cart.totalWeight': 'Total weight',
+    'cart.each': 'each',
     'cart.checkout': 'Checkout',
     'cart.redirecting': 'Redirecting…',
     'cart.securePayment': 'Secure payment powered by Stripe',
@@ -337,11 +339,6 @@ export const translations = {
     'cart.selectCountry': 'Select country…',
     'cart.restOfWorld': 'Rest of the world',
     'cart.days': 'days',
-    'cart.shippingProgress': 'Add {amount} more for free shipping',
-    'cart.shippingUnlocked': '🎉 You\'ve unlocked free shipping!',
-    'cart.cyprusShippingProgress': 'Add {amount} more for free delivery to Cyprus',
-    'cart.cyprusUnlockedEuRemaining': '✓ Free for Cyprus · Add {amount} more for the EU',
-    'cart.cyprusEuUnlocked': '🎉 Free delivery unlocked for Cyprus & the EU!',
     'cart.total': 'Total',
 
     // Cart — delivery details step
@@ -744,6 +741,8 @@ export const translations = {
     'cart.remove': 'Αφαίρεση',
     'cart.clear': 'Άδειασμα καλαθιού',
     'cart.subtotal': 'Υποσύνολο',
+    'cart.totalWeight': 'Συνολικό βάρος',
+    'cart.each': 'το καθένα',
     'cart.checkout': 'Ολοκλήρωση αγοράς',
     'cart.redirecting': 'Ανακατεύθυνση…',
     'cart.securePayment': 'Ασφαλής πληρωμή μέσω Stripe',
@@ -762,11 +761,6 @@ export const translations = {
     'cart.selectCountry': 'Επιλέξτε χώρα…',
     'cart.restOfWorld': 'Υπόλοιπος κόσμος',
     'cart.days': 'ημέρες',
-    'cart.shippingProgress': 'Προσθέστε άλλα {amount} για δωρεάν αποστολή',
-    'cart.shippingUnlocked': '🎉 Ξεκλειδώσατε τη δωρεάν αποστολή!',
-    'cart.cyprusShippingProgress': 'Προσθέστε άλλα {amount} για δωρεάν παράδοση στην Κύπρο',
-    'cart.cyprusUnlockedEuRemaining': '✓ Δωρεάν για Κύπρο · Άλλα {amount} για την ΕΕ',
-    'cart.cyprusEuUnlocked': '🎉 Δωρεάν παράδοση για Κύπρο & ΕΕ!',
     'cart.total': 'Σύνολο',
 
     // Cart — delivery details step
@@ -1169,6 +1163,8 @@ export const translations = {
     'cart.remove': 'Премахни',
     'cart.clear': 'Изчисти количката',
     'cart.subtotal': 'Междинна сума',
+    'cart.totalWeight': 'Общо тегло',
+    'cart.each': 'бр.',
     'cart.checkout': 'Плащане',
     'cart.redirecting': 'Пренасочване…',
     'cart.securePayment': 'Сигурно плащане чрез Stripe',
@@ -1187,11 +1183,6 @@ export const translations = {
     'cart.selectCountry': 'Изберете държава…',
     'cart.restOfWorld': 'Останалият свят',
     'cart.days': 'дни',
-    'cart.shippingProgress': 'Добавете още {amount} за безплатна доставка',
-    'cart.shippingUnlocked': '🎉 Отключихте безплатна доставка!',
-    'cart.cyprusShippingProgress': 'Добавете още {amount} за безплатна доставка до Кипър',
-    'cart.cyprusUnlockedEuRemaining': '✓ Безплатно за Кипър · Още {amount} за ЕС',
-    'cart.cyprusEuUnlocked': '🎉 Безплатна доставка за Кипър и ЕС!',
     'cart.total': 'Общо',
 
     // Cart — delivery details step

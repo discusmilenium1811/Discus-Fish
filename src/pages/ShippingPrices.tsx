@@ -168,8 +168,37 @@ function ZoneCard({
         </div>
       </div>
       <div className="px-5 py-5">
-        {!method ? (
+        {methods.length === 0 ? (
           <p className="py-1 text-sm text-slate-500">{labels.noMethods}</p>
+        ) : zone.is_domestic ? (
+          /* Domestic (AKIS Express): each option with its net-weight rule. */
+          <div className="space-y-5">
+            {methods.map((m) => (
+              <div key={m.id}>
+                <h4 className="font-bold text-white">{m.name}</h4>
+                {m.estimated_days_min != null && (
+                  <p className="mt-1 text-xs font-semibold text-cyan-200">
+                    ⏱ {labels.delivery}: {m.estimated_days_min}–
+                    {m.estimated_days_max ?? m.estimated_days_min} {labels.days}
+                  </p>
+                )}
+                {m.free_under_grams != null ? (
+                  <div className="mt-2">
+                    <div className="text-2xl font-black text-emerald-300">
+                      {labels.free} · ≤ {m.free_under_grams / 1000} kg
+                    </div>
+                    <div className="mt-1 text-xs font-bold text-slate-300">
+                      {money(m.over_weight_price_cents ?? m.price_cents, locale)} · &gt; {m.free_under_grams / 1000} kg
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-2 text-2xl font-black text-white">
+                    {m.price_cents === 0 ? labels.free : money(m.price_cents, locale)}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         ) : (
           <>
             <h4 className="font-bold text-white">{method.name}</h4>
@@ -180,17 +209,10 @@ function ZoneCard({
               </p>
             )}
 
-            {zone.is_domestic || !hasTiers ? (
-              /* Domestic (or un-tiered) zone: single flat price. */
-              <div className="mt-3">
-                <div className="text-2xl font-black text-white">
-                  {method.price_cents === 0 ? labels.free : money(method.price_cents, locale)}
-                </div>
-                {method.free_over_cents != null && (
-                  <div className="mt-1 text-xs font-bold text-emerald-300">
-                    {labels.freeOver} {money(method.free_over_cents, locale)}
-                  </div>
-                )}
+            {!hasTiers ? (
+              /* Un-tiered non-domestic zone: single flat price. */
+              <div className="mt-3 text-2xl font-black text-white">
+                {method.price_cents === 0 ? labels.free : money(method.price_cents, locale)}
               </div>
             ) : (
               /* UPS zone: price by parcel weight. */

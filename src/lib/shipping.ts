@@ -20,6 +20,10 @@ export interface ShippingMethod {
   description: string
   price_cents: number
   free_over_cents: number | null
+  /** Domestic (AKIS) only: net weight (g) at/under which delivery is free. */
+  free_under_grams: number | null
+  /** Domestic (AKIS) only: flat price charged when net weight exceeds the threshold. */
+  over_weight_price_cents: number | null
   estimated_days_min: number | null
   estimated_days_max: number | null
   is_active: boolean
@@ -59,7 +63,7 @@ export async function fetchPublicShippingRates(): Promise<ShippingRates> {
     supabase
       .from('shipping_methods')
       .select(
-        'id, zone_id, name, description, price_cents, free_over_cents, estimated_days_min, estimated_days_max, is_active, sort_order',
+        'id, zone_id, name, description, price_cents, free_over_cents, free_under_grams, over_weight_price_cents, estimated_days_min, estimated_days_max, is_active, sort_order',
       )
       .eq('is_active', true)
       .order('sort_order'),
@@ -123,9 +127,19 @@ export function methodsForCountry(rates: ShippingRates, country: string): Shippi
     .sort((a, b) => a.sort_order - b.sort_order || a.price_cents - b.price_cents)
 }
 
-/** Delivery cost for a chosen method given the goods subtotal (free over threshold). */
-export function shippingCostFor(method: ShippingMethod, subtotalCents: number): number {
-  if (method.free_over_cents != null && subtotalCents >= method.free_over_cents) return 0
+/**
+ * Domestic (Cyprus / AKIS Express) delivery price for a method, by net product weight.
+ *  • When the method has a free-weight threshold (office-to-office): free up to that
+ *    net weight, then a flat over-weight price (falling back to price_cents).
+ *  • Otherwise (home delivery): a plain flat price_cents.
+ * There is no amount-based free shipping anymore.
+ */
+export function domesticCost(method: ShippingMethod, netGrams: number): number {
+  if (method.free_under_grams != null) {
+    return netGrams <= method.free_under_grams
+      ? 0
+      : method.over_weight_price_cents ?? method.price_cents
+  }
   return method.price_cents
 }
 
@@ -172,19 +186,20 @@ export function weightBasedCost(
 }
 
 /**
- * Resolved delivery price for a specific method in its zone. Domestic (Cyprus)
- * zones use the flat method price + free-over threshold; UPS zones bill by the
- * shipment's billable weight. Returns null when no price can be determined.
+ * Resolved delivery price for a specific method in its zone. Domestic (Cyprus /
+ * AKIS) zones price by net product weight (free-under-threshold or flat); UPS
+ * zones bill by the shipment's billable weight (net + packaging tare). Returns
+ * null when no price can be determined.
  */
 export function methodCost(
   zone: ShippingZone,
   method: ShippingMethod,
   rates: Pick<ShippingRates, 'tiers'>,
-  grams: number,
-  subtotalCents: number,
+  netGrams: number,
+  billableGrams: number,
 ): number | null {
-  if (zone.is_domestic) return shippingCostFor(method, subtotalCents)
-  return weightBasedCost(zone, rates.tiers, grams)
+  if (zone.is_domestic) return domesticCost(method, netGrams)
+  return weightBasedCost(zone, rates.tiers, billableGrams)
 }
 
 export interface CheckoutCountry {
