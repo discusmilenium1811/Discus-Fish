@@ -14,19 +14,19 @@ interface Block {
 // left/right, each pointing into the catalogue (no buy cards).
 const BLOCKS: Block[] = [
   {
-    image: 'discus-red.jpg',
+    image: '/pictures/home-story/discus-trio-clean.webp',
     titleKey: 'home.story.1.title',
     textKey: 'home.story.1.text',
     accent: 'text-rose-200',
   },
   {
-    image: 'discus-school.jpg',
+    image: '/pictures/home-story/discus-closeup-clean.webp',
     titleKey: 'home.story.2.title',
     textKey: 'home.story.2.text',
     accent: 'text-cyan-200',
   },
   {
-    image: 'fish-plants.jpg',
+    image: '/pictures/home-story/discus-portrait-clean.webp',
     titleKey: 'home.story.3.title',
     textKey: 'home.story.3.text',
     accent: 'text-emerald-200',
@@ -66,7 +66,7 @@ export function HomeStory() {
                   }`}
                 >
                   <img
-                    src={`${HOME_IMG}/${b.image}`}
+                    src={b.image.startsWith('/') ? b.image : `${HOME_IMG}/${b.image}`}
                     alt={t(b.titleKey)}
                     loading="lazy"
                     className="aspect-[4/3] w-full object-cover transition duration-700 ease-out group-hover:scale-105"

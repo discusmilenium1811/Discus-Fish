@@ -4,7 +4,6 @@ import { ProductCard } from '../components/ProductCard'
 import { CatalogDownloadDrawer } from '../components/CatalogDownloadDrawer'
 import { useTranslation } from '../i18n/LanguageContext'
 import { productMatches } from '../lib/productSearch'
-import { HOME_IMG } from '../lib/homeImages'
 import type { StorefrontContext } from '../layouts/StorefrontLayout'
 import type { Product } from '../types'
 import type { TranslationKey } from '../i18n/translations'
@@ -27,17 +26,17 @@ const GROUPS: Group[] = [
   {
     id: 'fish-food',
     title: 'catalog.group.food',
-    image: 'discus-portrait.jpg',
+    image: '/pictures/categories/aquarium-fish-food-grid.webp',
   },
   {
     id: 'water-conditioners',
     title: 'catalog.group.water',
-    image: 'planted-tank.jpg',
+    image: '/pictures/categories/water-conditioners-landscape.webp',
   },
   {
     id: 'equipment',
     title: 'catalog.group.equipment',
-    image: 'aquascape.jpg',
+    image: '/pictures/categories/equipment-filter-enhanced.webp',
   },
 ]
 
@@ -173,7 +172,7 @@ export function CatalogPage({ tab }: CatalogPageProps) {
               }`}
             >
               <img
-                src={`${HOME_IMG}/${g.image}`}
+                src={g.image}
                 alt=""
                 aria-hidden="true"
                 className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105"

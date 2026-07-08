@@ -5,6 +5,7 @@ import { HOME_IMG } from '../lib/homeImages'
 
 interface Category {
   image: string
+  brightImage?: boolean
   titleKey: TranslationKey
   textKey: TranslationKey
   /** Deep-links straight into that catalogue category view. */
@@ -16,21 +17,24 @@ interface Category {
 // The three catalogue worlds. Each whole card links into its catalogue category.
 const CATEGORIES: Category[] = [
   {
-    image: 'discus-portrait.jpg',
+    image: '/pictures/categories/aquarium-fish-food-grid.webp',
+    brightImage: true,
     titleKey: 'catalog.group.food',
     textKey: 'catalog.group.foodText',
     to: '/Cataloge/Products?group=fish-food',
     wash: 'from-rose-500/45',
   },
   {
-    image: 'planted-tank.jpg',
+    image: '/pictures/categories/water-conditioners-landscape.webp',
+    brightImage: true,
     titleKey: 'catalog.group.water',
     textKey: 'catalog.group.waterText',
     to: '/Cataloge/Products?group=water-conditioners',
     wash: 'from-cyan-500/45',
   },
   {
-    image: 'aquascape.jpg',
+    image: '/pictures/categories/equipment-filter-enhanced.webp',
+    brightImage: true,
     titleKey: 'catalog.group.equipment',
     textKey: 'catalog.group.equipmentText',
     to: '/Cataloge/Products?group=equipment',
@@ -62,25 +66,29 @@ export function HomeCategories() {
               to={c.to}
               className="group relative block overflow-hidden rounded-3xl shadow-2xl shadow-black/40 ring-1 ring-white/10 transition duration-300 hover:ring-cyan-300/40"
             >
-              <div className="aspect-[4/5] w-full overflow-hidden">
+              <div className="aspect-[4/3] w-full overflow-hidden">
                 <img
-                  src={`${HOME_IMG}/${c.image}`}
+                  src={c.image.startsWith('/') ? c.image : `${HOME_IMG}/${c.image}`}
                   alt={t(c.titleKey)}
                   loading="lazy"
-                  className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-110"
+                  className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105"
                 />
               </div>
               <div
-                className={`absolute inset-0 bg-gradient-to-t ${c.wash} via-slate-950/35 to-slate-950/90`}
+                className={
+                  c.brightImage
+                    ? 'absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/15 to-transparent'
+                    : `absolute inset-0 bg-gradient-to-t ${c.wash} via-slate-950/35 to-slate-950/90`
+                }
               />
-              <div className="absolute inset-x-0 bottom-0 p-6">
-                <h3 className="text-xl font-extrabold tracking-tight text-white sm:text-2xl">
+              <div className="absolute inset-x-0 bottom-0 p-5">
+                <h3 className="text-base font-extrabold tracking-tight text-white sm:text-lg">
                   {t(c.titleKey)}
                 </h3>
-                <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-200">
+                <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-slate-200 sm:text-sm">
                   {t(c.textKey)}
                 </p>
-                <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-cyan-200">
+                <span className="mt-2.5 inline-flex items-center gap-2 text-xs font-bold text-cyan-200">
                   {t('home.cats.explore')}
                   <span aria-hidden="true" className="transition group-hover:translate-x-1">
                     →
