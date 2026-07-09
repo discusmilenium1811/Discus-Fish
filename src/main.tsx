@@ -13,6 +13,7 @@ import { ShippingPrices } from './pages/ShippingPrices'
 import { TrackingDelivery } from './pages/TrackingDelivery'
 import { LanguageProvider } from './i18n/LanguageContext'
 import { AuthProvider } from './auth/AuthContext'
+import { MfaGate } from './components/MfaGate'
 import { CartProvider } from './hooks/useCart'
 import { AdminLayout } from './admin/AdminLayout'
 import { Dashboard } from './admin/pages/Dashboard'
@@ -34,6 +35,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <LanguageProvider>
       <AuthProvider>
+        <MfaGate />
         <CartProvider>
         <BrowserRouter>
           <Routes>

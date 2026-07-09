@@ -13,6 +13,23 @@ import {
   type Profile,
 } from '../lib/supabase'
 
+/** TOTP enrollment payload returned by Supabase when a new factor is created. */
+export interface MfaEnrollment {
+  factorId: string
+  qrCode: string
+  secret: string
+  uri: string
+}
+
+/** Snapshot of the current session's MFA state, used by the MFA gate. */
+export interface MfaStatus {
+  currentLevel: string | null
+  nextLevel: string | null
+  hasVerifiedFactor: boolean
+  /** Id of the verified TOTP factor to challenge at login, if any. */
+  factorId: string | null
+}
+
 interface AuthContextValue {
   user: User | null
   profile: Profile | null
@@ -27,6 +44,7 @@ interface AuthContextValue {
     business?: BusinessDetails
   }) => Promise<void>
   signIn: (args: { email: string; password: string }) => Promise<void>
+  signInWithGoogle: () => Promise<void>
   resetPassword: (args: { email: string }) => Promise<void>
   changePassword: (args: {
     email?: string
@@ -34,6 +52,12 @@ interface AuthContextValue {
     newPassword: string
   }) => Promise<void>
   signOut: () => Promise<void>
+  /** Start TOTP enrollment; returns the QR/secret to show the user. */
+  enrollMfa: () => Promise<MfaEnrollment>
+  /** Verify a 6-digit code — completes enrollment or satisfies a login challenge. */
+  verifyMfa: (factorId: string, code: string) => Promise<void>
+  /** Read the current assurance level and whether a verified factor exists. */
+  getMfaStatus: () => Promise<MfaStatus>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -172,7 +196,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
     // Hard-reload to the home page so the whole app re-initialises with the new
     // session and no stale in-memory state (cart, catalog prices, etc.) survives.
+    // If the account has TOTP enabled the session lands at aal1 and the MFA gate
+    // will demand the second factor after this reload.
     window.location.assign('/')
+  }
+
+  async function signInWithGoogle() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    })
+    if (error) throw error
+    // On success the browser is redirected to Google; nothing runs after this.
   }
 
   async function resetPassword({ email }: { email: string }) {
@@ -204,6 +239,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
   }
 
+  async function enrollMfa(): Promise<MfaEnrollment> {
+    // Clear any leftover unverified factor from an abandoned attempt so a retry
+    // doesn't fail with "a factor with this name already exists".
+    const { data: list } = await supabase.auth.mfa.listFactors()
+    const stale = (list?.all ?? []).filter((f) => f.status === 'unverified')
+    for (const factor of stale) {
+      await supabase.auth.mfa.unenroll({ factorId: factor.id })
+    }
+
+    const { data, error } = await supabase.auth.mfa.enroll({
+      factorType: 'totp',
+      friendlyName: `DiscusFish ${new Date().toISOString().slice(0, 10)}`,
+    })
+    if (error) throw error
+    return {
+      factorId: data.id,
+      qrCode: data.totp.qr_code,
+      secret: data.totp.secret,
+      uri: data.totp.uri,
+    }
+  }
+
+  async function verifyMfa(factorId: string, code: string) {
+    // challengeAndVerify both finalises enrollment and satisfies a login
+    // challenge, elevating the session to aal2 on success.
+    const { error } = await supabase.auth.mfa.challengeAndVerify({
+      factorId,
+      code: code.trim(),
+    })
+    if (error) throw error
+  }
+
+  async function getMfaStatus(): Promise<MfaStatus> {
+    const [{ data: aal }, { data: factors }] = await Promise.all([
+      supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+      supabase.auth.mfa.listFactors(),
+    ])
+    const verified = (factors?.all ?? []).find(
+      (f) => f.status === 'verified' && f.factor_type === 'totp',
+    )
+    return {
+      currentLevel: aal?.currentLevel ?? null,
+      nextLevel: aal?.nextLevel ?? null,
+      hasVerifiedFactor: Boolean(verified),
+      factorId: verified?.id ?? null,
+    }
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
     setUser(null)
@@ -221,9 +304,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile?.account_type === 'business' && profile?.business_status === 'approved',
     signUp,
     signIn,
+    signInWithGoogle,
     resetPassword,
     changePassword,
     signOut,
+    enrollMfa,
+    verifyMfa,
+    getMfaStatus,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

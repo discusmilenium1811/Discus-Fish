@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { useTranslation } from '../i18n/LanguageContext'
+import { PasswordStrength } from './PasswordStrength'
+import { isPasswordPwned } from '../auth/pwnedCheck'
+import {
+  ADMIN_SECURITY_EXEMPT,
+  BUSINESS_MIN_PASSWORD,
+  PERSONAL_MIN_PASSWORD,
+  minPasswordLength,
+} from '../auth/passwordPolicy'
+import type { TranslationKey } from '../i18n/translations'
 
 export type AuthMode = 'login' | 'signup' | 'resetPassword' | 'changePassword'
 
@@ -30,7 +39,16 @@ const emptyBusiness = {
 
 export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps) {
   const { t } = useTranslation()
-  const { user, signIn, signUp, resetPassword, changePassword } = useAuth()
+  const {
+    user,
+    profile,
+    isAdmin,
+    signIn,
+    signInWithGoogle,
+    signUp,
+    resetPassword,
+    changePassword,
+  } = useAuth()
 
   const [signupKind, setSignupKind] = useState<SignupKind>('personal')
   const [username, setUsername] = useState('')
@@ -69,8 +87,54 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
   const isChangePassword = mode === 'changePassword'
   const isBusinessSignup = isSignup && signupKind === 'business'
 
+  // Business and admin accounts carry the stronger 12-character minimum; everyone
+  // else gets the low-friction 8. For change-password we lean on the logged-in
+  // profile (admins and approved businesses stay on the high bar).
+  const signupPasswordMin = minPasswordLength(signupKind)
+  const adminExempt = isAdmin && ADMIN_SECURITY_EXEMPT
+  const changePasswordMin =
+    profile?.account_type === 'business' || (isAdmin && !adminExempt)
+      ? BUSINESS_MIN_PASSWORD
+      : PERSONAL_MIN_PASSWORD
+  const hintKey: TranslationKey = isBusinessSignup
+    ? 'auth.passwordHintBusiness'
+    : 'auth.passwordHint'
+  // Google sign-in is offered for the low-friction paths only — plain login and
+  // personal signup. Business accounts need the full company form, so no OAuth.
+  const showGoogle = mode === 'login' || (isSignup && signupKind === 'personal')
+
   function updateBusiness(key: keyof typeof emptyBusiness, value: string) {
     setBusiness((prev) => ({ ...prev, [key]: value }))
+  }
+
+  async function handleGoogle() {
+    setError('')
+    setBusy(true)
+    try {
+      await signInWithGoogle()
+      // Browser redirects to Google on success; keep the spinner until then.
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('auth.errGeneric'))
+      setBusy(false)
+    }
+  }
+
+  /** Turn a Supabase auth error into friendly, translated copy. */
+  function describeError(err: unknown): string {
+    if (err && typeof err === 'object') {
+      const e = err as { name?: string; message?: string; reasons?: string[] }
+      const reasons = Array.isArray(e.reasons) ? e.reasons : []
+      if (e.name === 'AuthWeakPasswordError' || reasons.length) {
+        if (reasons.includes('pwned')) return t('auth.errPasswordLeaked')
+        return t('auth.errPasswordWeak')
+      }
+      // Supabase surfaces the leaked-password rejection as a plain message too.
+      if (typeof e.message === 'string' && /pwned|leaked|data breach/i.test(e.message)) {
+        return t('auth.errPasswordLeaked')
+      }
+      if (typeof e.message === 'string' && e.message) return e.message
+    }
+    return t('auth.errGeneric')
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -83,8 +147,9 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
         setError(t('auth.errFields'))
         return
       }
-      if (password.length < 6) {
-        setError(t('auth.errPasswordShort'))
+      const signupMin = minPasswordLength(signupKind)
+      if (password.length < signupMin) {
+        setError(t('auth.errPasswordShort').replace('{n}', String(signupMin)))
         return
       }
       if (password !== confirmPassword) {
@@ -121,8 +186,8 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
         setError(t('auth.errFields'))
         return
       }
-      if (newPassword.length < 6) {
-        setError(t('auth.errPasswordShort'))
+      if (newPassword.length < changePasswordMin) {
+        setError(t('auth.errPasswordShort').replace('{n}', String(changePasswordMin)))
         return
       }
       if (newPassword !== confirmPassword) {
@@ -136,6 +201,16 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
 
     setBusy(true)
     try {
+      // Block passwords known from data breaches (free client-side HIBP check).
+      if (mode === 'signup' && (await isPasswordPwned(password))) {
+        setError(t('auth.errPasswordLeaked'))
+        return
+      }
+      if (mode === 'changePassword' && (await isPasswordPwned(newPassword))) {
+        setError(t('auth.errPasswordLeaked'))
+        return
+      }
+
       if (mode === 'signup') {
         await signUp({
           username: username.trim(),
@@ -178,7 +253,7 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
         setSuccess(t('auth.loginSuccess'))
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
+      setError(describeError(err))
     } finally {
       setBusy(false)
     }
@@ -319,9 +394,15 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
                   className={inputClass}
                 />
                 {isSignup && (
-                  <p className="mt-1 pl-1 text-xs text-slate-400">
-                    {t('auth.passwordHint')}
-                  </p>
+                  <>
+                    <p className="mt-1 pl-1 text-xs text-slate-400">
+                      {t(hintKey).replace('{n}', String(signupPasswordMin))}
+                    </p>
+                    <PasswordStrength
+                      password={password}
+                      minLength={signupPasswordMin}
+                    />
+                  </>
                 )}
               </div>
             )}
@@ -337,8 +418,12 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
                   className={inputClass}
                 />
                 <p className="mt-1 pl-1 text-xs text-slate-400">
-                  {t('auth.passwordHint')}
+                  {t('auth.passwordHint').replace('{n}', String(changePasswordMin))}
                 </p>
+                <PasswordStrength
+                  password={newPassword}
+                  minLength={changePasswordMin}
+                />
               </div>
             )}
 
@@ -511,6 +596,27 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
                         ? t('auth.changePassword')
                         : t('auth.login')}
             </button>
+
+            {showGoogle && (
+              <>
+                <div className="flex items-center gap-3 pt-1">
+                  <span className="h-px flex-1 bg-white/10" />
+                  <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    {t('auth.or')}
+                  </span>
+                  <span className="h-px flex-1 bg-white/10" />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleGoogle}
+                  disabled={busy}
+                  className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-white/15 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <GoogleIcon />
+                  {t('auth.continueGoogle')}
+                </button>
+              </>
+            )}
           </form>
         )}
 
@@ -590,5 +696,29 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
         )}
       </div>
     </div>
+  )
+}
+
+/** Google's multi-colour "G" mark, inlined so it needs no external asset. */
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"
+      />
+      <path
+        fill="#34A853"
+        d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33z"
+      />
+      <path
+        fill="#EA4335"
+        d="M9 3.58c1.32 0 2.5.46 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"
+      />
+    </svg>
   )
 }
