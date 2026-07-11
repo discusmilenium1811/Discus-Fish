@@ -11,7 +11,12 @@ import {
 } from '../auth/passwordPolicy'
 import type { TranslationKey } from '../i18n/translations'
 
-export type AuthMode = 'login' | 'signup' | 'resetPassword' | 'changePassword'
+export type AuthMode =
+  | 'login'
+  | 'signup'
+  | 'resetPassword'
+  | 'changePassword'
+  | 'updatePassword'
 
 type SignupKind = 'personal' | 'business'
 
@@ -48,6 +53,7 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
     signUp,
     resetPassword,
     changePassword,
+    updatePassword,
   } = useAuth()
 
   const [signupKind, setSignupKind] = useState<SignupKind>('personal')
@@ -85,6 +91,9 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
   const isSignup = mode === 'signup'
   const isResetPassword = mode === 'resetPassword'
   const isChangePassword = mode === 'changePassword'
+  // "updatePassword" is the final step of a forgot-password flow: the user
+  // arrived via the email link and just sets a new password (no old one needed).
+  const isUpdatePassword = mode === 'updatePassword'
   const isBusinessSignup = isSignup && signupKind === 'business'
 
   // Business and admin accounts carry the stronger 12-character minimum; everyone
@@ -194,6 +203,19 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
         setError(t('auth.errPasswordMatch'))
         return
       }
+    } else if (mode === 'updatePassword') {
+      if (!newPassword || !confirmPassword) {
+        setError(t('auth.errFields'))
+        return
+      }
+      if (newPassword.length < changePasswordMin) {
+        setError(t('auth.errPasswordShort').replace('{n}', String(changePasswordMin)))
+        return
+      }
+      if (newPassword !== confirmPassword) {
+        setError(t('auth.errPasswordMatch'))
+        return
+      }
     } else if (!email.trim() || !password) {
       setError(t('auth.errFields'))
       return
@@ -206,7 +228,10 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
         setError(t('auth.errPasswordLeaked'))
         return
       }
-      if (mode === 'changePassword' && (await isPasswordPwned(newPassword))) {
+      if (
+        (mode === 'changePassword' || mode === 'updatePassword') &&
+        (await isPasswordPwned(newPassword))
+      ) {
         setError(t('auth.errPasswordLeaked'))
         return
       }
@@ -248,6 +273,11 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
         setNewPassword('')
         setConfirmPassword('')
         setSuccess(t('auth.passwordUpdated'))
+      } else if (mode === 'updatePassword') {
+        await updatePassword(newPassword)
+        setNewPassword('')
+        setConfirmPassword('')
+        setSuccess(t('auth.passwordUpdated'))
       } else {
         await signIn({ email: email.trim(), password })
         setSuccess(t('auth.loginSuccess'))
@@ -267,7 +297,9 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
         ? t('auth.resetPasswordTitle')
         : isChangePassword
           ? t('auth.changePasswordTitle')
-          : t('auth.loginTitle')
+          : isUpdatePassword
+            ? t('auth.updatePasswordTitle')
+            : t('auth.loginTitle')
 
   const inputClass =
     'w-full rounded-lg border border-white/15 bg-slate-800 px-3.5 py-2.5 text-sm text-white placeholder-slate-400 outline-none transition focus:border-cyan-400'
@@ -352,6 +384,12 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-3">
+            {isUpdatePassword && (
+              <p className="text-sm leading-6 text-slate-400">
+                {t('auth.updatePasswordDesc')}
+              </p>
+            )}
+
             {/* Account credentials */}
             {isBusinessSignup && (
               <p className="pt-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -370,7 +408,7 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
               />
             )}
 
-            {(!isChangePassword || !user) && (
+            {!isUpdatePassword && (!isChangePassword || !user) && (
               <input
                 type="email"
                 autoComplete="email"
@@ -381,7 +419,7 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
               />
             )}
 
-            {!isResetPassword && (
+            {!isResetPassword && !isUpdatePassword && (
               <div>
                 <input
                   type="password"
@@ -407,7 +445,7 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
               </div>
             )}
 
-            {isChangePassword && (
+            {(isChangePassword || isUpdatePassword) && (
               <div>
                 <input
                   type="password"
@@ -427,12 +465,12 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
               </div>
             )}
 
-            {(isSignup || isChangePassword) && (
+            {(isSignup || isChangePassword || isUpdatePassword) && (
               <input
                 type="password"
                 autoComplete="new-password"
                 placeholder={
-                  isChangePassword
+                  isChangePassword || isUpdatePassword
                     ? t('auth.confirmNewPassword')
                     : t('auth.confirmPassword')
                 }
@@ -583,7 +621,7 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
                   ? t('auth.creating')
                   : isResetPassword
                     ? t('auth.sendingReset')
-                    : isChangePassword
+                    : isChangePassword || isUpdatePassword
                       ? t('auth.updatingPassword')
                       : t('auth.signingIn')
                 : isBusinessSignup
@@ -594,7 +632,9 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
                       ? t('auth.resetPassword')
                       : isChangePassword
                         ? t('auth.changePassword')
-                        : t('auth.login')}
+                        : isUpdatePassword
+                          ? t('auth.setNewPassword')
+                          : t('auth.login')}
             </button>
 
             {showGoogle && (
@@ -622,17 +662,17 @@ export function AuthModal({ open, mode, onClose, onModeChange }: AuthModalProps)
 
         {!success && (
           <div className="mt-4 text-center text-sm text-slate-400">
-            {isResetPassword || isChangePassword ? (
+            {isResetPassword || isChangePassword || isUpdatePassword ? (
               <>
                 <button
                   type="button"
                   onClick={() => {
-                    if (isChangePassword && user) onClose()
+                    if ((isChangePassword && user) || isUpdatePassword) onClose()
                     else onModeChange('login')
                   }}
                   className="font-semibold text-cyan-300 hover:text-cyan-200"
                 >
-                  {isChangePassword && user
+                  {(isChangePassword && user) || isUpdatePassword
                     ? t('auth.close')
                     : t('auth.backToLogin')}
                 </button>

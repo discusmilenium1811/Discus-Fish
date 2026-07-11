@@ -14,7 +14,7 @@ type GateMode = 'checking' | 'ok' | 'enroll' | 'challenge'
  */
 export function MfaGate() {
   const { t } = useTranslation()
-  const { user, profile, isAdmin, loading, getMfaStatus, enrollMfa, verifyMfa, signOut } =
+  const { user, profile, isAdmin, loading, recovery, getMfaStatus, enrollMfa, verifyMfa, signOut } =
     useAuth()
 
   const [mode, setMode] = useState<GateMode>('checking')
@@ -29,8 +29,9 @@ export function MfaGate() {
   // is handled by the `!user` guard in render, not by a synchronous reset here.
   useEffect(() => {
     // Temporarily exempt the admin account entirely (see render guard too) — no
-    // enrollment, no challenge.
-    if (loading || !user || (isAdmin && ADMIN_SECURITY_EXEMPT)) return
+    // enrollment, no challenge. Also stand down during password recovery so the
+    // "set a new password" screen isn't buried under the gate.
+    if (loading || !user || recovery || (isAdmin && ADMIN_SECURITY_EXEMPT)) return
     let active = true
     ;(async () => {
       try {
@@ -54,7 +55,7 @@ export function MfaGate() {
     return () => {
       active = false
     }
-  }, [loading, user, profile?.account_type, isAdmin, getMfaStatus])
+  }, [loading, user, recovery, profile?.account_type, isAdmin, getMfaStatus])
 
   // Create the TOTP factor lazily once we know enrolment is required.
   useEffect(() => {
@@ -74,7 +75,13 @@ export function MfaGate() {
     }
   }, [mode, enrollment, enrollMfa, t])
 
-  if (!user || (isAdmin && ADMIN_SECURITY_EXEMPT) || mode === 'checking' || mode === 'ok')
+  if (
+    !user ||
+    recovery ||
+    (isAdmin && ADMIN_SECURITY_EXEMPT) ||
+    mode === 'checking' ||
+    mode === 'ok'
+  )
     return null
 
   async function handleVerify(e: React.FormEvent) {

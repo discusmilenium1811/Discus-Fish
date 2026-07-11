@@ -37,6 +37,14 @@ interface AuthContextValue {
   isAdmin: boolean
   /** True only for an approved business account — the wholesale pricing gate. */
   isBusinessApproved: boolean
+  /**
+   * True while the user is in a password-recovery session — i.e. they arrived
+   * via the "reset password" email link. The UI uses this to force the
+   * "set a new password" screen (and suppress the MFA gate) until it's done.
+   */
+  recovery: boolean
+  /** Clear the recovery flag once the new password has been set (or dismissed). */
+  clearRecovery: () => void
   signUp: (args: {
     username: string
     email: string
@@ -51,6 +59,11 @@ interface AuthContextValue {
     currentPassword: string
     newPassword: string
   }) => Promise<void>
+  /**
+   * Set a new password using the current (recovery or logged-in) session, with
+   * no need to know the old one. Used to complete the reset-password flow.
+   */
+  updatePassword: (newPassword: string) => Promise<void>
   signOut: () => Promise<void>
   /** Start TOTP enrollment; returns the QR/secret to show the user. */
   enrollMfa: () => Promise<MfaEnrollment>
@@ -102,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [recovery, setRecovery] = useState(false)
 
   const applySession = useCallback(async (session: Session | null) => {
     const nextUser = session?.user ?? null
@@ -137,8 +151,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       applySession(data.session)
     })
 
-    // React to sign-in / sign-out across tabs.
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    // React to sign-in / sign-out across tabs. A PASSWORD_RECOVERY event means
+    // the user followed the reset-password email link: supabase-js has just
+    // established a short-lived recovery session from the URL. Flag it so the UI
+    // can force the "set a new password" screen.
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') setRecovery(true)
       applySession(session)
     })
 
@@ -239,6 +257,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
   }
 
+  async function updatePassword(newPassword: string) {
+    // Works against whatever session is active — the recovery session created by
+    // the reset-password email link, or a normal logged-in one. No old password
+    // required, which is exactly what a "forgot password" flow needs.
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) throw error
+  }
+
   async function enrollMfa(): Promise<MfaEnrollment> {
     // Clear any leftover unverified factor from an abandoned attempt so a retry
     // doesn't fail with "a factor with this name already exists".
@@ -302,11 +328,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAdmin: profile?.role === 'admin',
     isBusinessApproved:
       profile?.account_type === 'business' && profile?.business_status === 'approved',
+    recovery,
+    clearRecovery: () => setRecovery(false),
     signUp,
     signIn,
     signInWithGoogle,
     resetPassword,
     changePassword,
+    updatePassword,
     signOut,
     enrollMfa,
     verifyMfa,

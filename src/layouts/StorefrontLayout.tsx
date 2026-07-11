@@ -21,7 +21,7 @@ export interface StorefrontContext {
 export function StorefrontLayout() {
   const cart = useCart()
   const navigate = useNavigate()
-  const { isBusinessApproved } = useAuth()
+  const { isBusinessApproved, recovery, clearRecovery } = useAuth()
   const [products, setProducts] = useState<Product[]>(sampleProducts)
   const [cartOpen, setCartOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
@@ -41,6 +41,19 @@ export function StorefrontLayout() {
         /* keep sample data */
       })
   }, [isBusinessApproved])
+
+  // Arriving via the reset-password email link puts the app into a recovery
+  // session — force the "set a new password" modal open so the user can finish.
+  useEffect(() => {
+    if (!recovery) return
+    // Defer out of the effect body so the state update doesn't run synchronously
+    // (repo lint rule react-hooks/set-state-in-effect).
+    const timer = window.setTimeout(() => {
+      setAuthMode('updatePassword')
+      setAuthOpen(true)
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [recovery])
 
   const ctx: StorefrontContext = { products, addToCart: cart.add }
 
@@ -84,7 +97,12 @@ export function StorefrontLayout() {
       <AuthModal
         open={authOpen}
         mode={authMode}
-        onClose={() => setAuthOpen(false)}
+        onClose={() => {
+          setAuthOpen(false)
+          // Leaving the recovery modal ends the recovery flow; the MFA gate (if
+          // any) then re-asserts on the now-authenticated session.
+          if (recovery) clearRecovery()
+        }}
         onModeChange={setAuthMode}
       />
     </div>
