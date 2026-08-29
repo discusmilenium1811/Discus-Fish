@@ -6,15 +6,20 @@ import type { Language } from './translations'
 
 /**
  * Seller identification, referenced from every document so it is edited in ONE
- * place. Values marked TODO must be replaced with the owner's real registered
- * details before go-live — grep for `TODO_COMPANY` to find them all.
+ * place. Name, number and address match the company's entry in the EU VIES
+ * register (verified 2026-08-29) — legal pages must agree with the register.
+ *
+ * Note: the VAT number ends in the LETTER "O", not a zero. Cyprus VAT numbers
+ * are always eight digits followed by a letter.
  */
 export const COMPANY = {
   tradingName: 'Discusfood',
-  legalName: 'TODO_COMPANY — registered company name',
-  registrationNumber: 'TODO_COMPANY — company registration number',
-  vatNumber: 'TODO_COMPANY — VAT number',
-  address: 'TODO_COMPANY — registered address, Cyprus',
+  legalName: 'M.M.T. Discus Milenium Ltd',
+  registrationNumber: 'HE487384',
+  vatNumber: 'CY60329173O',
+  address: 'Epidavrou 2, Apt. 108, 2660 Kokkinotrimithia, Cyprus',
+  /** The address exactly as registered, used on the Greek pages. */
+  addressEl: 'Επιδαύρου 2, Διαμ./Γραφείο 108, 2660 Κοκκινοτριμιθιά, Κύπρος',
   email: 'discusmilenium@outlook.com',
 } as const
 
@@ -334,7 +339,7 @@ export const legal: Record<Language, Record<LegalDocId, LegalDoc>> = {
           list: [
             `Αριθμός εγγραφής: ${COMPANY.registrationNumber}`,
             `Αριθμός ΦΠΑ: ${COMPANY.vatNumber}`,
-            `Έδρα: ${COMPANY.address}`,
+            `Έδρα: ${COMPANY.addressEl}`,
             `Email: ${COMPANY.email}`,
           ],
         },
@@ -443,7 +448,7 @@ export const legal: Record<Language, Record<LegalDocId, LegalDoc>> = {
         {
           heading: '1. Ποιος είναι υπεύθυνος για τα δεδομένα σας',
           body: [
-            `Υπεύθυνος επεξεργασίας είναι η ${COMPANY.legalName}, με εμπορική ονομασία ${COMPANY.tradingName}, ${COMPANY.address}. Για κάθε ερώτημα σχετικά με το απόρρητο ή για την άσκηση των δικαιωμάτων που περιγράφονται παρακάτω, γράψτε στο ${COMPANY.email}.`,
+            `Υπεύθυνος επεξεργασίας είναι η ${COMPANY.legalName}, με εμπορική ονομασία ${COMPANY.tradingName}, ${COMPANY.addressEl}. Για κάθε ερώτημα σχετικά με το απόρρητο ή για την άσκηση των δικαιωμάτων που περιγράφονται παρακάτω, γράψτε στο ${COMPANY.email}.`,
           ],
         },
         {
