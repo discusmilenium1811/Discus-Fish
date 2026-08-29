@@ -310,6 +310,7 @@ export const translations = {
     'footer.grade': 'Grade',
     'footer.verify': 'Verify',
     'footer.craftedBy': 'Designed and developed by',
+    'footer.partner': 'Official Partner of Discusfood',
 
     // Cart drawer
     'cart.title': 'Your cart',
@@ -761,6 +762,7 @@ export const translations = {
     'footer.grade': 'Βαθμός',
     'footer.verify': 'Έλεγχος',
     'footer.craftedBy': 'Σχεδιάστηκε και αναπτύχθηκε από',
+    'footer.partner': 'Επίσημος συνεργάτης της Discusfood',
 
     // Cart drawer
     'cart.title': 'Το καλάθι σας',
@@ -1212,6 +1214,7 @@ export const translations = {
     'footer.grade': 'Оценка',
     'footer.verify': 'Провери',
     'footer.craftedBy': 'Дизайн и разработка от',
+    'footer.partner': 'Официален партньор на Discusfood',
 
     // Cart drawer
     'cart.title': 'Вашата количка',

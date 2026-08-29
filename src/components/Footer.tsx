@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from '../i18n/LanguageContext'
+import { PARTNER_LOGO, PARTNER_LOGO_ALT } from '../lib/branding'
 
 export function Footer() {
   const { t } = useTranslation()
@@ -7,7 +8,7 @@ export function Footer() {
   return (
     <footer id="footer" className="border-t border-white/10 bg-slate-950/85 text-slate-300">
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6">
-        <div className="grid items-start gap-8 lg:grid-cols-[0.75fr_1.4fr_0.8fr] lg:gap-10">
+        <div className="grid items-start gap-8 lg:grid-cols-[0.85fr_1.15fr_1.15fr_0.85fr] lg:gap-10">
           <div className="max-w-xs">
             <Link
               to="/"
@@ -47,7 +48,7 @@ export function Footer() {
             </div>
           </section>
 
-          <div className="grid grid-cols-2 gap-8 text-sm lg:pt-2">
+          <div className="flex flex-wrap items-start gap-8 text-sm lg:pt-2">
             <div>
               <h4 className="font-semibold text-white">{t('footer.shop')}</h4>
               <ul className="mt-3 space-y-2 text-xs text-slate-400">
@@ -63,6 +64,16 @@ export function Footer() {
                 <li><Link to="/shipping-prices" className="transition hover:text-teal-400">{t('nav.shippingPrices')}</Link></li>
               </ul>
             </div>
+
+          </div>
+
+          <div className="flex flex-col items-start self-start lg:items-end">
+            <img
+              src={PARTNER_LOGO}
+              alt={PARTNER_LOGO_ALT}
+              className="h-24 w-24 shrink-0 rounded-2xl object-contain ring-1 ring-white/15 sm:h-28 sm:w-28"
+            />
+            <p className="mt-3 max-w-32 text-xs leading-5 text-slate-400 lg:text-right">{t('footer.partner')}</p>
           </div>
         </div>
 
