@@ -64,6 +64,14 @@ export function Footer() {
                 <li><Link to="/shipping-prices" className="transition hover:text-teal-400">{t('nav.shippingPrices')}</Link></li>
               </ul>
             </div>
+            <div>
+              <h4 className="font-semibold text-white">{t('footer.legal')}</h4>
+              <ul className="mt-3 space-y-2 text-xs text-slate-400">
+                <li><Link to="/terms" className="transition hover:text-teal-400">{t('footer.terms')}</Link></li>
+                <li><Link to="/privacy" className="transition hover:text-teal-400">{t('footer.privacy')}</Link></li>
+                <li><Link to="/refund-policy" className="transition hover:text-teal-400">{t('footer.refunds')}</Link></li>
+              </ul>
+            </div>
 
           </div>
 

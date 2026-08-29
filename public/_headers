@@ -1,0 +1,24 @@
+/*
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  X-Robots-Tag: index, follow
+
+# Content Security Policy — shipped in REPORT-ONLY first on purpose. A wrong CSP
+# breaks the site silently, so browse the live site with the console open and
+# check for "Content Security Policy" reports before promoting this line to the
+# enforcing `Content-Security-Policy` header.
+#
+# What each source is for:
+#   fonts.googleapis.com / fonts.gstatic.com  — the Inter webfont in index.html
+#   *.supabase.co                             — REST + realtime websocket + storage images
+#   api.pwnedpasswords.com                    — client-side leaked-password check at signup
+#   checkout.stripe.com                       — hosted Checkout (a navigation, not an iframe)
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://vumjslsogdnexehutibj.supabase.co; connect-src 'self' https://vumjslsogdnexehutibj.supabase.co wss://vumjslsogdnexehutibj.supabase.co https://api.pwnedpasswords.com; form-action 'self' https://checkout.stripe.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'
+
+# Vite emits content-hashed filenames under /assets, so they can be cached hard.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

@@ -461,6 +461,20 @@ export const translations = {
     'auth.postalCode': 'Postal / ZIP code',
     'auth.country': 'Country',
     'auth.createBusinessAccount': 'Create business account',
+    // Legal pages (long-form copy lives in ./legal.ts)
+    'legal.eyebrow': 'Legal',
+    'legal.updated': 'Last updated',
+    'legal.related': 'See also',
+    'footer.legal': 'Legal',
+    'footer.terms': 'Terms & Conditions',
+    'footer.privacy': 'Privacy Policy',
+    'footer.refunds': 'Refund Policy',
+    // 404
+    'notFound.title': 'This page swam away',
+    'notFound.text':
+      'The page you are looking for does not exist, or has moved. Let’s get you back to solid ground.',
+    'notFound.home': 'Back to home',
+    'notFound.catalog': 'Browse the catalogue',
   },
 
   el: {
@@ -913,6 +927,20 @@ export const translations = {
     'auth.postalCode': 'Ταχυδρομικός κώδικας',
     'auth.country': 'Χώρα',
     'auth.createBusinessAccount': 'Δημιουργία επαγγελματικού λογαριασμού',
+    // Legal pages (long-form copy lives in ./legal.ts)
+    'legal.eyebrow': 'Νομικά',
+    'legal.updated': 'Τελευταία ενημέρωση',
+    'legal.related': 'Δείτε επίσης',
+    'footer.legal': 'Νομικά',
+    'footer.terms': 'Όροι χρήσης',
+    'footer.privacy': 'Απόρρητο',
+    'footer.refunds': 'Πολιτική επιστροφών',
+    // 404
+    'notFound.title': 'Η σελίδα κολύμπησε μακριά',
+    'notFound.text':
+      'Η σελίδα που ψάχνετε δεν υπάρχει ή έχει μετακινηθεί. Ας σας γυρίσουμε σε ασφαλή νερά.',
+    'notFound.home': 'Επιστροφή στην αρχική',
+    'notFound.catalog': 'Δείτε τον κατάλογο',
   },
 
   bg: {
@@ -1365,5 +1393,19 @@ export const translations = {
     'auth.postalCode': 'Пощенски код',
     'auth.country': 'Държава',
     'auth.createBusinessAccount': 'Създай бизнес акаунт',
+    // Legal pages (long-form copy lives in ./legal.ts)
+    'legal.eyebrow': 'Правна информация',
+    'legal.updated': 'Последна актуализация',
+    'legal.related': 'Вижте също',
+    'footer.legal': 'Правна информация',
+    'footer.terms': 'Общи условия',
+    'footer.privacy': 'Поверителност',
+    'footer.refunds': 'Политика за връщане',
+    // 404
+    'notFound.title': 'Тази страница отплува',
+    'notFound.text':
+      'Страницата, която търсите, не съществува или е преместена. Да ви върнем на сигурно място.',
+    'notFound.home': 'Към началната страница',
+    'notFound.catalog': 'Разгледай каталога',
   },
 } as const

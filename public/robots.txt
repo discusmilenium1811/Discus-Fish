@@ -1,0 +1,10 @@
+# Discusfood — crawler rules.
+# The admin panel is behind authentication anyway, but there is no reason for it
+# to appear in search results.
+
+User-agent: *
+Disallow: /admin
+Disallow: /checkout/
+Allow: /
+
+Sitemap: https://discusmileniumcy.com/sitemap.xml

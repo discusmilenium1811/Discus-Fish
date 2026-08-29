@@ -11,6 +11,8 @@ import { ContactPage } from './pages/Contact'
 import { CheckoutSuccess } from './pages/CheckoutSuccess'
 import { ShippingPrices } from './pages/ShippingPrices'
 import { TrackingDelivery } from './pages/TrackingDelivery'
+import { LegalPage } from './pages/Legal'
+import { NotFound } from './pages/NotFound'
 import { LanguageProvider } from './i18n/LanguageContext'
 import { AuthProvider } from './auth/AuthContext'
 import { MfaGate } from './components/MfaGate'
@@ -53,6 +55,10 @@ createRoot(document.getElementById('root')!).render(
                 path="/Cataloge/NewProductsComingsoon"
                 element={<CatalogPage tab="coming" />}
               />
+              <Route path="/terms" element={<LegalPage doc="terms" />} />
+              <Route path="/privacy" element={<LegalPage doc="privacy" />} />
+              <Route path="/refund-policy" element={<LegalPage doc="refunds" />} />
+              <Route path="*" element={<NotFound />} />
             </Route>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Dashboard />} />

@@ -349,10 +349,15 @@ Deno.serve(async (req) => {
     // Send the buyer back to the storefront that started checkout: local dev
     // returns to localhost, production returns to the live site. Unknown origins
     // fall back to CLIENT_URL so this can't be abused as an open redirect.
-    const fallbackUrl = Deno.env.get('CLIENT_URL') ?? 'https://discusfishfood.netlify.app'
+    //
+    // CLIENT_URL is the canonical domain (no `www`). The `www` host is accepted
+    // too, so a buyer who somehow started checkout there is not bounced across
+    // domains after paying. Everything else falls back to the canonical origin.
+    const fallbackUrl = Deno.env.get('CLIENT_URL') ?? 'https://discusmileniumcy.com'
     const origin = req.headers.get('origin') ?? ''
     const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
-    const clientUrl = isLocalhost || origin === fallbackUrl ? origin : fallbackUrl
+    const isCanonical = origin === fallbackUrl || origin === fallbackUrl.replace('://', '://www.')
+    const clientUrl = isLocalhost || isCanonical ? origin : fallbackUrl
     const metadata: Record<string, string> = {
       cart: JSON.stringify(canonicalCart),
       amounts: JSON.stringify({
