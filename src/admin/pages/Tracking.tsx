@@ -125,6 +125,13 @@ export function Tracking() {
     ]),
   )
 
+  // An order can only hold one shipment (enforced by a unique constraint on
+  // shipments.order_id), and the customer page only ever shows one per order —
+  // so orders that already have a delivery must not be offered again.
+  const unshippedOrders = orders.filter(
+    (order) => !rows.some((shipment) => shipment.order_id === order.id),
+  )
+
   return (
     <div>
       <PageHeader
@@ -134,7 +141,7 @@ export function Tracking() {
         action={
           <div className="flex flex-wrap items-center gap-2">
             <PageSearch q={q} setQ={setQ} placeholder="Search order, customer or tracking…" />
-            <button className={btnPrimary} onClick={() => setEditing('new')} disabled={orders.length === 0}>+ Add delivery</button>
+            <button className={btnPrimary} onClick={() => setEditing('new')} disabled={unshippedOrders.length === 0} title={unshippedOrders.length === 0 ? 'Every order already has a delivery' : undefined}>+ Add delivery</button>
           </div>
         }
       />
@@ -167,7 +174,7 @@ export function Tracking() {
         </table>
       </Card>
 
-      {editing && <ShipmentForm row={editing === 'new' ? null : editing} orders={orders} events={editing === 'new' ? [] : events.filter((event) => event.shipment_id === editing.id)} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); void refresh() }} />}
+      {editing && <ShipmentForm row={editing === 'new' ? null : editing} orders={editing === 'new' ? unshippedOrders : orders} events={editing === 'new' ? [] : events.filter((event) => event.shipment_id === editing.id)} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); void refresh() }} />}
     </div>
   )
 }
@@ -212,7 +219,15 @@ function ShipmentForm({ row, orders, events, onClose, onSaved }: { row: Shipment
       await insertRow('tracking_events', { shipment_id: shipmentId, status, description: detail.trim() || statusName(status), location: location.trim() || null, event_at: now })
       onSaved()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Save failed')
+      const message = err instanceof Error ? err.message : 'Save failed'
+      // shipments.order_id is unique — only reachable if two admins add a
+      // delivery for the same order at once, since the picker already hides
+      // orders that have one.
+      setError(
+        /shipments_order_id_key|duplicate key/i.test(message)
+          ? 'That order already has a delivery. Refresh and update the existing one instead.'
+          : message,
+      )
     } finally {
       setSaving(false)
     }

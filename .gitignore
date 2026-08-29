@@ -36,6 +36,10 @@ next-env.d.ts
 # Local Netlify folder
 .netlify
 
+# Supabase CLI local cache (project ref, versions, pooler URL) — machine-local,
+# rewritten by every CLI command.
+supabase/.temp/
+
 # Private business documents / source price files — kept locally only,
 # never deployed (not under public/) and never pushed to GitHub.
 storage/

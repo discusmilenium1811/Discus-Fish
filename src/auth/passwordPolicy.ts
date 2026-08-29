@@ -5,9 +5,15 @@ import type { AccountType } from '../lib/supabase'
  * logic all agree.
  *
  * Consumer (personal) accounts favour low friction: a modern 8-character
- * minimum plus Supabase's leaked-password check (HaveIBeenPwned). Business and
+ * minimum plus a leaked-password check against HaveIBeenPwned. Business and
  * admin accounts trade convenience for security — a 12-character minimum and
  * mandatory TOTP two-factor authentication (enforced by the MFA gate).
+ *
+ * NB: the HIBP check is the CLIENT-side one in `./pwnedCheck.ts`. Supabase's
+ * built-in `password_hibp_enabled` is a paid-plan feature and is off on this
+ * project's Free plan (the Management API returns 402), so it is not a second
+ * line of defence — a caller hitting the GoTrue API directly bypasses the check.
+ * If the project ever moves to Pro, enable it there and this becomes enforced.
  */
 export const PERSONAL_MIN_PASSWORD = 8
 export const BUSINESS_MIN_PASSWORD = 12
