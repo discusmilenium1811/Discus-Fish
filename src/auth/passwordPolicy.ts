@@ -19,18 +19,21 @@ export const PERSONAL_MIN_PASSWORD = 8
 export const BUSINESS_MIN_PASSWORD = 12
 
 /**
- * Escape hatch for the admin account: when true, the admin is exempt from forced
- * TOTP 2FA and the stronger 12-character minimum. It was set during development
- * so the admin panel could be used without a second factor.
+ * Exempts the admin account from forced TOTP 2FA and the stronger 12-character
+ * minimum, leaving it on a password alone.
  *
- * Turned OFF on 2026-08-29, at go-live with real payments — the admin account
- * now sees real orders and customer data, so it must carry a second factor. On
- * the next sign-in the admin is taken through TOTP enrolment by `MfaGate`.
+ * This is a deliberate choice by the shop owner (2026-08-29), not an oversight
+ * or a leftover development flag — it was briefly enabled at go-live and turned
+ * back off at the owner's request. Do not "fix" it without asking them.
  *
- * Only flip this back to `true` to recover from a lock-out, and turn it off
- * again straight after. Business accounts are unaffected either way.
+ * What it costs: the admin account can read every order and every customer's
+ * name, address and phone number, and it is the account an attacker would want.
+ * With this flag on, one password is the only thing protecting it.
+ *
+ * Set to `false` to require TOTP; `MfaGate` then walks the admin through
+ * enrolment on the next sign-in. Business accounts are unaffected either way.
  */
-export const ADMIN_SECURITY_EXEMPT = false
+export const ADMIN_SECURITY_EXEMPT = true
 
 /** Minimum password length for the given account type. */
 export function minPasswordLength(accountType: AccountType): number {
