@@ -12,12 +12,17 @@ interface AccountDrawerProps {
 
 export function AccountDrawer({ open, onClose, onAuthClick, onAdminClick }: AccountDrawerProps) {
   const { t } = useTranslation()
-  const { user, profile, isAdmin } = useAuth()
+  const { user, profile, isAdmin, signOut } = useAuth()
   const name = profile?.username ?? user?.email ?? t('account.guest')
 
   const authAction = (mode: AuthMode) => {
     onClose()
     onAuthClick(mode)
+  }
+
+  const handleSignOut = () => {
+    onClose()
+    void signOut()
   }
 
   return (
@@ -83,6 +88,12 @@ export function AccountDrawer({ open, onClose, onAuthClick, onAdminClick }: Acco
               <span className="flex-1 text-sm font-bold text-white">{t('nav.shippingPrices')}</span>
               <span className="text-slate-500 transition group-hover:translate-x-0.5 group-hover:text-cyan-300">›</span>
             </Link>
+
+            {user && (
+              <div className="mt-4 border-t border-white/10 pt-4">
+                <DrawerButton icon="⏻" label={t('auth.logout')} onClick={handleSignOut} danger />
+              </div>
+            )}
           </nav>
         </div>
 
