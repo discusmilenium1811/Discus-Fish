@@ -22,7 +22,7 @@ There were no other contributors, no agency, and no starter template.
 | | |
 |---|---|
 | **Role** | Sole developer — architecture, implementation, security, deployment, handover |
-| **Commits** | 114 of 114, over 11 weeks |
+| **Commits** | Every commit in this repository, over 11 weeks |
 | **Client** | Discus Milenium — owns the product, the data and this repository |
 
 The GitHub account that owns this repository belongs to the client. Ownership of the
@@ -30,7 +30,7 @@ repo reflects who owns the business, not who wrote the code. The commit history 
 record of authorship:
 
 - **[Contributors graph](../../graphs/contributors)** — one name on it
-- **[All commits by @Kuman-Bazitov-BG](../../commits/main?author=Kuman-Bazitov-BG)** — the full 114
+- **[All commits by @Kuman-Bazitov-BG](../../commits/main?author=Kuman-Bazitov-BG)** — every one of them
 
 ---
 

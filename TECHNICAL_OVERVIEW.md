@@ -26,7 +26,7 @@ security model and deployment pipeline.
 | **Database** | 19 tables · 9 enums · 41 RLS policies · 8 SQL functions · 44 indexes · 22 migrations |
 | **Scale in production** | 94 products · 6 categories · 9 shipping zones · 416 weight-rate tiers |
 | **Languages** | English · Greek · Bulgarian (full UI + legal documents) |
-| **History** | 113 commits over 11 weeks, single developer |
+| **History** | 11 weeks, single developer — every commit by the same author |
 
 ---
 
