@@ -1,0 +1,120 @@
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Wholesale prices +20% (2026-09-05)
+--
+-- Owner instruction: raise the business-account price of every product by 20%,
+-- while it must still stay BELOW the retail price a normal customer pays.
+--
+-- The WHERE clause selects the 71 products that carry a real wholesale price.
+-- The other 23 are skipped BY CONSTRUCTION: their business price equals retail
+-- because no wholesale price was ever set for them, so a +20% raise would push a
+-- company ABOVE the walk-in price and break the rule above. They need a real
+-- wholesale price first — listed at the bottom of this file.
+--
+-- Verified before applying: after the raise the most expensive case reaches 98.0%
+-- of retail, so every business price stays below retail. The per-product
+-- before/after is recorded at the end so the change is auditable and reversible.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+update public.products
+   set business_price_cents = round(business_price_cents * 1.2),
+       updated_at           = now()
+ where business_price_cents is not null
+   and business_price_cents < price_cents;
+
+-- ── What this changed (71 products) ──────────────────────────────────────
+--   african-cichlids-color-soft-pearls           4.73 ->   5.68   (retail   7.00,  81.1%)
+--   african-cichlids-spirulina-soft-pearls       4.73 ->   5.68   (retail   7.00,  81.1%)
+--   amazon-tonic-5000ml                         72.90 ->  87.48   (retail  98.50,  88.8%)
+--   amazon-tonic                                10.11 ->  12.13   (retail  15.50,  78.3%)
+--   american-cichlids-color-soft-pearls          4.73 ->   5.68   (retail   7.00,  81.1%)
+--   american-cichlids-spirulina-soft-pearls      4.73 ->   5.68   (retail   7.00,  81.1%)
+--   angelfish-special-soft-granulate-230g       11.49 ->  13.79   (retail  17.50,  78.8%)
+--   angelfish-special-soft-granulate-550g       21.75 ->  26.10   (retail  30.50,  85.6%)
+--   angelfish-special-soft-granulate             4.73 ->   5.68   (retail   8.00,  71.0%)
+--   anti-tox                                    10.11 ->  12.13   (retail  15.50,  78.3%)
+--   anti-stress                                 14.79 ->  17.75   (retail  20.50,  86.6%)
+--   artemia-50-cysts                            26.07 ->  31.28   (retail  34.76,  90.0%)
+--   artemia-50-flat-granulate                    9.55 ->  11.46   (retail  12.75,  89.9%)
+--   artemia-50-micro-granulate-soft              6.47 ->   7.76   (retail   8.65,  89.7%)
+--   artemia-50-soft-granulate                   14.61 ->  17.53   (retail  19.50,  89.9%)
+--   artemia-50-xl-soft-granulate                14.61 ->  17.53   (retail  19.50,  89.9%)
+--   bacto-bakterien                             14.13 ->  16.96   (retail  19.50,  87.0%)
+--   beef-heart-paste-color                      16.47 ->  19.76   (retail  23.50,  84.1%)
+--   beef-heart-soft-granulate-230g              10.89 ->  13.07   (retail  18.00,  72.6%)
+--   beef-heart-soft-granulate-2800g            108.33 -> 130.00   (retail 160.00,  81.3%)
+--   beef-heart-soft-granules                    21.75 ->  26.10   (retail  29.00,  90.0%)
+--   beef-heart-soft-granulate                    4.65 ->   5.58   (retail   8.00,  69.8%)
+--   best-heart-flakes-blue-dream                 6.55 ->   7.86   (retail   9.50,  82.7%)
+--   best-heart-flakes-golden-dream               6.67 ->   8.00   (retail   9.70,  82.5%)
+--   best-heart-flakes-pro-breed                  6.55 ->   7.86   (retail   9.50,  82.7%)
+--   best-heart-flakes-red-dream                  7.94 ->   9.53   (retail  10.70,  89.1%)
+--   betta-special-all-colors-soft                3.59 ->   4.31   (retail   5.50,  78.4%)
+--   bio-sponge-filter-150                       12.40 ->  14.88   (retail  17.50,  85.0%)
+--   bio-sponge-filter-350                       18.37 ->  22.04   (retail  25.50,  86.4%)
+--   breeder-starter-food-1                      16.39 ->  19.67   (retail  22.50,  87.4%)
+--   breeder-starter-food-2                      16.39 ->  19.67   (retail  22.50,  87.4%)
+--   brine-shrimp-artemia-paste                  16.47 ->  19.76   (retail  23.50,  84.1%)
+--   buffet-di-insect                            10.01 ->  12.01   (retail  13.35,  90.0%)
+--   cichlids-xl-granulate-1                     25.23 ->  30.28   (retail  35.00,  86.5%)
+--   cichlids-xl-granulate-2                     25.23 ->  30.28   (retail  35.00,  86.5%)
+--   decapsulated-artemia-eggs                   13.49 ->  16.19   (retail  17.98,  90.0%)
+--   discus-minerals-1000g                       33.30 ->  39.96   (retail  45.50,  87.8%)
+--   discus-minerals                             11.74 ->  14.09   (retail  16.50,  85.4%)
+--   discus-protector                            18.84 ->  22.61   (retail  26.50,  85.3%)
+--   discus-protector-480g                       23.65 ->  28.38   (retail  32.50,  87.3%)
+--   for-discus-daily-granulate-230g              8.33 ->  10.00   (retail  17.00,  58.8%)
+--   for-discus-daily-granulate-2800g            83.61 -> 100.33   (retail 115.00,  87.2%)
+--   for-discus-daily-granulate                   3.65 ->   4.38   (retail   7.00,  62.6%)
+--   freshwater-crab-micro-granulate-soft         6.30 ->   7.56   (retail   8.40,  90.0%)
+--   freshwater-crab-soft-granulate              13.19 ->  15.83   (retail  17.60,  89.9%)
+--   freshwater-crab-xl-soft-granulate           13.19 ->  15.83   (retail  17.58,  90.0%)
+--   frutti-di-mare                              10.01 ->  12.01   (retail  13.35,  90.0%)
+--   grand-champion-granulate-230g               10.55 ->  12.66   (retail  17.50,  72.3%)
+--   grand-champion-granulate                     4.41 ->   5.29   (retail   7.50,  70.5%)
+--   guppy-super-color-soft                       5.23 ->   6.28   (retail   7.50,  83.7%)
+--   guppy-super-special-soft                     5.23 ->   6.28   (retail   7.50,  83.7%)
+--   herbs-food                                   5.74 ->   6.89   (retail   7.80,  88.3%)
+--   minerals-no-salt                             8.49 ->  10.19   (retail  12.50,  81.5%)
+--   natural-humin-5000ml                        72.90 ->  87.48   (retail  98.50,  88.8%)
+--   natural-humin                               10.11 ->  12.13   (retail  15.50,  78.3%)
+--   pleco-catfish-algae-wafers                   8.73 ->  10.48   (retail  12.50,  83.8%)
+--   plecs-catfish-algae-wafers                  24.15 ->  28.98   (retail  33.50,  86.5%)
+--   pleco-catfish-algae-wafers-50g               4.08 ->   4.90   (retail   5.00,  98.0%)
+--   pleco-catfish-carni-wafers                   8.31 ->   9.97   (retail  12.50,  79.8%)
+--   plecs-catfish-carni-wafers                  22.60 ->  27.12   (retail  31.50,  86.1%)
+--   pleco-catfish-carni-wafers-50g               3.84 ->   4.61   (retail   6.50,  70.9%)
+--   royal-catappa-5000ml                        72.90 ->  87.48   (retail  98.50,  88.8%)
+--   royal-catappa                               10.11 ->  12.13   (retail  15.50,  78.3%)
+--   shrimp-paste                                16.47 ->  19.76   (retail  23.50,  84.1%)
+--   super-growth                                 6.55 ->   7.86   (retail   9.50,  82.7%)
+--   turkey-heart-soft-granulate-230g            10.88 ->  13.06   (retail  18.00,  72.6%)
+--   turkey-heart-soft-granulate                  4.65 ->   5.58   (retail   8.00,  69.8%)
+--   vitamin-shot                                 9.13 ->  10.96   (retail  13.50,  81.2%)
+--   wels-special-soft                           10.88 ->  13.06   (retail  16.50,  79.2%)
+--   catfish-special-soft-granulate              21.75 ->  26.10   (retail  30.50,  85.6%)
+--   wels-special-soft-80g                        4.65 ->   5.58   (retail   9.50,  58.7%)
+
+-- ── Skipped: business price = retail, no wholesale price set (23) ─────────
+--   additive-d7-pro-breeding                   retail 10.00
+--   additive-1-probiotics                      retail 10.00
+--   artemia-50-soft-tabs                       retail 10.00
+--   best-heart-flakes                          retail 10.00
+--   black-water-nitrate-remover                retail 12.90
+--   red-color-booster                          retail 10.00
+--   blue-color-booster                         retail 10.00
+--   breeding-filter                            retail 10.00
+--   crystal-clean-nitrate-remover              retail 12.90
+--   fd-artemia                                 retail 12.90
+--   fd-artemia-spirulina                       retail 12.90
+--   fd-bloodworms-s                            retail 12.90
+--   fd-bloodworms-xl                           retail 12.90
+--   fd-krill                                   retail 12.90
+--   fd-tubifex                                 retail 12.90
+--   firstbite-artemia-nauplii                  retail 12.90
+--   firstbite-daphnia                          retail 12.90
+--   golden-color-booster                       retail 10.00
+--   lab-herbs                                  retail 12.90
+--   naturepur-artemia-adult                    retail 12.90
+--   naturepur-artemia-adult-spirulina          retail 12.90
+--   organic-clear                              retail 10.00
+--   plant-aquarium-nitrate-remover             retail 12.90
