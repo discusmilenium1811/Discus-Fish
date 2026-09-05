@@ -20,6 +20,90 @@ const WORLDWIDE = 'WORLDWIDE'
 // Must match PACKAGING_TARE_GRAMS in src/lib/shipping.ts so the charge equals the cart.
 const PACKAGING_TARE_GRAMS = 250
 
+// ─────────────────────────────────────────────────────────────────────────
+//  Invoicing
+//
+//  Stripe renders the invoice PDF and its emails in the *customer's*
+//  preferred_locales, which it otherwise infers from the buyer's browser —
+//  that is how invoices ended up in Russian. Pinning the locale on the
+//  customer (and on Checkout itself) keeps every invoice in English.
+//
+//  Stripe also prints a tax line only when the line items carry a tax rate.
+//  Catalog prices already include VAT (see src/lib/pricing.ts), so the rate is
+//  registered as *inclusive*: the totals do not change, but the invoice now
+//  shows "VAT (19% inclusive)" with the contained amount instead of leaving
+//  the customer to work it out.
+// ─────────────────────────────────────────────────────────────────────────
+
+const INVOICE_LOCALE = 'en'
+const VAT_PERCENTAGE = 19
+
+let cachedVatTaxRateId: string | null = null
+
+/** The Cyprus 19% VAT-inclusive rate, looked up once and then reused. */
+async function getVatTaxRateId(): Promise<string | null> {
+  if (cachedVatTaxRateId) return cachedVatTaxRateId
+  const configured = Deno.env.get('STRIPE_VAT_TAX_RATE_ID')
+  if (configured) {
+    cachedVatTaxRateId = configured
+    return cachedVatTaxRateId
+  }
+  try {
+    // Tax rates are immutable in Stripe, so a rate change means a new record:
+    // match on the exact percentage rather than on a fixed id.
+    const existing = await stripe.taxRates.list({ active: true, inclusive: true, limit: 100 })
+    const match = existing.data.find(
+      (r) => Number(r.percentage) === VAT_PERCENTAGE && r.country === 'CY',
+    )
+    cachedVatTaxRateId =
+      match?.id ??
+      (
+        await stripe.taxRates.create({
+          display_name: 'VAT',
+          description: 'Cyprus VAT',
+          jurisdiction: 'Cyprus',
+          country: 'CY',
+          percentage: VAT_PERCENTAGE,
+          inclusive: true,
+          tax_type: 'vat',
+        })
+      ).id
+    return cachedVatTaxRateId
+  } catch (err) {
+    // Never block a sale on this: worst case the invoice loses its VAT line.
+    console.error('[checkout] VAT tax rate unavailable:', err)
+    return null
+  }
+}
+
+/**
+ * Reuse (or create) the buyer's Stripe customer with English pinned, so the
+ * generated invoice is never rendered in whatever language their browser
+ * happens to be set to. Returns null when Stripe is unreachable, in which case
+ * checkout falls back to plain `customer_email`.
+ */
+async function resolveCustomerId(email: string): Promise<string | null> {
+  try {
+    const { data } = await stripe.customers.list({ email, limit: 1 })
+    const existing = data[0]
+    if (!existing) {
+      const created = await stripe.customers.create({
+        email,
+        preferred_locales: [INVOICE_LOCALE],
+      })
+      return created.id
+    }
+    const locales = existing.preferred_locales ?? []
+    if (locales.length !== 1 || locales[0] !== INVOICE_LOCALE) {
+      await stripe.customers.update(existing.id, { preferred_locales: [INVOICE_LOCALE] })
+    }
+    return existing.id
+  } catch (err) {
+    console.error('[checkout] customer lookup failed:', err)
+    return null
+  }
+}
+
 interface ZoneRow {
   id: string
   name: string
@@ -256,6 +340,11 @@ Deno.serve(async (req) => {
       byId.set(product.id, product)
       byId.set(`home-${product.slug}`, product)
     }
+    // Every line (goods and delivery alike) carries the inclusive VAT rate so
+    // Stripe breaks the tax out on the invoice instead of hiding it in the total.
+    const vatTaxRateId = await getVatTaxRateId()
+    const taxRates = vatTaxRateId ? { tax_rates: [vatTaxRateId] } : {}
+
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
     const canonicalCart: Array<{ id: string; q: number }> = []
     let subtotalCents = 0
@@ -294,6 +383,7 @@ Deno.serve(async (req) => {
           product_data: { name: p.name },
         },
         quantity: qty,
+        ...taxRates,
       })
     }
 
@@ -318,6 +408,7 @@ Deno.serve(async (req) => {
           product_data: { name: `Delivery — ${shippingResult.name}` },
         },
         quantity: 1,
+        ...taxRates,
       })
     }
 
@@ -377,6 +468,9 @@ Deno.serve(async (req) => {
 
     const customerEmail: string | undefined =
       email || contact?.email || billing?.email || undefined
+    // Attaching a customer with preferred_locales = ["en"] is what forces the
+    // invoice PDF and Stripe's emails into English.
+    const customerId = customerEmail ? await resolveCustomerId(customerEmail) : null
     const invoiceMessage = [
       'Hello,',
       'Thank you for your purchase from Discusfood.',
@@ -397,7 +491,19 @@ Deno.serve(async (req) => {
       },
       success_url: `${clientUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${clientUrl}/cart`,
-      ...(customerEmail ? { customer_email: customerEmail } : {}),
+      // Pin Checkout to English too, so Stripe cannot fall back to the browser
+      // locale for the customer record it touches during the session.
+      locale: INVOICE_LOCALE,
+      ...(customerId
+        ? {
+            customer: customerId,
+            // Without this the invoice would bill to the customer's stored
+            // address rather than the one collected at Checkout.
+            customer_update: { address: 'auto', name: 'auto' },
+          }
+        : customerEmail
+          ? { customer_email: customerEmail }
+          : {}),
       billing_address_collection: 'required',
       // Generate a paid Stripe Invoice for every successful one-time Checkout
       // payment. When "Successful payments" is enabled in Stripe's customer
