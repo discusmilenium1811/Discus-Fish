@@ -16,6 +16,17 @@ export const tsLocal = (v?: string | null): string => {
 }
 export const fmtDate = (v?: string | null): string =>
   v ? new Date(v).toLocaleDateString() : '—'
+/** Date + time, for records where the hour matters (invoices, audit trails). */
+export const fmtDateTime = (v?: string | null): string =>
+  v
+    ? new Date(v).toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : '—'
 
 // ── Generic CRUD over a table (admin RLS applies) ───────────────────
 export async function fetchAll<T = unknown>(
