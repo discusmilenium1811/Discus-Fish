@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { fetchAll, fmtDateTime } from '../lib/adminApi'
+import { supabase } from '../../lib/supabase'
 import { formatPrice } from '../../lib/format'
 import {
   PageHeader,
@@ -37,22 +38,57 @@ interface Invoice {
 const tone = (s: string | null) =>
   s === 'paid' ? 'green' : s === 'void' || s === 'uncollectible' ? 'rose' : 'amber'
 
+const SYNC_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sync-invoices`
+
 export function Invoices() {
   const [rows, setRows] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [syncing, setSyncing] = useState(false)
   const [q, setQ] = useQuery()
 
-  useEffect(() => {
-    let active = true
-    fetchAll<Invoice>('invoices', '*', { col: 'issued_at', asc: false })
-      .then((data) => active && (setRows(data), setError('')))
-      .catch((e) => active && setError(e instanceof Error ? e.message : 'Failed to load'))
-      .finally(() => active && setLoading(false))
-    return () => {
-      active = false
+  const refresh = useCallback(async () => {
+    try {
+      setRows(await fetchAll<Invoice>('invoices', '*', { col: 'issued_at', asc: false }))
+      setError('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load')
+    } finally {
+      setLoading(false)
     }
   }, [])
+
+  // Deferred a tick so the first load does not set state during the effect
+  // itself — same pattern as Orders.tsx.
+  useEffect(() => {
+    const timer = window.setTimeout(() => void refresh(), 0)
+    return () => window.clearTimeout(timer)
+  }, [refresh])
+
+  /** Import anything Stripe has that is not here yet — history, or a missed webhook. */
+  async function syncFromStripe() {
+    setSyncing(true)
+    setNotice('')
+    setError('')
+    try {
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.access_token
+      if (!token) throw new Error('Session expired — sign in again.')
+      const res = await fetch(SYNC_URL, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      })
+      const body = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(body?.error ?? `Sync failed (${res.status})`)
+      setNotice(`Checked ${body.imported} invoice${body.imported === 1 ? '' : 's'} in Stripe.`)
+      await refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Sync failed')
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   const shown = useMemo(
     () =>
@@ -86,6 +122,9 @@ export function Invoices() {
         description="Every invoice Stripe issued for a paid order. The PDF is Stripe's own file — the exact document the customer received — so it can be filed as-is."
         action={
           <div className="flex items-center gap-2">
+            <button className={btnGhost} onClick={syncFromStripe} disabled={syncing}>
+              {syncing ? 'Syncing…' : 'Sync from Stripe'}
+            </button>
             <button
               className={btnGhost}
               onClick={() => downloadCsv(shown)}
@@ -98,6 +137,11 @@ export function Invoices() {
         }
       />
       <ErrorNote msg={error} />
+      {notice && (
+        <p className="mb-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
+          {notice}
+        </p>
+      )}
       <Card>
         <table className={tableCls}>
           <thead className={theadCls}>
