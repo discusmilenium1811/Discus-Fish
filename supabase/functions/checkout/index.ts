@@ -37,8 +37,13 @@ const PACKAGING_TARE_GRAMS = 250
 
 const INVOICE_LOCALE = 'en'
 const VAT_PERCENTAGE = 19
+// The seller's own VAT number, printed under the company address on every
+// invoice. Keep in sync with COMPANY.vatNumber in src/i18n/legal.ts — an edge
+// function cannot import from the client bundle. It ends in the LETTER "O".
+const COMPANY_VAT_NUMBER = 'CY60329173O'
 
 let cachedVatTaxRateId: string | null = null
+let cachedAccountTaxId: string | null = null
 
 /** The Cyprus 19% VAT-inclusive rate, looked up once and then reused. */
 async function getVatTaxRateId(): Promise<string | null> {
@@ -72,6 +77,41 @@ async function getVatTaxRateId(): Promise<string | null> {
   } catch (err) {
     // Never block a sale on this: worst case the invoice loses its VAT line.
     console.error('[checkout] VAT tax rate unavailable:', err)
+    return null
+  }
+}
+
+/**
+ * The seller's VAT registration, held on the Stripe account itself and quoted on
+ * each invoice via `account_tax_ids`. Without it the invoice showed the company
+ * name and address but no VAT number, which an EU VAT invoice is expected to
+ * carry. Registered once and then reused.
+ */
+async function getAccountTaxId(): Promise<string | null> {
+  if (cachedAccountTaxId) return cachedAccountTaxId
+  const configured = Deno.env.get('STRIPE_ACCOUNT_TAX_ID')
+  if (configured) {
+    cachedAccountTaxId = configured
+    return cachedAccountTaxId
+  }
+  try {
+    // `self` means the account making the request, as opposed to a connected
+    // account or a customer.
+    const existing = await stripe.taxIds.list({ owner: { type: 'self' }, limit: 100 })
+    const match = existing.data.find((t) => t.value === COMPANY_VAT_NUMBER)
+    cachedAccountTaxId =
+      match?.id ??
+      (
+        await stripe.taxIds.create({
+          type: 'eu_vat',
+          value: COMPANY_VAT_NUMBER,
+          owner: { type: 'self' },
+        })
+      ).id
+    return cachedAccountTaxId
+  } catch (err) {
+    // Never block a sale on this: worst case the invoice loses the VAT number.
+    console.error('[checkout] account tax id unavailable:', err)
     return null
   }
 }
@@ -342,7 +382,12 @@ Deno.serve(async (req) => {
     }
     // Every line (goods and delivery alike) carries the inclusive VAT rate so
     // Stripe breaks the tax out on the invoice instead of hiding it in the total.
-    const vatTaxRateId = await getVatTaxRateId()
+    // The account tax id puts our own VAT number on the invoice; both are
+    // registered once in Stripe, so fetch them together.
+    const [vatTaxRateId, accountTaxId] = await Promise.all([
+      getVatTaxRateId(),
+      getAccountTaxId(),
+    ])
     const taxRates = vatTaxRateId ? { tax_rates: [vatTaxRateId] } : {}
 
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
@@ -513,6 +558,8 @@ Deno.serve(async (req) => {
         enabled: true,
         invoice_data: {
           description: invoiceMessage,
+          // Prints "CY VAT CY60329173O" under the company address.
+          ...(accountTaxId ? { account_tax_ids: [accountTaxId] } : {}),
           ...(billing
             ? {
                 custom_fields: [
