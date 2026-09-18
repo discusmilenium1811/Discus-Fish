@@ -158,6 +158,21 @@ async function recordOrder(session: Stripe.Checkout.Session) {
     await supabase.from('order_items').insert(lineRows)
   }
 
+  // Remember the checkout phone on a profile that has none yet, so the cart
+  // form is pre-filled next time. userId is the checkout function's verified
+  // caller. Best-effort: never block the order.
+  if (userId && contact?.phone) {
+    try {
+      await supabase
+        .from('profiles')
+        .update({ phone: contact.phone })
+        .eq('id', userId)
+        .or('phone.is.null,phone.eq.')
+    } catch (err) {
+      console.error('[stripe-webhook] profile phone update failed:', userId, err)
+    }
+  }
+
   // Decrement inventory for tracked products and log the sale movement. This
   // runs only on a fresh order insert (duplicate webhook retries return early
   // above), so stock is never double-counted. Best-effort: never block the order.

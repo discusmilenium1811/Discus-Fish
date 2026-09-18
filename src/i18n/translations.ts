@@ -349,7 +349,7 @@ export const translations = {
     'cart.fullName': 'Full name',
     'cart.email': 'Email address',
     'cart.phone': 'Phone number',
-    'cart.contactHint': 'Enter an email or phone number so we can reach you about your order.',
+    'cart.contactHint': 'We need both your email and phone number to reach you about your order.',
     'cart.shippingAddress': 'Delivery address',
     'cart.country': 'Country',
     'cart.state': 'State / Region',
@@ -369,7 +369,9 @@ export const translations = {
     'cart.vatIncluded': 'Includes VAT (19%)',
     'cart.payNow': 'Pay now',
     'cart.requiredError': 'Please fill in all required fields (marked *).',
-    'cart.contactRequired': 'Please provide an email or phone number.',
+    'cart.contactRequired': 'Please provide both an email address and a phone number.',
+    'cart.emailInvalid': 'Please enter a valid email address.',
+    'cart.phoneInvalid': 'Please enter a valid phone number (7–15 digits, e.g. +357 99 123456).',
 
     // Checkout success
     'checkout.successTitle': 'Order confirmed!',
@@ -815,7 +817,7 @@ export const translations = {
     'cart.fullName': 'Ονοματεπώνυμο',
     'cart.email': 'Διεύθυνση email',
     'cart.phone': 'Αριθμός τηλεφώνου',
-    'cart.contactHint': 'Συμπληρώστε email ή τηλέφωνο για να επικοινωνήσουμε σχετικά με την παραγγελία σας.',
+    'cart.contactHint': 'Χρειαζόμαστε το email και το τηλέφωνό σας για να επικοινωνήσουμε σχετικά με την παραγγελία σας.',
     'cart.shippingAddress': 'Διεύθυνση παράδοσης',
     'cart.country': 'Χώρα',
     'cart.state': 'Νομός / Περιοχή',
@@ -835,7 +837,9 @@ export const translations = {
     'cart.vatIncluded': 'Περιλαμβάνει ΦΠΑ (19%)',
     'cart.payNow': 'Πληρωμή τώρα',
     'cart.requiredError': 'Συμπληρώστε όλα τα υποχρεωτικά πεδία (με *).',
-    'cart.contactRequired': 'Δώστε email ή αριθμό τηλεφώνου.',
+    'cart.contactRequired': 'Δώστε και email και αριθμό τηλεφώνου.',
+    'cart.emailInvalid': 'Εισαγάγετε μια έγκυρη διεύθυνση email.',
+    'cart.phoneInvalid': 'Εισαγάγετε έναν έγκυρο αριθμό τηλεφώνου (7–15 ψηφία, π.χ. +357 99 123456).',
 
     // Checkout success
     'checkout.successTitle': 'Η παραγγελία επιβεβαιώθηκε!',
@@ -1281,7 +1285,7 @@ export const translations = {
     'cart.fullName': 'Име и фамилия',
     'cart.email': 'Имейл адрес',
     'cart.phone': 'Телефонен номер',
-    'cart.contactHint': 'Въведете имейл или телефон, за да се свържем с вас относно поръчката.',
+    'cart.contactHint': 'Нужни са ни и имейл, и телефон, за да се свържем с вас относно поръчката.',
     'cart.shippingAddress': 'Адрес за доставка',
     'cart.country': 'Държава',
     'cart.state': 'Област / Регион',
@@ -1301,7 +1305,9 @@ export const translations = {
     'cart.vatIncluded': 'Включва ДДС (19%)',
     'cart.payNow': 'Плати сега',
     'cart.requiredError': 'Моля, попълнете всички задължителни полета (с *).',
-    'cart.contactRequired': 'Моля, посочете имейл или телефонен номер.',
+    'cart.contactRequired': 'Моля, посочете и имейл, и телефонен номер.',
+    'cart.emailInvalid': 'Моля, въведете валиден имейл адрес.',
+    'cart.phoneInvalid': 'Моля, въведете валиден телефонен номер (7–15 цифри, напр. +357 99 123456).',
 
     // Checkout success
     'checkout.successTitle': 'Поръчката е потвърдена!',

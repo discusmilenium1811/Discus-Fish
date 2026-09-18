@@ -326,21 +326,38 @@ Deno.serve(async (req) => {
       return json(result)
     }
 
-    const { items, userId, email, billing, contact, shipping, shippingMethodId, couponCode } = body
+    const { items, email, billing, contact, shipping, shippingMethodId, couponCode } = body
 
     if (!Array.isArray(items) || items.length === 0) {
       return json({ error: 'No items' }, 400)
+    }
+
+    // Every order needs both an email and a phone number (same rules as the cart form).
+    const contactEmail = typeof contact?.email === 'string' ? contact.email.trim() : ''
+    const contactPhone = typeof contact?.phone === 'string' ? contact.phone.trim() : ''
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+      return json({ error: 'A valid email address is required' }, 400)
+    }
+    if (
+      !/^\+?[\d\s().-]+$/.test(contactPhone) ||
+      !/^\d{7,15}$/.test(contactPhone.replace(/\D/g, ''))
+    ) {
+      return json({ error: 'A valid phone number is required' }, 400)
     }
 
     // Decide the price tier from the AUTHENTICATED caller, never the body userId
     // (wholesale prices are lower, so a spoofed id must not underprice the cart).
     // Only an approved business account gets wholesale prices.
     let approvedBusiness = false
+    // The verified caller id. The webhook links the order to this user and may
+    // save the checkout phone on their profile, so it must not come from the body.
+    let authUserId: string | null = null
     const authHeader = req.headers.get('Authorization') ?? ''
     const token = authHeader.replace(/^Bearer\s+/i, '')
     if (token) {
       const { data: userData } = await supabase.auth.getUser(token)
       if (userData?.user) {
+        authUserId = userData.user.id
         const { data: prof } = await supabase
           .from('profiles')
           .select('account_type, business_status')
@@ -504,7 +521,7 @@ Deno.serve(async (req) => {
         total: totalCents,
       }),
     }
-    if (userId) metadata.userId = userId
+    if (authUserId) metadata.userId = authUserId
     if (billing) metadata.billing = JSON.stringify(billing)
     if (contact) metadata.contact = JSON.stringify(contact)
     if (shipping) metadata.ship = JSON.stringify(shipping)

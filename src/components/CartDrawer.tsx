@@ -63,6 +63,11 @@ const EMPTY_FORM = {
   postalCode: '',
 }
 
+// Mirrors the server-side check in the checkout edge function.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const isValidPhone = (value: string) =>
+  /^\+?[\d\s().-]+$/.test(value) && /^\d{7,15}$/.test(value.replace(/\D/g, ''))
+
 export function CartDrawer({
   open,
   onClose,
@@ -108,6 +113,22 @@ export function CartDrawer({
     (key: keyof typeof form) =>
     (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((f) => ({ ...f, [key]: e.target.value }))
+
+  // Opens the delivery step, pre-filling contact details from the signed-in
+  // account. Only empty fields are filled, so anything already typed is kept.
+  function goToDetails() {
+    setError(null)
+    if (user) {
+      const email = user.email ?? ''
+      const phone = profile?.phone ?? ''
+      setForm((f) => ({
+        ...f,
+        email: f.email || email,
+        phone: f.phone || phone,
+      }))
+    }
+    setStep('details')
+  }
 
   // Coupon.
   const [couponCode, setCouponCode] = useState('')
@@ -242,7 +263,7 @@ export function CartDrawer({
   }
 
   async function handlePay() {
-    // Required fields: name, full address, and at least one contact method.
+    // Required fields: name, email, phone and full address.
     const missingRequired =
       !form.fullName.trim() ||
       !form.country.trim() ||
@@ -253,8 +274,16 @@ export function CartDrawer({
       setError(t('cart.requiredError'))
       return
     }
-    if (!form.email.trim() && !form.phone.trim()) {
+    if (!form.email.trim() || !form.phone.trim()) {
       setError(t('cart.contactRequired'))
+      return
+    }
+    if (!EMAIL_PATTERN.test(form.email.trim())) {
+      setError(t('cart.emailInvalid'))
+      return
+    }
+    if (!isValidPhone(form.phone.trim())) {
+      setError(t('cart.phoneInvalid'))
       return
     }
     if (!selectedMethod) {
@@ -268,8 +297,8 @@ export function CartDrawer({
       const customer: CheckoutCustomer = {
         contact: {
           fullName: form.fullName.trim(),
-          email: form.email.trim() || undefined,
-          phone: form.phone.trim() || undefined,
+          email: form.email.trim(),
+          phone: form.phone.trim(),
         },
         shipping: {
           country: form.country.trim(),
@@ -464,14 +493,14 @@ export function CartDrawer({
               />
               <div className="grid grid-cols-2 gap-3">
                 <FieldInput
-                  label={t('cart.email')}
+                  label={`${t('cart.email')} *`}
                   type="email"
                   value={form.email}
                   onChange={upd('email')}
                   autoComplete="email"
                 />
                 <FieldInput
-                  label={t('cart.phone')}
+                  label={`${t('cart.phone')} *`}
                   type="tel"
                   value={form.phone}
                   onChange={upd('phone')}
@@ -721,10 +750,7 @@ export function CartDrawer({
 
             <button
               type="button"
-              onClick={() => {
-                setError(null)
-                setStep('details')
-              }}
+              onClick={goToDetails}
               className="w-full rounded-full bg-cyan-400 py-3 text-sm font-bold text-slate-900 transition hover:bg-cyan-300"
             >
               {t('cart.checkout')}
