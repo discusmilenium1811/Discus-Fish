@@ -119,23 +119,32 @@ async function getAccountTaxId(): Promise<string | null> {
 /**
  * Reuse (or create) the buyer's Stripe customer with English pinned, so the
  * generated invoice is never rendered in whatever language their browser
- * happens to be set to. Returns null when Stripe is unreachable, in which case
- * checkout falls back to plain `customer_email`.
+ * happens to be set to. The checkout phone is stored on the customer too:
+ * the invoice's "Bill to" block prints the customer's phone, and Checkout
+ * itself never collects one. Returns null when Stripe is unreachable, in
+ * which case checkout falls back to plain `customer_email`.
  */
-async function resolveCustomerId(email: string): Promise<string | null> {
+async function resolveCustomerId(email: string, phone: string): Promise<string | null> {
   try {
     const { data } = await stripe.customers.list({ email, limit: 1 })
     const existing = data[0]
     if (!existing) {
       const created = await stripe.customers.create({
         email,
+        phone,
         preferred_locales: [INVOICE_LOCALE],
       })
       return created.id
     }
     const locales = existing.preferred_locales ?? []
+    const update: Stripe.CustomerUpdateParams = {}
     if (locales.length !== 1 || locales[0] !== INVOICE_LOCALE) {
-      await stripe.customers.update(existing.id, { preferred_locales: [INVOICE_LOCALE] })
+      update.preferred_locales = [INVOICE_LOCALE]
+    }
+    // Latest checkout wins, so the invoice carries the number given for this order.
+    if (existing.phone !== phone) update.phone = phone
+    if (Object.keys(update).length > 0) {
+      await stripe.customers.update(existing.id, update)
     }
     return existing.id
   } catch (err) {
@@ -576,7 +585,9 @@ Deno.serve(async (req) => {
       email || contact?.email || billing?.email || undefined
     // Attaching a customer with preferred_locales = ["en"] is what forces the
     // invoice PDF and Stripe's emails into English.
-    const customerId = customerEmail ? await resolveCustomerId(customerEmail) : null
+    const customerId = customerEmail
+      ? await resolveCustomerId(customerEmail, contactPhone)
+      : null
     const invoiceMessage = [
       'Hello,',
       'Thank you for your purchase from Discusfood.',
