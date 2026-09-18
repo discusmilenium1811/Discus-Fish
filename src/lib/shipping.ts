@@ -24,6 +24,8 @@ export interface ShippingMethod {
   free_under_grams: number | null
   /** Domestic (AKIS) only: flat price charged when net weight exceeds the threshold. */
   over_weight_price_cents: number | null
+  /** AKIS office collection: the customer picks an office instead of an address. */
+  is_office_pickup: boolean
   estimated_days_min: number | null
   estimated_days_max: number | null
   is_active: boolean
@@ -63,7 +65,7 @@ export async function fetchPublicShippingRates(): Promise<ShippingRates> {
     supabase
       .from('shipping_methods')
       .select(
-        'id, zone_id, name, description, price_cents, free_over_cents, free_under_grams, over_weight_price_cents, estimated_days_min, estimated_days_max, is_active, sort_order',
+        'id, zone_id, name, description, price_cents, free_over_cents, free_under_grams, over_weight_price_cents, is_office_pickup, estimated_days_min, estimated_days_max, is_active, sort_order',
       )
       .eq('is_active', true)
       .order('sort_order'),

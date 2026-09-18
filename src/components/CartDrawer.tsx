@@ -10,6 +10,12 @@ import { computeBreakdown } from '../lib/pricing'
 import { useAuth } from '../auth/AuthContext'
 import { useTranslation } from '../i18n/LanguageContext'
 import {
+  AKIS_OFFICES,
+  AKIS_PHONE,
+  akisOfficeLabel,
+  akisOfficesByCity,
+} from '../lib/akisOffices'
+import {
   billableWeightGrams,
   checkoutCountries,
   fetchPublicShippingRates,
@@ -61,7 +67,11 @@ const EMPTY_FORM = {
   floor: '',
   apartment: '',
   postalCode: '',
+  /** AKIS office id, used instead of the address for office-pickup methods. */
+  pickupOfficeId: '',
 }
+
+const AKIS_OFFICE_GROUPS = akisOfficesByCity()
 
 // Mirrors the server-side check in the checkout edge function.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -208,6 +218,10 @@ export function CartDrawer({
   const selectedMethod =
     methods.find((method) => method.id === methodId) ?? methods[0] ?? null
   const shippingCents = selectedMethod ? costFor(selectedMethod) : 0
+  // AKIS office-to-office: the customer picks an office instead of an address.
+  // Home delivery and every UPS destination go to the customer's address.
+  const isOfficePickup = selectedMethod?.is_office_pickup ?? false
+  const pickupOffice = AKIS_OFFICES.find((office) => office.id === form.pickupOfficeId) ?? null
 
   const breakdown = computeBreakdown(
     subtotalCents,
@@ -263,14 +277,22 @@ export function CartDrawer({
   }
 
   async function handlePay() {
-    // Required fields: name, email, phone and full address.
-    const missingRequired =
-      !form.fullName.trim() ||
-      !form.country.trim() ||
-      !form.city.trim() ||
-      !form.street.trim() ||
-      !form.postalCode.trim()
-    if (missingRequired) {
+    // Required fields: name, email, phone, country and delivery method, then
+    // either the AKIS office (office pickup) or the full address.
+    if (!form.fullName.trim() || !form.country.trim()) {
+      setError(t('cart.requiredError'))
+      return
+    }
+    if (!selectedMethod) {
+      setError(t('cart.shippingRequired'))
+      return
+    }
+    if (isOfficePickup) {
+      if (!pickupOffice) {
+        setError(t('cart.pickupOfficeRequired'))
+        return
+      }
+    } else if (!form.city.trim() || !form.street.trim() || !form.postalCode.trim()) {
       setError(t('cart.requiredError'))
       return
     }
@@ -286,10 +308,6 @@ export function CartDrawer({
       setError(t('cart.phoneInvalid'))
       return
     }
-    if (!selectedMethod) {
-      setError(t('cart.shippingRequired'))
-      return
-    }
 
     setLoading(true)
     setError(null)
@@ -300,16 +318,23 @@ export function CartDrawer({
           email: form.email.trim(),
           phone: form.phone.trim(),
         },
-        shipping: {
-          country: form.country.trim(),
-          state: form.state.trim() || undefined,
-          city: form.city.trim(),
-          street: form.street.trim(),
-          building: form.building.trim() || undefined,
-          floor: form.floor.trim() || undefined,
-          apartment: form.apartment.trim() || undefined,
-          postalCode: form.postalCode.trim(),
-        },
+        shipping:
+          isOfficePickup && pickupOffice
+            ? {
+                country: form.country.trim(),
+                city: pickupOffice.city,
+                pickupOffice: akisOfficeLabel(pickupOffice),
+              }
+            : {
+                country: form.country.trim(),
+                state: form.state.trim() || undefined,
+                city: form.city.trim(),
+                street: form.street.trim(),
+                building: form.building.trim() || undefined,
+                floor: form.floor.trim() || undefined,
+                apartment: form.apartment.trim() || undefined,
+                postalCode: form.postalCode.trim(),
+              },
         shippingMethodId: selectedMethod.id,
         couponCode: coupon?.code,
       }
@@ -510,82 +535,34 @@ export function CartDrawer({
               <p className="text-xs text-slate-500">{t('cart.contactHint')}</p>
             </section>
 
-            {/* Delivery address */}
+            {/* Destination + delivery method — options & prices come from
+                Admin > Shipping. Chosen first, because the method decides
+                whether we need an address or an AKIS office. */}
             <section className="space-y-3">
-              <h3 className="text-sm font-bold text-white">{t('cart.shippingAddress')}</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="mb-1 block text-xs font-medium text-slate-400">
-                    {`${t('cart.country')} *`}
-                  </span>
-                  <select
-                    className={`${inputCls} [color-scheme:dark]`}
-                    value={form.country}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, country: e.target.value }))
-                    }
-                    autoComplete="country-name"
-                  >
-                    <option className={optionCls} value="">{t('cart.selectCountry')}</option>
-                    {countryOptions.map((c) => (
-                      <option className={optionCls} key={c.code} value={c.code}>
-                        {c.name}
-                      </option>
-                    ))}
-                    {showWorldwide && (
-                      <option className={optionCls} value={WORLDWIDE}>{t('cart.restOfWorld')}</option>
-                    )}
-                  </select>
-                </label>
-                <FieldInput
-                  label={t('cart.state')}
-                  value={form.state}
-                  onChange={upd('state')}
-                  autoComplete="address-level1"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <FieldInput
-                  label={`${t('cart.city')} *`}
-                  value={form.city}
-                  onChange={upd('city')}
-                  autoComplete="address-level2"
-                />
-                <FieldInput
-                  label={`${t('cart.postalCode')} *`}
-                  value={form.postalCode}
-                  onChange={upd('postalCode')}
-                  autoComplete="postal-code"
-                />
-              </div>
-              <FieldInput
-                label={`${t('cart.street')} *`}
-                value={form.street}
-                onChange={upd('street')}
-                autoComplete="address-line1"
-              />
-              <div className="grid grid-cols-3 gap-3">
-                <FieldInput
-                  label={t('cart.building')}
-                  value={form.building}
-                  onChange={upd('building')}
-                />
-                <FieldInput
-                  label={t('cart.floor')}
-                  value={form.floor}
-                  onChange={upd('floor')}
-                />
-                <FieldInput
-                  label={t('cart.apartment')}
-                  value={form.apartment}
-                  onChange={upd('apartment')}
-                />
-              </div>
-            </section>
-
-            {/* Delivery method — options & prices come from Admin > Shipping */}
-            <section className="space-y-2">
               <h3 className="text-sm font-bold text-white">{t('cart.shippingMethod')}</h3>
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-slate-400">
+                  {`${t('cart.country')} *`}
+                </span>
+                <select
+                  className={`${inputCls} [color-scheme:dark]`}
+                  value={form.country}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, country: e.target.value }))
+                  }
+                  autoComplete="country-name"
+                >
+                  <option className={optionCls} value="">{t('cart.selectCountry')}</option>
+                  {countryOptions.map((c) => (
+                    <option className={optionCls} key={c.code} value={c.code}>
+                      {c.name}
+                    </option>
+                  ))}
+                  {showWorldwide && (
+                    <option className={optionCls} value={WORLDWIDE}>{t('cart.restOfWorld')}</option>
+                  )}
+                </select>
+              </label>
               {!form.country ? (
                 <p className="text-xs text-slate-500">{t('cart.shippingPickCountry')}</p>
               ) : !rates ? (
@@ -640,6 +617,92 @@ export function CartDrawer({
                 </div>
               )}
             </section>
+
+            {isOfficePickup ? (
+              /* AKIS office pickup — no street address needed */
+              <section className="space-y-3">
+                <h3 className="text-sm font-bold text-white">{t('cart.pickupOffice')}</h3>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-medium text-slate-400">
+                    {`${t('cart.pickupOffice')} *`}
+                  </span>
+                  <select
+                    className={`${inputCls} [color-scheme:dark]`}
+                    value={form.pickupOfficeId}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, pickupOfficeId: e.target.value }))
+                    }
+                  >
+                    <option className={optionCls} value="">{t('cart.pickupOfficeSelect')}</option>
+                    {AKIS_OFFICE_GROUPS.map((group) => (
+                      <optgroup className={optionCls} key={group.city} label={group.city}>
+                        {group.offices.map((office) => (
+                          <option className={optionCls} key={office.id} value={office.id}>
+                            {office.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </label>
+                {pickupOffice && (
+                  <p className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-300">
+                    📍 {pickupOffice.address}, {pickupOffice.city}
+                  </p>
+                )}
+                <p className="text-xs text-slate-500">
+                  {t('cart.pickupOfficeHint')} AKIS Express: {AKIS_PHONE}.
+                </p>
+              </section>
+            ) : (
+              /* Delivery address — AKIS home delivery and every UPS destination */
+              <section className="space-y-3">
+                <h3 className="text-sm font-bold text-white">{t('cart.shippingAddress')}</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <FieldInput
+                    label={`${t('cart.city')} *`}
+                    value={form.city}
+                    onChange={upd('city')}
+                    autoComplete="address-level2"
+                  />
+                  <FieldInput
+                    label={`${t('cart.postalCode')} *`}
+                    value={form.postalCode}
+                    onChange={upd('postalCode')}
+                    autoComplete="postal-code"
+                  />
+                </div>
+                <FieldInput
+                  label={`${t('cart.street')} *`}
+                  value={form.street}
+                  onChange={upd('street')}
+                  autoComplete="address-line1"
+                />
+                <div className="grid grid-cols-3 gap-3">
+                  <FieldInput
+                    label={t('cart.building')}
+                    value={form.building}
+                    onChange={upd('building')}
+                  />
+                  <FieldInput
+                    label={t('cart.floor')}
+                    value={form.floor}
+                    onChange={upd('floor')}
+                  />
+                  <FieldInput
+                    label={t('cart.apartment')}
+                    value={form.apartment}
+                    onChange={upd('apartment')}
+                  />
+                </div>
+                <FieldInput
+                  label={t('cart.state')}
+                  value={form.state}
+                  onChange={upd('state')}
+                  autoComplete="address-level1"
+                />
+              </section>
+            )}
 
             {/* Coupon */}
             <section className="space-y-2">

@@ -102,15 +102,22 @@ export interface CheckoutContact {
 }
 
 /** Detailed delivery address collected before payment. */
+/**
+ * Where the parcel goes: a street address, or — for an AKIS office-pickup method —
+ * the chosen AKIS Express office (then `city` is the office's city and there is
+ * no street / post code).
+ */
 export interface CheckoutShipping {
   country: string
   state?: string
   city: string
-  street: string
+  street?: string
   building?: string
   floor?: string
   apartment?: string
-  postalCode: string
+  postalCode?: string
+  /** AKIS office label (name — address, city) for office-pickup orders. */
+  pickupOffice?: string
 }
 
 export interface CheckoutCustomer {

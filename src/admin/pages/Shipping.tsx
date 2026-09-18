@@ -52,6 +52,7 @@ interface Method {
   free_over_cents: number | null
   free_under_grams: number | null
   over_weight_price_cents: number | null
+  is_office_pickup: boolean
   estimated_days_min: number | null
   estimated_days_max: number | null
   is_active: boolean
@@ -227,6 +228,11 @@ export function Shipping() {
                   <td className="px-4 py-3">
                     <div className="font-semibold text-white">{m.name}</div>
                     <div className="text-xs text-slate-500">{m.description}</div>
+                    {m.is_office_pickup && (
+                      <div className="mt-1">
+                        <Pill tone="cyan">AKIS office pickup</Pill>
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-slate-300">{zoneName(m.zone_id)}</td>
                   <td className="px-4 py-3 text-slate-200">
@@ -565,6 +571,7 @@ function MethodForm({
   const [daysMax, setDaysMax] = useState(row?.estimated_days_max != null ? String(row.estimated_days_max) : '')
   const [sortOrder, setSortOrder] = useState(String(row?.sort_order ?? 0))
   const [isActive, setIsActive] = useState(row?.is_active ?? true)
+  const [isOfficePickup, setIsOfficePickup] = useState(row?.is_office_pickup ?? false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   // Free-under / over-weight pricing applies only to domestic (AKIS) zones.
@@ -581,6 +588,8 @@ function MethodForm({
       free_over_cents: null,
       free_under_grams: freeUnderKg ? Math.round(Number(freeUnderKg) * 1000) : null,
       over_weight_price_cents: overWeightPrice ? eurosToCents(overWeightPrice) : null,
+      // Office pickup is an AKIS (domestic) option; UPS always delivers to an address.
+      is_office_pickup: isDomestic && isOfficePickup,
       estimated_days_min: daysMin ? parseInt(daysMin, 10) : null,
       estimated_days_max: daysMax ? parseInt(daysMax, 10) : null,
       sort_order: parseInt(sortOrder, 10) || 0,
@@ -657,6 +666,16 @@ function MethodForm({
         <label className="flex items-center gap-2 text-sm text-slate-200">
           <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="h-4 w-4 accent-cyan-400" />
           Active
+        </label>
+        <label className={`flex items-center gap-2 text-sm ${isDomestic ? 'text-slate-200' : 'text-slate-500'}`}>
+          <input
+            type="checkbox"
+            checked={isDomestic && isOfficePickup}
+            disabled={!isDomestic}
+            onChange={(e) => setIsOfficePickup(e.target.checked)}
+            className="h-4 w-4 accent-cyan-400"
+          />
+          AKIS office pickup — the customer picks an AKIS office instead of entering an address (domestic only)
         </label>
       </form>
     </Modal>

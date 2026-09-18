@@ -160,6 +160,7 @@ interface MethodRow {
   free_over_cents: number | null
   free_under_grams: number | null
   over_weight_price_cents: number | null
+  is_office_pickup: boolean
   is_active: boolean
   sort_order: number
 }
@@ -200,7 +201,9 @@ async function resolveShipping(
   methodId: string | undefined,
   netGrams: number,
   shipmentGrams: number,
-): Promise<{ cents: number; name: string; methodId: string } | { error: string }> {
+): Promise<
+  { cents: number; name: string; methodId: string; officePickup: boolean } | { error: string }
+> {
   const [zonesRes, methodsRes, tiersRes] = await Promise.all([
     supabase
       .from('shipping_zones')
@@ -208,7 +211,7 @@ async function resolveShipping(
       .eq('is_active', true),
     supabase
       .from('shipping_methods')
-      .select('id, zone_id, name, price_cents, free_over_cents, free_under_grams, over_weight_price_cents, is_active, sort_order')
+      .select('id, zone_id, name, price_cents, free_over_cents, free_under_grams, over_weight_price_cents, is_office_pickup, is_active, sort_order')
       .eq('is_active', true),
     supabase.from('shipping_rate_tiers').select('zone_id, max_weight_grams, price_cents'),
   ])
@@ -243,7 +246,14 @@ async function resolveShipping(
       return { error: 'No delivery rate is available for this destination.' }
     cents = cost
   }
-  return { cents, name: chosen.name, methodId: chosen.id }
+  // Office pickup is an AKIS (domestic) option only; UPS always goes to an address.
+  const officePickup = zone.is_domestic && chosen.is_office_pickup === true
+  return { cents, name: chosen.name, methodId: chosen.id, officePickup }
+}
+
+/** Trimmed string field from the request body, capped so metadata stays small. */
+function text(value: unknown, max = 200): string {
+  return typeof value === 'string' ? value.trim().slice(0, max) : ''
 }
 
 interface CouponRow {
@@ -461,6 +471,40 @@ Deno.serve(async (req) => {
     if ('error' in shippingResult) {
       return json({ error: shippingResult.error }, 400)
     }
+
+    // Where the parcel goes. AKIS office-to-office needs the chosen office and no
+    // street address; AKIS home delivery and every UPS destination need a full
+    // address. Only the fields for the chosen kind are kept on the order.
+    const pickupOffice = text(shipping?.pickupOffice, 300)
+    const address = {
+      country: text(shipping?.country),
+      state: text(shipping?.state),
+      city: text(shipping?.city),
+      street: text(shipping?.street),
+      building: text(shipping?.building),
+      floor: text(shipping?.floor),
+      apartment: text(shipping?.apartment),
+      postalCode: text(shipping?.postalCode),
+    }
+    const hasAddress = address.city !== '' && address.street !== '' && address.postalCode !== ''
+    let destination: Record<string, string>
+    if (shippingResult.officePickup) {
+      if (pickupOffice) {
+        destination = { country: address.country, city: address.city, pickupOffice }
+      } else if (hasAddress) {
+        // A cart loaded before office selection existed sends an address instead.
+        // Keep it so the order is not lost. The owner can confirm the office by phone.
+        destination = address
+      } else {
+        return json({ error: 'Please choose the AKIS Express office to collect from.' }, 400)
+      }
+    } else {
+      if (!hasAddress) {
+        return json({ error: 'A full delivery address is required.' }, 400)
+      }
+      destination = address
+    }
+
     const shippingCents = shippingResult.cents
     if (shippingCents > 0) {
       lineItems.push({
@@ -524,7 +568,7 @@ Deno.serve(async (req) => {
     if (authUserId) metadata.userId = authUserId
     if (billing) metadata.billing = JSON.stringify(billing)
     if (contact) metadata.contact = JSON.stringify(contact)
-    if (shipping) metadata.ship = JSON.stringify(shipping)
+    metadata.ship = JSON.stringify(destination)
     metadata.shipMethodId = shippingResult.methodId
     if (appliedCode) metadata.coupon = appliedCode
 

@@ -67,11 +67,17 @@ async function recordOrder(session: Stripe.Checkout.Session) {
   const couponCode = session.metadata?.coupon ?? null
   const userId = session.metadata?.userId ?? null
 
-  // Flatten the detailed delivery form into the order's two address lines.
+  // Flatten the detailed delivery form into the order's two address lines. An
+  // AKIS office-pickup order has no street address: the chosen office goes on
+  // the first line so the owner knows where to send the parcel.
   const join = (...parts: (string | undefined | null)[]) =>
     parts.filter((p) => p && p.trim()).join(', ') || null
-  const shipAddress1 = ship ? join(ship.street, ship.building && `Bldg ${ship.building}`) : null
-  const shipAddress2 = ship
+  const shipAddress1 = ship?.pickupOffice
+    ? `AKIS office pickup: ${ship.pickupOffice}`
+    : ship
+      ? join(ship.street, ship.building && `Bldg ${ship.building}`)
+      : null
+  const shipAddress2 = ship && !ship.pickupOffice
     ? join(
         ship.floor && `Floor ${ship.floor}`,
         ship.apartment && `Apt ${ship.apartment}`,
