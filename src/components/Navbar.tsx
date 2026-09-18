@@ -75,48 +75,50 @@ export function Navbar({
 
       <div className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/80 backdrop-blur-lg">
         <div className="mx-auto flex max-w-7xl items-center px-4 py-2.5 sm:px-6 sm:py-4">
-          <nav className="relative flex w-full flex-wrap items-center justify-center gap-x-3 gap-y-2 text-center text-[0.65rem] font-semibold text-slate-300 sm:gap-8 sm:text-lg">
-            <Link
-              to="/"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="transition hover:text-cyan-300 focus:outline-none"
-            >
-              {t('nav.home')}
-            </Link>
-            <button
-              type="button"
-              onClick={onCatalogClick}
-              className="cursor-pointer transition hover:text-cyan-300"
-            >
-              {t('nav.catalog')}
-            </button>
-            <Link
-              to="/why-us"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="transition hover:text-cyan-300"
-            >
-              {t('nav.whyUs')}
-            </Link>
-            <Link
-              to="/contact"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="transition hover:text-cyan-300"
-            >
-              {t('nav.contact')}
-            </Link>
-            <Link
-              to="/tracking-delivery"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="transition hover:text-cyan-300 focus:outline-none"
-            >
-              {t('nav.trackingDelivery')}
-            </Link>
+          <nav className="flex w-full flex-wrap items-center justify-center gap-y-2 text-center text-[0.65rem] font-semibold text-slate-300 sm:text-lg lg:flex-nowrap lg:gap-x-6">
+            {/* The links take only the space left of the action buttons, so longer
+                translations (e.g. Greek) can never slide underneath the cart. */}
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 sm:gap-x-8 lg:min-w-0 lg:flex-1 lg:gap-x-5 xl:gap-x-8 [&>*]:whitespace-nowrap">
+              <Link
+                to="/"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="transition hover:text-cyan-300 focus:outline-none"
+              >
+                {t('nav.home')}
+              </Link>
+              <button
+                type="button"
+                onClick={onCatalogClick}
+                className="cursor-pointer transition hover:text-cyan-300"
+              >
+                {t('nav.catalog')}
+              </button>
+              <Link
+                to="/why-us"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="transition hover:text-cyan-300"
+              >
+                {t('nav.whyUs')}
+              </Link>
+              <Link
+                to="/contact"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="transition hover:text-cyan-300"
+              >
+                {t('nav.contact')}
+              </Link>
+              <Link
+                to="/tracking-delivery"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="transition hover:text-cyan-300 focus:outline-none"
+              >
+                {t('nav.trackingDelivery')}
+              </Link>
+            </div>
 
-            {/* Login/account, cart and language sit together at the right edge.
-                The group is only pinned there from lg up, where the row is wide
-                enough to clear the centred links; below that it wraps to its
-                own centred line. */}
-            <div className="flex w-full items-center justify-center gap-2 lg:absolute lg:right-0 lg:w-auto lg:gap-3">
+            {/* Login/account, cart and language sit together at the right edge
+                from lg up; below that they wrap to their own centred line. */}
+            <div className="flex w-full items-center justify-center gap-2 lg:w-auto lg:shrink-0 lg:gap-3">
               {!user && (
                 <button
                   type="button"
