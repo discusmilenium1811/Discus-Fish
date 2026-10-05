@@ -7,7 +7,7 @@
 
 /** VAT rate. Catalog prices are VAT-inclusive, so this is used to show the
  *  portion of the total that is VAT — it is never added on top. */
-export const VAT_RATE = 0.19
+export const VAT_RATE = 0.05
 
 export interface PriceBreakdown {
   /** Sum of line items (VAT-inclusive). */

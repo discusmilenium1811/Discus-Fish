@@ -47,7 +47,7 @@ appearing** — that is the first thing to check if the shop looks broken.
 | Google sign-in | Google Cloud Console → OAuth 2.0 Client | Authorised origins + redirect URIs must include the live domain. |
 | Shipping zones, methods, weight tiers | **Database**, editable in the admin panel | No code change needed to alter shipping prices. |
 | Prices, stock, products, coupons | Database / admin panel | |
-| VAT rate (19%) | **Hardcoded** — `src/lib/pricing.ts` and `supabase/functions/checkout/index.ts` | Prices include VAT; this only affects the reported tax figure. |
+| VAT rate (5%, was 19% until 2026-10) | **Hardcoded** — `src/lib/pricing.ts` and `supabase/functions/checkout/index.ts` | Prices include VAT; this only affects the reported tax figure. |
 | Packaging tare (250 g) | **Duplicated** — `src/lib/shipping.ts` and `supabase/functions/checkout/index.ts` | Must be changed in both or the charged shipping stops matching the cart. |
 | Legal page text + company details | `src/i18n/legal.ts` (`COMPANY` at the top) | Three languages in one file. |
 

@@ -197,7 +197,7 @@ async function emailOwnerCopy(
               ${line('Email', invoice.customer_email ?? '—')}
               ${line('Date', new Date((invoice.created ?? 0) * 1000).toISOString().slice(0, 16).replace('T', ' '))}
               ${line('Net', money(total - vatCents))}
-              ${line('VAT (19% incl.)', money(vatCents))}
+              ${line('VAT (incl.)', money(vatCents))}
               ${line('Total', money(total), true)}
             </table>
             ${invoice.hosted_invoice_url ? `<p><a href="${invoice.hosted_invoice_url}">View this invoice in Stripe</a></p>` : ''}

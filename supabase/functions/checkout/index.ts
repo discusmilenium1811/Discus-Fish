@@ -31,12 +31,14 @@ const PACKAGING_TARE_GRAMS = 250
 //  Stripe also prints a tax line only when the line items carry a tax rate.
 //  Catalog prices already include VAT (see src/lib/pricing.ts), so the rate is
 //  registered as *inclusive*: the totals do not change, but the invoice now
-//  shows "VAT (19% inclusive)" with the contained amount instead of leaving
+//  shows "VAT (5% inclusive)" with the contained amount instead of leaving
 //  the customer to work it out.
 // ─────────────────────────────────────────────────────────────────────────
 
 const INVOICE_LOCALE = 'en'
-const VAT_PERCENTAGE = 19
+// Cyprus reduced rate for these goods (was 19% until the 2026 law change).
+// Keep in sync with VAT_RATE in src/lib/pricing.ts.
+const VAT_PERCENTAGE = 5
 // The seller's own VAT number, printed under the company address on every
 // invoice. Keep in sync with COMPANY.vatNumber in src/i18n/legal.ts — an edge
 // function cannot import from the client bundle. It ends in the LETTER "O".
@@ -45,7 +47,7 @@ const COMPANY_VAT_NUMBER = 'CY60329173O'
 let cachedVatTaxRateId: string | null = null
 let cachedAccountTaxId: string | null = null
 
-/** The Cyprus 19% VAT-inclusive rate, looked up once and then reused. */
+/** The Cyprus VAT-inclusive rate, looked up once and then reused. */
 async function getVatTaxRateId(): Promise<string | null> {
   if (cachedVatTaxRateId) return cachedVatTaxRateId
   const configured = Deno.env.get('STRIPE_VAT_TAX_RATE_ID')
@@ -550,7 +552,7 @@ Deno.serve(async (req) => {
 
     const totalCents = Math.max(0, subtotalCents - discountCents) + shippingCents
     // VAT is included in the prices; this is the portion contained in the total.
-    const vatCents = Math.round(totalCents - totalCents / 1.19)
+    const vatCents = Math.round(totalCents - totalCents / (1 + VAT_PERCENTAGE / 100))
 
     // Send the buyer back to the storefront that started checkout: local dev
     // returns to localhost, production returns to the live site. Unknown origins
